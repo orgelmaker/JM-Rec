@@ -12,6 +12,7 @@ Author: Martijn
 
 import os
 import sys
+import re
 import json
 import time
 import wave
@@ -53,6 +54,31 @@ def midi_to_filename(midi_num):
     note = NOTE_NAMES[midi_num % 12]
     return f"{midi_num:03d}-{note}"
 
+def format_register_name(name):
+    """Format register input to clean folder name.
+    'Holpijp 8 voet' -> 'Holpijp_8'
+    'Mixtuur 4 sterk' -> 'Mixtuur_4st'
+    'Prestant 16' -> 'Prestant_16'
+    """
+    name = name.strip()
+    # Remove 'voet' / "'" (foot mark)
+    name = re.sub(r"\s*voet\b", "", name, flags=re.IGNORECASE)
+    name = re.sub(r"\s*'", "", name)
+    # 'sterk' -> 'st'
+    name = re.sub(r"\s*sterk\b", "st", name, flags=re.IGNORECASE)
+    # Replace spaces with underscores
+    name = re.sub(r"\s+", "_", name.strip())
+    # Remove unsafe chars
+    name = re.sub(r"[^\w\-]", "", name)
+    return name or "Register"
+
+def sanitize_device_name(name):
+    """Convert audio device name to filesystem-safe folder name."""
+    name = re.sub(r"\s*\(.*?\)\s*", "", name)
+    name = re.sub(r"[^\w\-]", "_", name)
+    name = re.sub(r"_+", "_", name)
+    return name.strip("_") or "Device"
+
 
 # ─────────────────────────────────────────────
 # Recorder Engine
@@ -70,33 +96,46 @@ class RecorderEngine:
         self.bit_depth = 16  # 16 or 24
         self.channels = 1    # mono by default
         self.mp3_bitrate = 192
-        self.device_index = None
-        
+        self.device_indices = []   # list of device indices; empty = system default
+        self.device_names = {}     # {index: position name} e.g. {0: "Front", 1: "Rear"}
+
+        # Orgel-structuur
+        self.keyboards = []        # ["Hoofdwerk", "Zwelwerk", ...]
+        self.has_pedal = False
+        self.current_keyboard = "" # selected keyboard/pedal name
+        self.tremulant = False     # append _trem to register folder
+
         # Recording workflow settings
         self.countdown_seconds = 5
         self.record_seconds = 5
-        
+
         # Register range (MIDI numbers)
         self.start_note = 36   # C2
         self.end_note = 96     # C7
         self.current_note = 36
-        
+
         # State
         self.state = "idle"  # idle, countdown, recording, paused
         self.countdown_value = 0
         self.recording_data = []
         self.is_running = False
         self.auto_advance = True
-        
+
         # VU meter
         self.current_level = 0.0
+        self.current_levels = {}   # per-device levels for multi-mic
         
         # Callbacks
         self.on_state_change = None
         
         # Thread lock
         self.lock = threading.Lock()
-    
+
+    @property
+    def device_index(self):
+        """Backwards-compatible: return first selected device or None."""
+        return self.device_indices[0] if self.device_indices else None
+
     def get_devices(self):
         """List available audio input devices."""
         devices = sd.query_devices()
@@ -106,14 +145,40 @@ class RecorderEngine:
                 input_devices.append({
                     'index': i,
                     'name': d['name'],
+                    'safe_name': sanitize_device_name(d['name']),
                     'channels': d['max_input_channels'],
                     'sample_rate': int(d['default_samplerate'])
                 })
         return input_devices
-    
+
+    def setup_organ(self, organ_name, keyboards, has_pedal, output_dir=None):
+        """Set up organ project: creates main folder + keyboard/pedal subfolders."""
+        self.project_name = organ_name
+        self.keyboards = keyboards
+        self.has_pedal = has_pedal
+        if output_dir:
+            self.output_dir = output_dir
+        base = os.path.join(self.output_dir, organ_name)
+        os.makedirs(base, exist_ok=True)
+        for kb in keyboards:
+            os.makedirs(os.path.join(base, kb), exist_ok=True)
+        if has_pedal:
+            os.makedirs(os.path.join(base, "Pedaal"), exist_ok=True)
+        # Select first keyboard by default
+        if keyboards:
+            self.current_keyboard = keyboards[0]
+        elif has_pedal:
+            self.current_keyboard = "Pedaal"
+        self._notify()
+        return base
+
     def get_current_register_path(self):
         """Get the full path for current register."""
-        return os.path.join(self.output_dir, self.project_name, self.register_name)
+        reg_name = self.register_name
+        if self.tremulant and not reg_name.endswith("_trem"):
+            reg_name += "_trem"
+        return os.path.join(self.output_dir, self.project_name,
+                            self.current_keyboard, reg_name)
     
     def get_current_filename(self):
         """Get filename for current note."""
@@ -148,10 +213,15 @@ class RecorderEngine:
         self.register_name = register_name
         if output_dir:
             self.output_dir = output_dir
-        
+
         # Create directories
         path = self.get_current_register_path()
         os.makedirs(path, exist_ok=True)
+        # Create multi-mic subdirs if applicable
+        if len(self.device_indices) > 1:
+            for idx in self.device_indices:
+                sub = self.device_names.get(idx, f"Mic_{idx}")
+                os.makedirs(os.path.join(path, sub), exist_ok=True)
         return path
     
     def start_recording_cycle(self):
@@ -205,28 +275,34 @@ class RecorderEngine:
         self._notify()
     
     def _do_record(self):
-        """Record audio for the configured duration."""
+        """Record audio from selected device(s)."""
         frames = int(self.sample_rate * self.record_seconds)
         channels = self.channels
-        
+        dtype = 'float32' if self.bit_depth == 24 else 'int16'
+
+        if len(self.device_indices) > 1:
+            self._do_record_multi(frames, channels, dtype)
+        else:
+            dev = self.device_index  # None or single index
+            self._do_record_single(dev, frames, channels, dtype)
+
+    def _do_record_single(self, device_index, frames, channels, dtype):
+        """Record from a single device (original behavior)."""
         try:
-            # Record
             audio_data = sd.rec(
-                frames, 
+                frames,
                 samplerate=self.sample_rate,
                 channels=channels,
-                dtype='float32' if self.bit_depth == 24 else 'int16',
-                device=self.device_index
+                dtype=dtype,
+                device=device_index
             )
-            
-            # Monitor levels while recording
+
             start_time = time.time()
             while time.time() - start_time < self.record_seconds:
                 if not self.is_running:
                     sd.stop()
                     return
                 elapsed = time.time() - start_time
-                # Update level meter from recorded data so far
                 samples_so_far = int(elapsed * self.sample_rate)
                 if samples_so_far > 0 and samples_so_far < len(audio_data):
                     chunk = audio_data[max(0, samples_so_far-1024):samples_so_far]
@@ -238,22 +314,115 @@ class RecorderEngine:
                         self.current_level = min(1.0, rms * 3)
                 self._notify()
                 time.sleep(0.05)
-            
+
             sd.wait()
-            
-            # Save as MP3
             self._save_mp3(audio_data)
             self.current_level = 0.0
-            
+
         except Exception as e:
             print(f"Recording error: {e}")
-            # Don't stop the entire cycle on a single recording error
-            # Just log it and continue to the next note
             self.current_level = 0.0
+
+    def _do_record_multi(self, frames, channels, dtype):
+        """Record from multiple devices simultaneously using InputStream per device."""
+        buffers = {}
+        streams = {}
+
+        for dev_idx in self.device_indices:
+            buffers[dev_idx] = []
+
+        def make_callback(dev_idx):
+            def callback(indata, frame_count, time_info, status):
+                buffers[dev_idx].append(indata.copy())
+                # Update per-device level
+                if self.bit_depth == 24:
+                    rms = np.sqrt(np.mean(indata.astype(np.float64)**2))
+                else:
+                    rms = np.sqrt(np.mean((indata.astype(np.float64) / 32768.0)**2))
+                self.current_levels[dev_idx] = min(1.0, rms * 3)
+            return callback
+
+        try:
+            # Open streams
+            for dev_idx in self.device_indices:
+                try:
+                    stream = sd.InputStream(
+                        device=dev_idx,
+                        samplerate=self.sample_rate,
+                        channels=channels,
+                        dtype=dtype,
+                        callback=make_callback(dev_idx)
+                    )
+                    streams[dev_idx] = stream
+                except Exception as e:
+                    print(f"Warning: Could not open device {dev_idx}: {e}")
+
+            if not streams:
+                print("No devices could be opened for multi-mic recording")
+                return
+
+            # Start all streams
+            for stream in streams.values():
+                stream.start()
+
+            # Wait for recording duration
+            start_time = time.time()
+            while time.time() - start_time < self.record_seconds:
+                if not self.is_running:
+                    break
+                # Primary level = first active device
+                primary = next(iter(streams))
+                self.current_level = self.current_levels.get(primary, 0.0)
+                self._notify()
+                time.sleep(0.05)
+
+            # Stop all streams
+            for stream in streams.values():
+                try:
+                    stream.stop()
+                    stream.close()
+                except:
+                    pass
+
+            if not self.is_running:
+                return
+
+            # Save per device
+            for dev_idx in streams:
+                try:
+                    if not buffers[dev_idx]:
+                        continue
+                    audio_data = np.concatenate(buffers[dev_idx], axis=0)
+                    # Trim or pad to exact frame count
+                    if len(audio_data) > frames:
+                        audio_data = audio_data[:frames]
+                    elif len(audio_data) < frames:
+                        pad_shape = (frames - len(audio_data),) + audio_data.shape[1:]
+                        audio_data = np.concatenate([audio_data, np.zeros(pad_shape, dtype=audio_data.dtype)])
+                    sub = self.device_names.get(dev_idx, f"Mic_{dev_idx}")
+                    self._save_mp3(audio_data, subdirectory=sub)
+                except Exception as e:
+                    print(f"Save error for device {dev_idx}: {e}")
+
+            self.current_level = 0.0
+            self.current_levels.clear()
+
+        except Exception as e:
+            print(f"Multi-recording error: {e}")
+            self.current_level = 0.0
+            for stream in streams.values():
+                try:
+                    stream.stop()
+                    stream.close()
+                except:
+                    pass
     
-    def _save_mp3(self, audio_data):
+    def _save_mp3(self, audio_data, subdirectory=None):
         """Save recorded audio as MP3 with GrandOrgue-compatible naming."""
         path = self.get_current_register_path()
+        if subdirectory:
+            path = os.path.join(path, subdirectory)
+            os.makedirs(path, exist_ok=True)
         filename = midi_to_filename(self.current_note)
         wav_path = os.path.join(path, filename + ".wav")
         mp3_path = os.path.join(path, filename + ".mp3")
@@ -305,6 +474,7 @@ class RecorderEngine:
         self.is_running = False
         self.state = "idle"
         self.current_level = 0.0
+        self.current_levels.clear()
         try:
             sd.stop()
         except:
@@ -340,13 +510,19 @@ class RecorderEngine:
             self.current_note = midi_num
             self._notify()
     
-    def new_register(self, register_name):
+    def new_register(self, register_name, tremulant=False):
         """Start a new register."""
         self.stop()
         self.register_name = register_name
+        self.tremulant = tremulant
         self.current_note = self.start_note
         path = self.get_current_register_path()
         os.makedirs(path, exist_ok=True)
+        # Create multi-mic subdirs if applicable
+        if len(self.device_indices) > 1:
+            for idx in self.device_indices:
+                sub = self.device_names.get(idx, f"Mic_{idx}")
+                os.makedirs(os.path.join(path, sub), exist_ok=True)
         self._notify()
         return path
     
@@ -358,10 +534,15 @@ class RecorderEngine:
                 'project': self.project_name,
                 'register': self.register_name,
                 'output_dir': self.output_dir,
+                'keyboards': self.keyboards,
+                'has_pedal': self.has_pedal,
+                'current_keyboard': self.current_keyboard,
+                'tremulant': self.tremulant,
                 'countdown': self.countdown_value,
                 'note': self.get_notes_info(),
                 'progress': self.get_progress(),
                 'level': self.current_level,
+                'levels': dict(self.current_levels),
                 'settings': {
                     'sample_rate': self.sample_rate,
                     'bit_depth': self.bit_depth,
@@ -371,7 +552,9 @@ class RecorderEngine:
                     'record_seconds': self.record_seconds,
                     'start_note': self.start_note,
                     'end_note': self.end_note,
-                    'device_index': self.device_index
+                    'device_index': self.device_index,
+                    'device_indices': list(self.device_indices),
+                    'device_names': dict(self.device_names),
                 }
             }
     
@@ -435,7 +618,44 @@ def create_web_app(engine: RecorderEngine):
             )
             return jsonify({'success': True, 'path': path})
         return jsonify({'success': False, 'error': 'Missing project or register name'})
-    
+
+    @app.route('/api/setup-organ', methods=['POST'])
+    def api_setup_organ():
+        data = request.json
+        organ = data.get('organ', '').strip()
+        keyboards = data.get('keyboards', [])
+        has_pedal = data.get('has_pedal', False)
+        output_dir = data.get('output_dir')
+        if not organ:
+            return jsonify({'success': False, 'error': 'Missing organ name'})
+        if not keyboards and not has_pedal:
+            return jsonify({'success': False, 'error': 'Need at least one keyboard or pedal'})
+        path = engine.setup_organ(organ, keyboards, has_pedal, output_dir)
+        return jsonify({'success': True, 'path': path})
+
+    @app.route('/api/select-keyboard', methods=['POST'])
+    def api_select_keyboard():
+        data = request.json
+        kb = data.get('keyboard', '').strip()
+        available = list(engine.keyboards)
+        if engine.has_pedal:
+            available.append('Pedaal')
+        if kb not in available:
+            return jsonify({'success': False, 'error': f'Unknown keyboard: {kb}'})
+        engine.current_keyboard = kb
+        engine._notify()
+        return jsonify({'success': True, 'current_keyboard': kb})
+
+    @app.route('/api/format-register', methods=['POST'])
+    def api_format_register():
+        data = request.json
+        name = data.get('name', '')
+        tremulant = data.get('tremulant', False)
+        formatted = format_register_name(name)
+        if tremulant and formatted and not formatted.endswith('_trem'):
+            formatted += '_trem'
+        return jsonify({'formatted': formatted})
+
     @app.route('/api/settings', methods=['POST'])
     def api_settings():
         data = request.json
@@ -458,7 +678,12 @@ def create_web_app(engine: RecorderEngine):
             engine.end_note = int(data['end_note'])
             engine.current_note = min(engine.current_note, engine.end_note)
         if 'device_index' in data:
-            engine.device_index = int(data['device_index']) if data['device_index'] is not None else None
+            val = data['device_index']
+            engine.device_indices = [int(val)] if val is not None else []
+        if 'device_indices' in data:
+            engine.device_indices = [int(i) for i in data['device_indices']] if data['device_indices'] else []
+        if 'device_names' in data:
+            engine.device_names = {int(k): v for k, v in data['device_names'].items()}
         return jsonify({'success': True, 'state': engine.get_state()})
     
     @app.route('/api/record', methods=['POST'])
@@ -509,8 +734,10 @@ def create_web_app(engine: RecorderEngine):
     def api_new_register():
         data = request.json
         if 'name' in data:
-            path = engine.new_register(data['name'])
-            return jsonify({'success': True, 'path': path})
+            name = format_register_name(data['name'])
+            tremulant = data.get('tremulant', False)
+            path = engine.new_register(name, tremulant=tremulant)
+            return jsonify({'success': True, 'path': path, 'formatted_name': name})
         return jsonify({'success': False, 'error': 'Missing register name'})
 
     @app.route('/api/qr.svg')
@@ -1009,12 +1236,79 @@ body {
     grid-template-columns: 1fr 1fr 1fr;
     gap: 8px;
 }
+.d-checkbox-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0;
+}
+.d-checkbox-row input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+}
+.d-checkbox-row label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text);
+    flex: 1;
+}
+.d-checkbox-row .d-mic-name {
+    width: 90px;
+    padding: 4px 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    outline: none;
+}
+.d-checkbox-row .d-mic-name:focus { border-color: var(--accent); }
+.d-preview {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent);
+    background: var(--bg);
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    margin-top: 4px;
+}
+.d-kbd-inputs { display: flex; flex-direction: column; gap: 4px; margin: 6px 0; }
+.d-kbd-row { display: flex; gap: 6px; align-items: center; }
+.d-kbd-row input { flex: 1; }
+.d-kbd-row .d-kbd-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--dim);
+    min-width: 16px;
+}
+.d-kb-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 6px 0;
+}
+.d-kb-btn {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--dim);
+    cursor: pointer;
+    transition: all 0.15s;
+}
+.d-kb-btn:hover { border-color: var(--accent); color: var(--accent); }
+.d-kb-btn.active { background: var(--accent); color: var(--bg); border-color: var(--accent); }
 </style>
 </head>
 <body>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v1.0</span></div>
+    <div class="logo">JM-Rec <span>v1.1</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -1080,30 +1374,54 @@ body {
         </div>
 
         <div class="drawer-section">
-            <div class="drawer-section-title">Project</div>
+            <div class="drawer-section-title">Orgel instellen</div>
             <div class="d-form-group">
-                <label class="d-form-label">Projectnaam</label>
-                <input class="d-form-input" id="dProject" placeholder="bijv. Sint-Bavokerk">
-            </div>
-            <div class="d-form-group">
-                <label class="d-form-label">Registernaam</label>
-                <input class="d-form-input" id="dRegister" placeholder="bijv. Prestant_8">
+                <label class="d-form-label">Orgelnaam</label>
+                <input class="d-form-input" id="dOrganName" placeholder="bijv. Sint-Bavokerk">
             </div>
             <div class="d-form-group">
                 <label class="d-form-label">Opslaglocatie</label>
                 <input class="d-form-input" id="dOutputDir" placeholder="C:\Users\...\JM-Rec">
             </div>
-            <button class="d-btn d-btn-primary" onclick="dSetupProject()" style="margin-top:4px;">Map aanmaken &amp; instellen</button>
+            <div class="d-form-group">
+                <label class="d-form-label">Aantal klavieren</label>
+                <input class="d-form-input" type="number" id="dKbCount" value="2" min="1" max="5" onchange="dUpdateKbInputs()">
+            </div>
+            <div class="d-kbd-inputs" id="dKbInputs"></div>
+            <div class="d-checkbox-row">
+                <input type="checkbox" id="dHasPedal" checked>
+                <label for="dHasPedal">Pedaal</label>
+            </div>
+            <button class="d-btn d-btn-primary" onclick="dSetupOrgan()" style="margin-top:6px;">Orgel instellen</button>
+        </div>
+
+        <div class="drawer-section" id="dKbSection" style="display:none;">
+            <div class="drawer-section-title">Klavier / Pedaal</div>
+            <div class="d-kb-selector" id="dKbSelector"></div>
+        </div>
+
+        <div class="drawer-section" id="dRegSection" style="display:none;">
+            <div class="drawer-section-title">Register</div>
+            <div class="d-form-group">
+                <label class="d-form-label">Registernaam</label>
+                <input class="d-form-input" id="dRegName" placeholder="bijv. Holpijp 8 voet" oninput="dUpdateRegPreview()">
+            </div>
+            <div class="d-checkbox-row">
+                <input type="checkbox" id="dTremulant" onchange="dUpdateRegPreview()">
+                <label for="dTremulant">Tremulant</label>
+            </div>
+            <div class="d-preview" id="dRegPreview">Mapnaam: —</div>
+            <button class="d-btn d-btn-primary" onclick="dNewRegister()" style="margin-top:6px;">Register opnemen</button>
+        </div>
+
+        <div class="drawer-section">
+            <div class="drawer-section-title">Microfoons</div>
+            <div id="dMicList">Laden...</div>
+            <button class="d-btn" onclick="dApplyMics()" style="margin-top:6px;">Microfoons toepassen</button>
         </div>
 
         <div class="drawer-section">
             <div class="drawer-section-title">Audio</div>
-            <div class="d-form-group">
-                <label class="d-form-label">Microfoon</label>
-                <select class="d-form-select" id="dDevice">
-                    <option value="">Standaard</option>
-                </select>
-            </div>
             <div class="d-form-row">
                 <div class="d-form-group">
                     <label class="d-form-label">Samplerate</label>
@@ -1166,14 +1484,6 @@ body {
             <button class="d-btn d-btn-primary" onclick="dApplySettings()" style="margin-top:8px;">Instellingen toepassen</button>
         </div>
 
-        <div class="drawer-section">
-            <div class="drawer-section-title">Nieuw register</div>
-            <div class="d-form-group">
-                <label class="d-form-label">Registernaam</label>
-                <input class="d-form-input" id="dNewRegister" placeholder="bijv. Fluit_4">
-            </div>
-            <button class="d-btn" onclick="dNewRegister()">Nieuw register starten</button>
-        </div>
 
     </div>
 </div>
@@ -1228,7 +1538,8 @@ body {
 
         <h2>Mapstructuur</h2>
         <div class="tip-box">
-            <code>Opslaglocatie / Projectnaam / Registernaam / 036-c.mp3</code>
+            <code>Opslaglocatie / Orgel / Klavier / Register / 036-c.mp3</code><br>
+            Bij multi-mic: <code>... / Register / Positie / 036-c.mp3</code>
         </div>
 
         <h2>Instelbare parameters</h2>
@@ -1267,7 +1578,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v1.0</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v1.1</p>
     </div>
 </div>
 
@@ -1309,13 +1620,117 @@ async function dApi(url, data) {
     } catch(e) { console.error(e); }
 }
 
-async function dSetupProject() {
+// ── Keyboard inputs ──
+function dUpdateKbInputs() {
+    const n = parseInt(document.getElementById('dKbCount').value) || 2;
+    const c = document.getElementById('dKbInputs');
+    const defaults = ['Hoofdwerk','Zwelwerk','Borstwerk','Rugwerk','Bovenwerk'];
+    c.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+        c.innerHTML += '<div class="d-kbd-row"><span class="d-kbd-num">' + (i+1) + '.</span>' +
+            '<input class="d-form-input" id="dKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (defaults[i]||'') + '"></div>';
+    }
+}
+dUpdateKbInputs();
+
+// ── Organ setup ──
+async function dSetupOrgan() {
+    const n = parseInt(document.getElementById('dKbCount').value) || 2;
+    const keyboards = [];
+    for (let i = 0; i < n; i++) {
+        const v = document.getElementById('dKb' + i).value.trim();
+        if (v) keyboards.push(v);
+    }
     const data = {
-        project: document.getElementById('dProject').value,
-        register: document.getElementById('dRegister').value,
+        organ: document.getElementById('dOrganName').value,
+        keyboards: keyboards,
+        has_pedal: document.getElementById('dHasPedal').checked,
         output_dir: document.getElementById('dOutputDir').value || undefined
     };
-    await dApi('/api/setup', data);
+    await dApi('/api/setup-organ', data);
+}
+
+// ── Keyboard selector ──
+function dBuildKbSelector(keyboards, hasPedal, current) {
+    const c = document.getElementById('dKbSelector');
+    const sec = document.getElementById('dKbSection');
+    const all = [...keyboards];
+    if (hasPedal) all.push('Pedaal');
+    if (all.length === 0) { sec.style.display = 'none'; return; }
+    sec.style.display = '';
+    c.innerHTML = '';
+    all.forEach(kb => {
+        const cls = kb === current ? 'd-kb-btn active' : 'd-kb-btn';
+        c.innerHTML += '<button class="' + cls + '" onclick="dSelectKb(\'' + kb.replace(/'/g,"\\'") + '\')">' + kb + '</button>';
+    });
+    // Show register section when organ is set up
+    document.getElementById('dRegSection').style.display = '';
+}
+async function dSelectKb(kb) {
+    await dApi('/api/select-keyboard', { keyboard: kb });
+}
+
+// ── Register preview ──
+async function dUpdateRegPreview() {
+    const name = document.getElementById('dRegName').value;
+    const trem = document.getElementById('dTremulant').checked;
+    const el = document.getElementById('dRegPreview');
+    if (!name.trim()) { el.textContent = 'Mapnaam: —'; return; }
+    try {
+        const res = await fetch('/api/format-register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name: name, tremulant: trem })
+        });
+        const data = await res.json();
+        el.textContent = 'Mapnaam: ' + data.formatted;
+    } catch(e) { el.textContent = 'Mapnaam: —'; }
+}
+
+async function dNewRegister() {
+    const name = document.getElementById('dRegName').value;
+    const trem = document.getElementById('dTremulant').checked;
+    if (name) await dApi('/api/new-register', { name: name, tremulant: trem });
+}
+
+// ── Microphone list ──
+let _deviceList = [];
+async function dLoadDevices() {
+    try {
+        const res = await fetch('/api/devices');
+        _deviceList = await res.json();
+        dRenderMicList();
+    } catch(e) {}
+}
+function dRenderMicList(activeIndices, activeNames) {
+    const c = document.getElementById('dMicList');
+    if (!_deviceList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.75rem;">Geen apparaten gevonden</span>'; return; }
+    activeIndices = activeIndices || [];
+    activeNames = activeNames || {};
+    let html = '';
+    _deviceList.forEach(d => {
+        const checked = activeIndices.includes(d.index) ? ' checked' : '';
+        const posName = activeNames[d.index] || d.safe_name || '';
+        html += '<div class="d-checkbox-row">' +
+            '<input type="checkbox" id="dMic' + d.index + '" data-idx="' + d.index + '"' + checked + '>' +
+            '<label for="dMic' + d.index + '">' + d.name + '</label>' +
+            '<input class="d-mic-name" id="dMicN' + d.index + '" placeholder="Positie" value="' + posName + '">' +
+            '</div>';
+    });
+    c.innerHTML = html;
+}
+async function dApplyMics() {
+    const indices = [];
+    const names = {};
+    _deviceList.forEach(d => {
+        const cb = document.getElementById('dMic' + d.index);
+        if (cb && cb.checked) {
+            indices.push(d.index);
+            const n = document.getElementById('dMicN' + d.index);
+            if (n && n.value.trim()) names[d.index] = n.value.trim();
+        }
+    });
+    await dApi('/api/settings', { device_indices: indices, device_names: names });
 }
 
 async function dApplySettings() {
@@ -1327,39 +1742,22 @@ async function dApplySettings() {
         countdown_seconds: parseInt(document.getElementById('dCountdown').value),
         record_seconds: parseInt(document.getElementById('dRecordDur').value),
         start_note: parseInt(document.getElementById('dStartNote').value),
-        end_note: parseInt(document.getElementById('dEndNote').value),
-        device_index: document.getElementById('dDevice').value || null
+        end_note: parseInt(document.getElementById('dEndNote').value)
     };
     await dApi('/api/settings', data);
 }
 
-async function dNewRegister() {
-    const name = document.getElementById('dNewRegister').value;
-    if (name) await dApi('/api/new-register', { name });
-}
-
-async function dLoadDevices() {
-    try {
-        const res = await fetch('/api/devices');
-        const devices = await res.json();
-        const sel = document.getElementById('dDevice');
-        sel.innerHTML = '<option value="">Standaard</option>';
-        devices.forEach(d => {
-            sel.innerHTML += '<option value="' + d.index + '">' + d.name + ' (' + d.channels + 'ch)</option>';
-        });
-    } catch(e) {}
-}
-
-// Sync drawer form fields from state
+// ── Sync drawer from state ──
 let _drawerSynced = false;
 function syncDrawer(state) {
     if (!_drawerSynced && state.project) {
-        document.getElementById('dProject').value = state.project;
-        document.getElementById('dRegister').value = state.register;
+        document.getElementById('dOrganName').value = state.project;
         document.getElementById('dOutputDir').value = state.output_dir;
         _drawerSynced = true;
     }
-    // Always sync current settings values (in case changed from remote)
+    // Keyboard selector
+    dBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
+    // Settings
     const s = state.settings;
     document.getElementById('dSampleRate').value = s.sample_rate;
     document.getElementById('dBitDepth').value = s.bit_depth;
@@ -1369,6 +1767,8 @@ function syncDrawer(state) {
     document.getElementById('dRecordDur').value = s.record_seconds;
     document.getElementById('dStartNote').value = s.start_note;
     document.getElementById('dEndNote').value = s.end_note;
+    // Mic list sync
+    if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
 }
 
 dLoadDevices();
@@ -1396,24 +1796,35 @@ function updateUI(state) {
         cd.style.opacity = '0';
     }
     
-    // VU meter
-    document.getElementById('vuBar').style.width = (state.level * 100) + '%';
+    // VU meter (max across all mics)
+    let vuLevel = state.level || 0;
+    if (state.levels) {
+        const vals = Object.values(state.levels);
+        if (vals.length) vuLevel = Math.max(...vals);
+    }
+    document.getElementById('vuBar').style.width = (vuLevel * 100) + '%';
     
     // Progress
     document.getElementById('progressBar').style.width = (state.progress * 100) + '%';
     document.getElementById('progressText').textContent = 
         state.note.done + ' / ' + state.note.total + ' noten';
     
-    // Project info
-    document.getElementById('projectInfo').innerHTML = 
-        '<strong>' + (state.project || '—') + '</strong> / ' + (state.register || '—');
-    
+    // Project info: Orgel / Klavier / Register
+    const kb = state.current_keyboard || '';
+    const reg = state.register || '';
+    const trem = state.tremulant ? ' (trem)' : '';
+    document.getElementById('projectInfo').innerHTML =
+        '<strong>' + (state.project || '—') + '</strong>' +
+        (kb ? ' / ' + kb : '') +
+        (reg ? ' / ' + reg + trem : '');
+
     // Settings
     const s = state.settings;
-    document.getElementById('settingsInfo').textContent = 
-        s.sample_rate + 'Hz / ' + s.bit_depth + '-bit / ' + 
-        (s.channels === 1 ? 'Mono' : 'Stereo') + ' / MP3 ' + s.mp3_bitrate + 'kbps';
-    
+    const micCount = (s.device_indices && s.device_indices.length > 1) ? ' / ' + s.device_indices.length + ' mics' : '';
+    document.getElementById('settingsInfo').textContent =
+        s.sample_rate + 'Hz / ' + s.bit_depth + '-bit / ' +
+        (s.channels === 1 ? 'Mono' : 'Stereo') + ' / MP3 ' + s.mp3_bitrate + 'kbps' + micCount;
+
     document.getElementById('registerInfo').textContent = state.output_dir;
 }
 
@@ -1782,32 +2193,47 @@ body {
 <!-- SETUP TAB -->
 <div class="tab-content" id="tab-setup">
     <div class="section">
-        <div class="section-title">Project instellen</div>
+        <div class="section-title">Orgel instellen</div>
         <div class="form-group">
-            <label class="form-label">Projectnaam (hoofdmap)</label>
-            <input class="form-input" id="fProject" placeholder="bijv. Sint-Bavokerk">
-        </div>
-        <div class="form-group">
-            <label class="form-label">Registernaam (submap)</label>
-            <input class="form-input" id="fRegister" placeholder="bijv. Prestant_8">
+            <label class="form-label">Orgelnaam</label>
+            <input class="form-input" id="fOrganName" placeholder="bijv. Sint-Bavokerk">
         </div>
         <div class="form-group">
             <label class="form-label">Opslaglocatie</label>
             <input class="form-input" id="fOutputDir" placeholder="C:\Users\...\JM-Rec">
         </div>
-        <button class="btn btn-primary" onclick="setupProject()" style="width:100%;margin-top:8px;">
-            Map aanmaken & instellen
+        <div class="form-group">
+            <label class="form-label">Aantal klavieren</label>
+            <input class="form-input" type="number" id="fKbCount" value="2" min="1" max="5" onchange="fUpdateKbInputs()">
+        </div>
+        <div id="fKbInputs" style="display:flex;flex-direction:column;gap:6px;margin:6px 0;"></div>
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="checkbox" id="fHasPedal" checked style="accent-color:var(--accent);width:18px;height:18px;">
+            <label for="fHasPedal" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text);">Pedaal</label>
+        </div>
+        <button class="btn btn-primary" onclick="fSetupOrgan()" style="width:100%;margin-top:8px;">
+            Orgel instellen
         </button>
     </div>
-    
-    <div class="section">
-        <div class="section-title">Nieuw register starten</div>
+
+    <div class="section" id="fKbSection" style="display:none;">
+        <div class="section-title">Klavier / Pedaal selecteren</div>
+        <div id="fKbSelector" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+
+    <div class="section" id="fRegSection" style="display:none;">
+        <div class="section-title">Register</div>
         <div class="form-group">
-            <label class="form-label">Nieuwe registernaam</label>
-            <input class="form-input" id="fNewRegister" placeholder="bijv. Fluit_4">
+            <label class="form-label">Registernaam</label>
+            <input class="form-input" id="fRegName" placeholder="bijv. Holpijp 8 voet" oninput="fUpdateRegPreview()">
         </div>
-        <button class="btn" onclick="newRegister()" style="width:100%;">
-            Nieuw register starten
+        <div style="display:flex;align-items:center;gap:8px;margin:6px 0;">
+            <input type="checkbox" id="fTremulant" onchange="fUpdateRegPreview()" style="accent-color:var(--accent);width:18px;height:18px;">
+            <label for="fTremulant" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--text);">Tremulant</label>
+        </div>
+        <div id="fRegPreview" style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);background:var(--surface);padding:6px 12px;border-radius:8px;border:1px solid var(--border);margin:4px 0;">Mapnaam: —</div>
+        <button class="btn btn-primary" onclick="fNewRegister()" style="width:100%;margin-top:8px;">
+            Register opnemen
         </button>
     </div>
 </div>
@@ -1815,13 +2241,12 @@ body {
 <!-- SETTINGS TAB -->
 <div class="tab-content" id="tab-settings">
     <div class="section">
+        <div class="section-title">Microfoons</div>
+        <div id="fMicList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
+        <button class="btn" onclick="fApplyMics()" style="width:100%;margin-top:8px;">Microfoons toepassen</button>
+    </div>
+    <div class="section">
         <div class="section-title">Audio-instellingen</div>
-        <div class="form-group">
-            <label class="form-label">Microfoon</label>
-            <select class="form-select" id="fDevice">
-                <option value="">Laden...</option>
-            </select>
-        </div>
         <div class="form-row">
             <div class="form-group">
                 <label class="form-label">Samplerate</label>
@@ -1924,26 +2349,120 @@ async function apiCall(url, data) {
     }
 }
 
-// Setup project
-async function setupProject() {
-    const data = {
-        project: document.getElementById('fProject').value,
-        register: document.getElementById('fRegister').value,
+// ── Keyboard inputs ──
+const KB_DEFAULTS = ['Hoofdwerk','Zwelwerk','Borstwerk','Rugwerk','Bovenwerk'];
+function fUpdateKbInputs() {
+    const n = parseInt(document.getElementById('fKbCount').value) || 2;
+    const c = document.getElementById('fKbInputs');
+    c.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+        c.innerHTML += '<div style="display:flex;gap:6px;align-items:center;">' +
+            '<span style="font-family:JetBrains Mono,monospace;font-size:0.7rem;color:var(--dim);min-width:16px;">' + (i+1) + '.</span>' +
+            '<input class="form-input" id="fKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (KB_DEFAULTS[i]||'') + '" style="padding:8px 10px;font-size:0.8rem;"></div>';
+    }
+}
+fUpdateKbInputs();
+
+// ── Organ setup ──
+async function fSetupOrgan() {
+    const n = parseInt(document.getElementById('fKbCount').value) || 2;
+    const keyboards = [];
+    for (let i = 0; i < n; i++) {
+        const v = document.getElementById('fKb' + i).value.trim();
+        if (v) keyboards.push(v);
+    }
+    const res = await apiCall('/api/setup-organ', {
+        organ: document.getElementById('fOrganName').value,
+        keyboards: keyboards,
+        has_pedal: document.getElementById('fHasPedal').checked,
         output_dir: document.getElementById('fOutputDir').value || undefined
-    };
-    const res = await apiCall('/api/setup', data);
-    if (res && res.success) {
+    });
+    if (res && res.success) switchTab('control');
+}
+
+// ── Keyboard selector ──
+function fBuildKbSelector(keyboards, hasPedal, current) {
+    const c = document.getElementById('fKbSelector');
+    const sec = document.getElementById('fKbSection');
+    const all = [...keyboards];
+    if (hasPedal) all.push('Pedaal');
+    if (all.length === 0) { sec.style.display = 'none'; return; }
+    sec.style.display = '';
+    c.innerHTML = '';
+    all.forEach(kb => {
+        const cls = kb === current ? 'btn btn-primary' : 'btn';
+        c.innerHTML += '<button class="' + cls + '" style="padding:10px 16px;font-size:0.8rem;" onclick="fSelectKb(\'' + kb.replace(/'/g,"\\'") + '\')">' + kb + '</button>';
+    });
+    document.getElementById('fRegSection').style.display = '';
+}
+async function fSelectKb(kb) {
+    await apiCall('/api/select-keyboard', { keyboard: kb });
+}
+
+// ── Register preview ──
+async function fUpdateRegPreview() {
+    const name = document.getElementById('fRegName').value;
+    const trem = document.getElementById('fTremulant').checked;
+    const el = document.getElementById('fRegPreview');
+    if (!name.trim()) { el.textContent = 'Mapnaam: \u2014'; return; }
+    try {
+        const res = await fetch('/api/format-register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name: name, tremulant: trem })
+        });
+        const data = await res.json();
+        el.textContent = 'Mapnaam: ' + data.formatted;
+    } catch(e) { el.textContent = 'Mapnaam: \u2014'; }
+}
+
+async function fNewRegister() {
+    const name = document.getElementById('fRegName').value;
+    const trem = document.getElementById('fTremulant').checked;
+    if (name) {
+        await apiCall('/api/new-register', { name: name, tremulant: trem });
         switchTab('control');
     }
 }
 
-// New register
-async function newRegister() {
-    const name = document.getElementById('fNewRegister').value;
-    if (name) {
-        await apiCall('/api/new-register', { name });
-        switchTab('control');
-    }
+// ── Microphone list ──
+let _rDeviceList = [];
+async function loadDevices() {
+    try {
+        const res = await fetch('/api/devices');
+        _rDeviceList = await res.json();
+        fRenderMicList();
+    } catch(e) {}
+}
+function fRenderMicList(activeIndices, activeNames) {
+    const c = document.getElementById('fMicList');
+    if (!_rDeviceList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.8rem;">Geen apparaten gevonden</span>'; return; }
+    activeIndices = activeIndices || [];
+    activeNames = activeNames || {};
+    let html = '';
+    _rDeviceList.forEach(d => {
+        const checked = activeIndices.includes(d.index) ? ' checked' : '';
+        const posName = activeNames[d.index] || d.safe_name || '';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
+            '<input type="checkbox" id="fMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' style="accent-color:var(--accent);width:16px;height:16px;">' +
+            '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + d.name + '</label>' +
+            '<input id="fMicN' + d.index + '" placeholder="Positie" value="' + posName + '" style="width:80px;padding:4px 8px;font-family:JetBrains Mono,monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;">' +
+            '</div>';
+    });
+    c.innerHTML = html;
+}
+async function fApplyMics() {
+    const indices = [];
+    const names = {};
+    _rDeviceList.forEach(d => {
+        const cb = document.getElementById('fMic' + d.index);
+        if (cb && cb.checked) {
+            indices.push(d.index);
+            const n = document.getElementById('fMicN' + d.index);
+            if (n && n.value.trim()) names[d.index] = n.value.trim();
+        }
+    });
+    await apiCall('/api/settings', { device_indices: indices, device_names: names });
 }
 
 // Apply settings
@@ -1956,23 +2475,9 @@ async function applySettings() {
         countdown_seconds: parseInt(document.getElementById('fCountdown').value),
         record_seconds: parseInt(document.getElementById('fRecordDur').value),
         start_note: parseInt(document.getElementById('fStartNote').value),
-        end_note: parseInt(document.getElementById('fEndNote').value),
-        device_index: document.getElementById('fDevice').value || null
+        end_note: parseInt(document.getElementById('fEndNote').value)
     };
     await apiCall('/api/settings', data);
-}
-
-// Load devices
-async function loadDevices() {
-    try {
-        const res = await fetch('/api/devices');
-        const devices = await res.json();
-        const sel = document.getElementById('fDevice');
-        sel.innerHTML = '<option value="">Standaard</option>';
-        devices.forEach(d => {
-            sel.innerHTML += `<option value="${d.index}">${d.name} (${d.channels}ch)</option>`;
-        });
-    } catch(e) {}
 }
 
 // Note label updates
@@ -2005,27 +2510,40 @@ function updateRemote(state) {
     const cd = document.getElementById('rCountdown');
     cd.textContent = state.state === 'countdown' && state.countdown > 0 ? state.countdown : '';
     
-    // VU
-    document.getElementById('rVuBar').style.width = (state.level * 100) + '%';
-    
+    // VU (max across all mics)
+    let vuLevel = state.level || 0;
+    if (state.levels) {
+        const vals = Object.values(state.levels);
+        if (vals.length) vuLevel = Math.max(...vals);
+    }
+    document.getElementById('rVuBar').style.width = (vuLevel * 100) + '%';
+
     // Progress
     document.getElementById('rProgress').style.width = (state.progress * 100) + '%';
     document.getElementById('rProgressLabel').textContent = state.note.done + '/' + state.note.total;
-    
+
+    // Keyboard selector
+    fBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
+
     // Sync settings to form (initial load)
     if (!window._settingsSynced && state.project) {
-        document.getElementById('fProject').value = state.project;
-        document.getElementById('fRegister').value = state.register;
+        document.getElementById('fOrganName').value = state.project;
         document.getElementById('fOutputDir').value = state.output_dir;
-        document.getElementById('fSampleRate').value = state.settings.sample_rate;
-        document.getElementById('fBitDepth').value = state.settings.bit_depth;
-        document.getElementById('fChannels').value = state.settings.channels;
-        document.getElementById('fBitrate').value = state.settings.mp3_bitrate;
-        document.getElementById('fCountdown').value = state.settings.countdown_seconds;
-        document.getElementById('fRecordDur').value = state.settings.record_seconds;
-        document.getElementById('fStartNote').value = state.settings.start_note;
-        document.getElementById('fEndNote').value = state.settings.end_note;
+        const s = state.settings;
+        document.getElementById('fSampleRate').value = s.sample_rate;
+        document.getElementById('fBitDepth').value = s.bit_depth;
+        document.getElementById('fChannels').value = s.channels;
+        document.getElementById('fBitrate').value = s.mp3_bitrate;
+        document.getElementById('fCountdown').value = s.countdown_seconds;
+        document.getElementById('fRecordDur').value = s.record_seconds;
+        document.getElementById('fStartNote').value = s.start_note;
+        document.getElementById('fEndNote').value = s.end_note;
         window._settingsSynced = true;
+    }
+    // Mic list sync
+    if (_rDeviceList.length) {
+        const s = state.settings;
+        fRenderMicList(s.device_indices || [], s.device_names || {});
     }
 }
 

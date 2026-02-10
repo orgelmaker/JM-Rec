@@ -42,7 +42,10 @@
       "Bash(\"C:\\\\Users\\\\orgel\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\":*)",
       "Bash(\"C:\\\\Users\\\\orgel\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" -c:*)",
       "Bash(tasklist:*)",
-      "Bash(start \"\" \"C:\\\\Bronbestanden\\\\JM-Rec\\\\dist\\\\JM-Rec.exe\" --port 5560)"
+      "Bash(start \"\" \"C:\\\\Bronbestanden\\\\JM-Rec\\\\dist\\\\JM-Rec.exe\" --port 5560)",
+      "Bash(ping:*)",
+      "Bash(\"C:\\\\Users\\\\orgel\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" -c \"import sounddevice; import flask; print\\(''All imports OK''\\)\")",
+      "Bash(\"C:\\\\Users\\\\orgel\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python314\\\\python.exe\" \"C:\\\\Bronbestanden\\\\JM-Rec\\\\jm_rec.py\" --port 5556)"
     ]
   }
 }
