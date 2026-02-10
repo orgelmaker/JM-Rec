@@ -30,7 +30,7 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 
 ### Standalone (aanbevolen)
 
-Download **`JM-Rec-Setup.exe`** van de [Releases](../../releases) pagina en voer de installer uit. Geen Python of andere software vereist.
+Download **`JM-Rec-Setup.exe`** van deze link (https://github.com/orgelmaker/JM-Rec/blob/main/output/JM-Rec-Setup.exe) en voer de installer uit. Geen Python of andere software vereist.
 
 > Bij opnieuw uitvoeren van de setup kun je kiezen tussen **Repareren** of **Verwijderen**.
 
