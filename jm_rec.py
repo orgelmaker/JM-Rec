@@ -1407,7 +1407,7 @@ body {
 <body>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v1.1</span></div>
+    <div class="logo">JM-Rec <span>v3.0</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -1687,7 +1687,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v1.1</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.0</p>
     </div>
 </div>
 

@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.1-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.0-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-GrandOrgue%20%7C%20Hauptwerk-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v1.1 — Organ Sample Recorder
+# JM-Rec v3.0 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met GrandOrgue/Hauptwerk-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.0
+- **"Wat je hoort" opnamemodus** — neem systeemaudio op via WASAPI loopback in plaats van (of naast) een microfoon. Ideaal voor het samplen vanuit Hauptwerk, GrandOrgue of andere software direct op dezelfde PC.
 
 ---
 
@@ -19,6 +22,7 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 - **Orgelstructuur** — stel klavieren, pedaal en registers in per orgel
 - **Registernaam-automatisering** — "Holpijp 8 voet" wordt automatisch `Holpijp_8`, "Mixtuur 4 sterk" wordt `Mixtuur_4st`
 - **Tremulant** — registermappen krijgen automatisch `_trem` suffix
+- **"Wat je hoort"** — neem systeemaudio op via WASAPI loopback, direct vanuit Hauptwerk/GrandOrgue op dezelfde PC
 - **Multi-microfoon** — neem gelijktijdig op met meerdere microfoons (front, midden, rear) in aparte submappen
 - **Automatische noot-doorloop** — telt af, neemt op, gaat door naar de volgende noot
 - **Draadloze afstandsbediening** — bedien de opname vanaf je telefoon, tablet of tweede PC
@@ -84,7 +88,7 @@ Werkt op elk apparaat met een browser — telefoon, tablet of tweede PC.
 |---------|---------|
 | **Bediening** | Opnemen, Stop, Vorige, Opnieuw, Volgende |
 | **Project** | Orgel instellen, klavier selecteren, register starten (met tremulant) |
-| **Instellingen** | Microfoons (multi-mic), samplerate, bitdiepte, opnameduur, nootbereik |
+| **Instellingen** | Invoermodus (Microfoon / Wat je hoort), microfoons (multi-mic), samplerate, bitdiepte, opnameduur, nootbereik |
 
 ---
 
@@ -189,20 +193,20 @@ JM-Rec.exe [opties]
 | **Windows** | 10/11 (64-bit) | 10/11 (64-bit) |
 | **Python** | Niet nodig | 3.10+ |
 | **MP3-encoder** | Ingebouwd | LAME of FFmpeg |
+| **soundcard** | Ingebouwd | `pip install soundcard` (optioneel, voor "Wat je hoort") |
 | **Netwerk** | WiFi voor remote | WiFi voor remote |
 
 ---
 
 ## Zelf bouwen
 
+Zie **[BUILD.md](BUILD.md)** voor volledige build-instructies (venv, PyInstaller, Inno Setup).
+
+Snelstart:
 ```bash
-# Installeer dependencies
+python -m venv venv
+venv\Scripts\activate
 pip install -r requirements.txt
 pip install pyinstaller
-
-# Bouw standalone exe
-pyinstaller JM-Rec.spec --noconfirm --clean
-
-# Bouw installer (Inno Setup vereist)
-iscc setup/jm_rec_setup.iss
+setup\build.bat
 ```
