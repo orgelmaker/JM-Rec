@@ -3,6 +3,8 @@ from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports = ['qrcode.image.svg']
 hiddenimports += collect_submodules('qrcode')
+hiddenimports += collect_submodules('soundcard')
+hiddenimports += ['comtypes', 'comtypes.stream']
 
 
 a = Analysis(

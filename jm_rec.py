@@ -36,6 +36,12 @@ try:
 except ImportError:
     HAS_QRCODE = False
 
+try:
+    import soundcard as sc
+    HAS_SOUNDCARD = True
+except ImportError:
+    HAS_SOUNDCARD = False
+
 # ─────────────────────────────────────────────
 # Constants & Note Mapping
 # ─────────────────────────────────────────────
@@ -99,6 +105,10 @@ class RecorderEngine:
         self.device_indices = []   # list of device indices; empty = system default
         self.device_names = {}     # {index: position name} e.g. {0: "Front", 1: "Rear"}
 
+        # Loopback (system audio) settings
+        self.input_mode = "mic"        # "mic" or "loopback"
+        self.loopback_device_id = None # soundcard speaker ID
+
         # Orgel-structuur
         self.keyboards = []        # ["Hoofdwerk", "Zwelwerk", ...]
         self.has_pedal = False
@@ -150,6 +160,25 @@ class RecorderEngine:
                     'sample_rate': int(d['default_samplerate'])
                 })
         return input_devices
+
+    def get_loopback_devices(self):
+        """List available output devices for loopback ('what you hear') recording."""
+        if not HAS_SOUNDCARD:
+            return []
+        try:
+            speakers = sc.all_speakers()
+            default_id = sc.default_speaker().id
+            devices = []
+            for s in speakers:
+                devices.append({
+                    'id': s.id,
+                    'name': s.name,
+                    'is_default': s.id == default_id
+                })
+            return devices
+        except Exception as e:
+            print(f"Error listing loopback devices: {e}")
+            return []
 
     def setup_organ(self, organ_name, keyboards, has_pedal, output_dir=None):
         """Set up organ project: creates main folder + keyboard/pedal subfolders."""
@@ -276,6 +305,10 @@ class RecorderEngine:
     
     def _do_record(self):
         """Record audio from selected device(s)."""
+        if self.input_mode == "loopback":
+            self._do_record_loopback()
+            return
+
         frames = int(self.sample_rate * self.record_seconds)
         channels = self.channels
         dtype = 'float32' if self.bit_depth == 24 else 'int16'
@@ -321,6 +354,61 @@ class RecorderEngine:
 
         except Exception as e:
             print(f"Recording error: {e}")
+            self.current_level = 0.0
+
+    def _do_record_loopback(self):
+        """Record system audio ('what you hear') via WASAPI loopback."""
+        if not HAS_SOUNDCARD:
+            print("Loopback recording requires the 'soundcard' library")
+            return
+
+        frames = int(self.sample_rate * self.record_seconds)
+        channels = self.channels
+
+        try:
+            # Get the speaker to record from
+            if self.loopback_device_id:
+                speaker = sc.get_speaker(self.loopback_device_id)
+            else:
+                speaker = sc.default_speaker()
+
+            # Record in chunks for VU meter updates
+            chunk_size = int(self.sample_rate * 0.05)  # 50ms chunks
+            collected = []
+
+            with speaker.recorder(samplerate=self.sample_rate, channels=channels) as recorder:
+                start_time = time.time()
+                while time.time() - start_time < self.record_seconds:
+                    if not self.is_running:
+                        return
+
+                    data = recorder.record(numframes=chunk_size)
+                    collected.append(data)
+
+                    # Update VU meter
+                    rms = np.sqrt(np.mean(data.astype(np.float64)**2))
+                    self.current_level = min(1.0, rms * 3)
+                    self._notify()
+
+            audio_data = np.concatenate(collected, axis=0)
+
+            # Trim to exact length
+            if len(audio_data) > frames:
+                audio_data = audio_data[:frames]
+
+            # soundcard returns float64; convert to match expected format
+            if self.bit_depth == 24:
+                audio_data = audio_data.astype(np.float32)
+            else:
+                # Convert float64 to int16
+                audio_data = np.clip(audio_data, -1.0, 1.0)
+                audio_data = (audio_data * 32767).astype(np.int16)
+
+            self._save_mp3(audio_data)
+            self.current_level = 0.0
+
+        except Exception as e:
+            print(f"Loopback recording error: {e}")
             self.current_level = 0.0
 
     def _do_record_multi(self, frames, channels, dtype):
@@ -555,6 +643,9 @@ class RecorderEngine:
                     'device_index': self.device_index,
                     'device_indices': list(self.device_indices),
                     'device_names': dict(self.device_names),
+                    'input_mode': self.input_mode,
+                    'loopback_device_id': self.loopback_device_id,
+                    'has_soundcard': HAS_SOUNDCARD,
                 }
             }
     
@@ -606,7 +697,11 @@ def create_web_app(engine: RecorderEngine):
     @app.route('/api/devices')
     def api_devices():
         return jsonify(engine.get_devices())
-    
+
+    @app.route('/api/loopback-devices')
+    def api_loopback_devices():
+        return jsonify(engine.get_loopback_devices())
+
     @app.route('/api/setup', methods=['POST'])
     def api_setup():
         data = request.json
@@ -684,6 +779,10 @@ def create_web_app(engine: RecorderEngine):
             engine.device_indices = [int(i) for i in data['device_indices']] if data['device_indices'] else []
         if 'device_names' in data:
             engine.device_names = {int(k): v for k, v in data['device_names'].items()}
+        if 'input_mode' in data:
+            engine.input_mode = data['input_mode'] if data['input_mode'] in ('mic', 'loopback') else 'mic'
+        if 'loopback_device_id' in data:
+            engine.loopback_device_id = data['loopback_device_id']
         return jsonify({'success': True, 'state': engine.get_state()})
     
     @app.route('/api/record', methods=['POST'])
@@ -1415,9 +1514,19 @@ body {
         </div>
 
         <div class="drawer-section">
-            <div class="drawer-section-title">Microfoons</div>
-            <div id="dMicList">Laden...</div>
-            <button class="d-btn" onclick="dApplyMics()" style="margin-top:6px;">Microfoons toepassen</button>
+            <div class="drawer-section-title">Audiobron</div>
+            <div style="display:flex;gap:4px;margin-bottom:8px;">
+                <button class="d-btn" id="dModeMic" onclick="dSetInputMode('mic')" style="flex:1;">Microfoon</button>
+                <button class="d-btn" id="dModeLoopback" onclick="dSetInputMode('loopback')" style="flex:1;">Wat je hoort</button>
+            </div>
+            <div id="dMicSection">
+                <div id="dMicList">Laden...</div>
+                <button class="d-btn" onclick="dApplyMics()" style="margin-top:6px;">Microfoons toepassen</button>
+            </div>
+            <div id="dLoopbackSection" style="display:none;">
+                <div id="dLoopbackList" style="font-size:0.75rem;color:var(--dim);">Laden...</div>
+                <button class="d-btn" onclick="dApplyLoopback()" style="margin-top:6px;">Loopback toepassen</button>
+            </div>
         </div>
 
         <div class="drawer-section">
@@ -1693,13 +1802,32 @@ async function dNewRegister() {
     if (name) await dApi('/api/new-register', { name: name, tremulant: trem });
 }
 
-// ── Microphone list ──
+// ── Input mode & device lists ──
 let _deviceList = [];
+let _loopbackList = [];
+let _dInputMode = 'mic';
+
+function dSetInputMode(mode) {
+    _dInputMode = mode;
+    document.getElementById('dMicSection').style.display = mode === 'mic' ? '' : 'none';
+    document.getElementById('dLoopbackSection').style.display = mode === 'loopback' ? '' : 'none';
+    document.getElementById('dModeMic').style.borderColor = mode === 'mic' ? 'var(--accent)' : 'var(--border)';
+    document.getElementById('dModeMic').style.color = mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
+    document.getElementById('dModeLoopback').style.borderColor = mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
+    document.getElementById('dModeLoopback').style.color = mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
+    dApi('/api/settings', { input_mode: mode });
+}
+
 async function dLoadDevices() {
     try {
         const res = await fetch('/api/devices');
         _deviceList = await res.json();
         dRenderMicList();
+    } catch(e) {}
+    try {
+        const res = await fetch('/api/loopback-devices');
+        _loopbackList = await res.json();
+        dRenderLoopbackList();
     } catch(e) {}
 }
 function dRenderMicList(activeIndices, activeNames) {
@@ -1719,6 +1847,19 @@ function dRenderMicList(activeIndices, activeNames) {
     });
     c.innerHTML = html;
 }
+function dRenderLoopbackList(activeId) {
+    const c = document.getElementById('dLoopbackList');
+    if (!_loopbackList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.75rem;">Loopback niet beschikbaar (soundcard library ontbreekt)</span>'; return; }
+    let html = '';
+    _loopbackList.forEach(d => {
+        const checked = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' checked' : '';
+        html += '<div class="d-checkbox-row">' +
+            '<input type="radio" name="dLoopbackDev" id="dLB_' + d.id + '" value="' + d.id + '"' + checked + '>' +
+            '<label for="dLB_' + d.id + '">' + d.name + (d.is_default ? ' (standaard)' : '') + '</label>' +
+            '</div>';
+    });
+    c.innerHTML = html;
+}
 async function dApplyMics() {
     const indices = [];
     const names = {};
@@ -1731,6 +1872,11 @@ async function dApplyMics() {
         }
     });
     await dApi('/api/settings', { device_indices: indices, device_names: names });
+}
+async function dApplyLoopback() {
+    const sel = document.querySelector('input[name="dLoopbackDev"]:checked');
+    const devId = sel ? sel.value : null;
+    await dApi('/api/settings', { input_mode: 'loopback', loopback_device_id: devId });
 }
 
 async function dApplySettings() {
@@ -1767,8 +1913,18 @@ function syncDrawer(state) {
     document.getElementById('dRecordDur').value = s.record_seconds;
     document.getElementById('dStartNote').value = s.start_note;
     document.getElementById('dEndNote').value = s.end_note;
-    // Mic list sync
+    // Input mode & device list sync
+    if (s.input_mode && s.input_mode !== _dInputMode) {
+        _dInputMode = s.input_mode;
+        document.getElementById('dMicSection').style.display = s.input_mode === 'mic' ? '' : 'none';
+        document.getElementById('dLoopbackSection').style.display = s.input_mode === 'loopback' ? '' : 'none';
+        document.getElementById('dModeMic').style.borderColor = s.input_mode === 'mic' ? 'var(--accent)' : 'var(--border)';
+        document.getElementById('dModeMic').style.color = s.input_mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
+        document.getElementById('dModeLoopback').style.borderColor = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
+        document.getElementById('dModeLoopback').style.color = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
+    }
     if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
+    if (_loopbackList.length) dRenderLoopbackList(s.loopback_device_id);
 }
 
 dLoadDevices();
@@ -2241,9 +2397,19 @@ body {
 <!-- SETTINGS TAB -->
 <div class="tab-content" id="tab-settings">
     <div class="section">
-        <div class="section-title">Microfoons</div>
-        <div id="fMicList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
-        <button class="btn" onclick="fApplyMics()" style="width:100%;margin-top:8px;">Microfoons toepassen</button>
+        <div class="section-title">Audiobron</div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button class="btn" id="fModeMic" onclick="fSetInputMode('mic')" style="flex:1;border-color:var(--accent);color:var(--accent);">Microfoon</button>
+            <button class="btn" id="fModeLoopback" onclick="fSetInputMode('loopback')" style="flex:1;">Wat je hoort</button>
+        </div>
+        <div id="fMicSection">
+            <div id="fMicList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
+            <button class="btn" onclick="fApplyMics()" style="width:100%;margin-top:8px;">Microfoons toepassen</button>
+        </div>
+        <div id="fLoopbackSection" style="display:none;">
+            <div id="fLoopbackList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
+            <button class="btn" onclick="fApplyLoopback()" style="width:100%;margin-top:8px;">Loopback toepassen</button>
+        </div>
     </div>
     <div class="section">
         <div class="section-title">Audio-instellingen</div>
@@ -2425,13 +2591,32 @@ async function fNewRegister() {
     }
 }
 
-// ── Microphone list ──
+// ── Input mode & device lists ──
 let _rDeviceList = [];
+let _rLoopbackList = [];
+let _fInputMode = 'mic';
+
+function fSetInputMode(mode) {
+    _fInputMode = mode;
+    document.getElementById('fMicSection').style.display = mode === 'mic' ? '' : 'none';
+    document.getElementById('fLoopbackSection').style.display = mode === 'loopback' ? '' : 'none';
+    document.getElementById('fModeMic').style.borderColor = mode === 'mic' ? 'var(--accent)' : 'var(--border)';
+    document.getElementById('fModeMic').style.color = mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
+    document.getElementById('fModeLoopback').style.borderColor = mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
+    document.getElementById('fModeLoopback').style.color = mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
+    apiCall('/api/settings', { input_mode: mode });
+}
+
 async function loadDevices() {
     try {
         const res = await fetch('/api/devices');
         _rDeviceList = await res.json();
         fRenderMicList();
+    } catch(e) {}
+    try {
+        const res = await fetch('/api/loopback-devices');
+        _rLoopbackList = await res.json();
+        fRenderLoopbackList();
     } catch(e) {}
 }
 function fRenderMicList(activeIndices, activeNames) {
@@ -2451,6 +2636,19 @@ function fRenderMicList(activeIndices, activeNames) {
     });
     c.innerHTML = html;
 }
+function fRenderLoopbackList(activeId) {
+    const c = document.getElementById('fLoopbackList');
+    if (!_rLoopbackList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.8rem;">Loopback niet beschikbaar (soundcard library ontbreekt)</span>'; return; }
+    let html = '';
+    _rLoopbackList.forEach(d => {
+        const checked = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' checked' : '';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
+            '<input type="radio" name="fLoopbackDev" id="fLB_' + d.id + '" value="' + d.id + '"' + checked + ' style="accent-color:var(--accent);width:16px;height:16px;">' +
+            '<label for="fLB_' + d.id + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + d.name + (d.is_default ? ' (standaard)' : '') + '</label>' +
+            '</div>';
+    });
+    c.innerHTML = html;
+}
 async function fApplyMics() {
     const indices = [];
     const names = {};
@@ -2463,6 +2661,11 @@ async function fApplyMics() {
         }
     });
     await apiCall('/api/settings', { device_indices: indices, device_names: names });
+}
+async function fApplyLoopback() {
+    const sel = document.querySelector('input[name="fLoopbackDev"]:checked');
+    const devId = sel ? sel.value : null;
+    await apiCall('/api/settings', { input_mode: 'loopback', loopback_device_id: devId });
 }
 
 // Apply settings
@@ -2540,10 +2743,22 @@ function updateRemote(state) {
         document.getElementById('fEndNote').value = s.end_note;
         window._settingsSynced = true;
     }
-    // Mic list sync
+    // Input mode & device list sync
+    const s2 = state.settings;
+    if (s2.input_mode && s2.input_mode !== _fInputMode) {
+        _fInputMode = s2.input_mode;
+        document.getElementById('fMicSection').style.display = s2.input_mode === 'mic' ? '' : 'none';
+        document.getElementById('fLoopbackSection').style.display = s2.input_mode === 'loopback' ? '' : 'none';
+        document.getElementById('fModeMic').style.borderColor = s2.input_mode === 'mic' ? 'var(--accent)' : 'var(--border)';
+        document.getElementById('fModeMic').style.color = s2.input_mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
+        document.getElementById('fModeLoopback').style.borderColor = s2.input_mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
+        document.getElementById('fModeLoopback').style.color = s2.input_mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
+    }
     if (_rDeviceList.length) {
-        const s = state.settings;
-        fRenderMicList(s.device_indices || [], s.device_names || {});
+        fRenderMicList(s2.device_indices || [], s2.device_names || {});
+    }
+    if (_rLoopbackList.length) {
+        fRenderLoopbackList(s2.loopback_device_id);
     }
 }
 
