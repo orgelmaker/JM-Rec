@@ -131,6 +131,9 @@ class RecorderEngine:
         self.is_running = False
         self.auto_advance = True
 
+        # Volume / gain
+        self.record_gain = 1.0     # 0.0 – 2.0, applied before save
+
         # VU meter
         self.current_level = 0.0
         self.current_levels = {}   # per-device levels for multi-mic
@@ -255,10 +258,11 @@ class RecorderEngine:
     
     def start_recording_cycle(self):
         """Start the countdown → record → next cycle."""
-        if self.state != "idle" and self.state != "paused":
-            return
-        
-        self.is_running = True
+        with self.lock:
+            if self.state != "idle" and self.state != "paused":
+                return
+            self.state = "countdown"
+            self.is_running = True
         thread = threading.Thread(target=self._recording_cycle, daemon=True)
         thread.start()
     
@@ -514,7 +518,14 @@ class RecorderEngine:
         filename = midi_to_filename(self.current_note)
         wav_path = os.path.join(path, filename + ".wav")
         mp3_path = os.path.join(path, filename + ".mp3")
-        
+
+        # Apply recording gain
+        if self.record_gain != 1.0:
+            if audio_data.dtype in (np.float32, np.float64):
+                audio_data = np.clip(audio_data * self.record_gain, -1.0, 1.0).astype(audio_data.dtype)
+            else:
+                audio_data = np.clip(audio_data.astype(np.float64) * self.record_gain, -32768, 32767).astype(np.int16)
+
         # Save as temporary WAV first
         if self.bit_depth == 24:
             # Convert float32 to int24 via int32
@@ -646,6 +657,7 @@ class RecorderEngine:
                     'input_mode': self.input_mode,
                     'loopback_device_id': self.loopback_device_id,
                     'has_soundcard': HAS_SOUNDCARD,
+                    'record_gain': self.record_gain,
                 }
             }
     
@@ -783,6 +795,8 @@ def create_web_app(engine: RecorderEngine):
             engine.input_mode = data['input_mode'] if data['input_mode'] in ('mic', 'loopback') else 'mic'
         if 'loopback_device_id' in data:
             engine.loopback_device_id = data['loopback_device_id']
+        if 'record_gain' in data:
+            engine.record_gain = max(0.0, min(2.0, float(data['record_gain'])))
         return jsonify({'success': True, 'state': engine.get_state()})
     
     @app.route('/api/record', methods=['POST'])
@@ -1566,6 +1580,12 @@ body {
                     </select>
                 </div>
             </div>
+            <div class="d-form-row">
+                <div class="d-form-group" style="flex:1;">
+                    <label class="d-form-label">Volume <span id="dGainVal">100%</span></label>
+                    <input type="range" id="dGain" min="0" max="200" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="document.getElementById('dGainVal').textContent=this.value+'%'">
+                </div>
+            </div>
         </div>
 
         <div class="drawer-section">
@@ -1885,6 +1905,7 @@ async function dApplySettings() {
         bit_depth: parseInt(document.getElementById('dBitDepth').value),
         channels: parseInt(document.getElementById('dChannels').value),
         mp3_bitrate: parseInt(document.getElementById('dBitrate').value),
+        record_gain: parseInt(document.getElementById('dGain').value) / 100,
         countdown_seconds: parseInt(document.getElementById('dCountdown').value),
         record_seconds: parseInt(document.getElementById('dRecordDur').value),
         start_note: parseInt(document.getElementById('dStartNote').value),
@@ -1909,6 +1930,8 @@ function syncDrawer(state) {
     document.getElementById('dBitDepth').value = s.bit_depth;
     document.getElementById('dChannels').value = s.channels;
     document.getElementById('dBitrate').value = s.mp3_bitrate;
+    document.getElementById('dGain').value = Math.round((s.record_gain || 1.0) * 100);
+    document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
     document.getElementById('dCountdown').value = s.countdown_seconds;
     document.getElementById('dRecordDur').value = s.record_seconds;
     document.getElementById('dStartNote').value = s.start_note;
@@ -2447,9 +2470,13 @@ body {
                     <option value="320">320 kbps</option>
                 </select>
             </div>
+            <div class="form-group" style="flex-basis:100%;">
+                <label class="form-label">Volume <span id="fGainVal">100%</span></label>
+                <input type="range" id="fGain" min="0" max="200" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="document.getElementById('fGainVal').textContent=this.value+'%'">
+            </div>
         </div>
     </div>
-    
+
     <div class="section">
         <div class="section-title">Opname-workflow</div>
         <div class="form-row">
@@ -2675,6 +2702,7 @@ async function applySettings() {
         bit_depth: parseInt(document.getElementById('fBitDepth').value),
         channels: parseInt(document.getElementById('fChannels').value),
         mp3_bitrate: parseInt(document.getElementById('fBitrate').value),
+        record_gain: parseInt(document.getElementById('fGain').value) / 100,
         countdown_seconds: parseInt(document.getElementById('fCountdown').value),
         record_seconds: parseInt(document.getElementById('fRecordDur').value),
         start_note: parseInt(document.getElementById('fStartNote').value),
@@ -2737,6 +2765,8 @@ function updateRemote(state) {
         document.getElementById('fBitDepth').value = s.bit_depth;
         document.getElementById('fChannels').value = s.channels;
         document.getElementById('fBitrate').value = s.mp3_bitrate;
+        document.getElementById('fGain').value = Math.round((s.record_gain || 1.0) * 100);
+        document.getElementById('fGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
         document.getElementById('fCountdown').value = s.countdown_seconds;
         document.getElementById('fRecordDur').value = s.record_seconds;
         document.getElementById('fStartNote').value = s.start_note;
