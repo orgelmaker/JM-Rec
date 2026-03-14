@@ -28,13 +28,11 @@ import sounddevice as sd
 from pathlib import Path
 from flask import Flask, render_template_string, jsonify, request, Response
 
-# Add bundled ffmpeg to PATH (PyInstaller onefile extracts to _MEIPASS)
+# Add bundled lame.exe to PATH (PyInstaller onefile extracts to _MEIPASS)
 _bundle_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-_ffmpeg_path = os.path.join(_bundle_dir, 'ffmpeg.exe')
-if os.path.exists(_ffmpeg_path):
+_lame_path = os.path.join(_bundle_dir, 'lame.exe')
+if os.path.exists(_lame_path):
     os.environ['PATH'] = _bundle_dir + os.pathsep + os.environ.get('PATH', '')
-
-from pydub import AudioSegment
 
 try:
     import qrcode
@@ -108,6 +106,7 @@ class RecorderEngine:
         self.sample_rate = 44100
         self.bit_depth = 16  # 16 or 24
         self.channels = 1    # mono by default
+        self.output_format = "mp3"  # "mp3", "wav", "flac"
         self.mp3_bitrate = 192
         self.device_indices = []   # list of device indices; empty = system default
         self.device_names = {}     # {index: position name} e.g. {0: "Front", 1: "Rear"}
@@ -360,7 +359,7 @@ class RecorderEngine:
                 time.sleep(0.05)
 
             sd.wait()
-            self._save_mp3(audio_data)
+            self._save_audio(audio_data)
             self.current_level = 0.0
 
         except Exception as e:
@@ -415,7 +414,7 @@ class RecorderEngine:
                 audio_data = np.clip(audio_data, -1.0, 1.0)
                 audio_data = (audio_data * 32767).astype(np.int16)
 
-            self._save_mp3(audio_data)
+            self._save_audio(audio_data)
             self.current_level = 0.0
 
         except Exception as e:
@@ -499,7 +498,7 @@ class RecorderEngine:
                         pad_shape = (frames - len(audio_data),) + audio_data.shape[1:]
                         audio_data = np.concatenate([audio_data, np.zeros(pad_shape, dtype=audio_data.dtype)])
                     sub = self.device_names.get(dev_idx, f"Mic_{dev_idx}")
-                    self._save_mp3(audio_data, subdirectory=sub)
+                    self._save_audio(audio_data, subdirectory=sub)
                 except Exception as e:
                     print(f"Save error for device {dev_idx}: {e}")
 
@@ -516,15 +515,13 @@ class RecorderEngine:
                 except:
                     pass
     
-    def _save_mp3(self, audio_data, subdirectory=None):
-        """Save recorded audio as MP3 with GrandOrgue-compatible naming."""
+    def _save_audio(self, audio_data, subdirectory=None):
+        """Save recorded audio in chosen format (mp3/wav/flac)."""
         path = self.get_current_register_path()
         if subdirectory:
             path = os.path.join(path, subdirectory)
             os.makedirs(path, exist_ok=True)
         filename = midi_to_filename(self.current_note)
-        wav_path = os.path.join(path, filename + ".wav")
-        mp3_path = os.path.join(path, filename + ".mp3")
 
         # Apply recording gain
         if self.record_gain != 1.0:
@@ -533,59 +530,81 @@ class RecorderEngine:
             else:
                 audio_data = np.clip(audio_data.astype(np.float64) * self.record_gain, -32768, 32767).astype(np.int16)
 
-        # Save as temporary WAV first
+        fmt = self.output_format
+
+        if fmt == "wav":
+            self._write_wav(os.path.join(path, filename + ".wav"), audio_data)
+
+        elif fmt == "flac":
+            # Write WAV first, then convert to FLAC via ffmpeg
+            wav_path = os.path.join(path, filename + ".wav")
+            flac_path = os.path.join(path, filename + ".flac")
+            self._write_wav(wav_path, audio_data)
+            _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            try:
+                subprocess.run([
+                    'ffmpeg', '-y', '-i', wav_path, flac_path
+                ], check=True, creationflags=_cflags,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                os.remove(wav_path)
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                print("FLAC encoding requires ffmpeg — keeping WAV")
+
+        else:  # mp3
+            wav_path = os.path.join(path, filename + ".wav")
+            mp3_path = os.path.join(path, filename + ".mp3")
+            self._write_wav(wav_path, audio_data)
+            _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+            mp3_ok = False
+
+            # Try LAME first (bundled with PyInstaller build)
+            try:
+                subprocess.run([
+                    'lame', '-b', str(self.mp3_bitrate),
+                    '--quiet', wav_path, mp3_path
+                ], check=True, creationflags=_cflags,
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                mp3_ok = True
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                pass
+
+            # Fallback: try ffmpeg
+            if not mp3_ok:
+                try:
+                    subprocess.run([
+                        'ffmpeg', '-y', '-i', wav_path,
+                        '-b:a', f'{self.mp3_bitrate}k', '-q:a', '0',
+                        mp3_path
+                    ], check=True, creationflags=_cflags,
+                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    mp3_ok = True
+                except (subprocess.CalledProcessError, FileNotFoundError):
+                    pass
+
+            if mp3_ok:
+                os.remove(wav_path)
+            else:
+                print("No MP3 encoder (lame/ffmpeg) found, keeping WAV")
+
+    def _write_wav(self, wav_path, audio_data):
+        """Write audio data to a WAV file."""
         if self.bit_depth == 24:
-            # Convert float32 to int24 via int32
             audio_int = (audio_data * 2147483647).astype(np.int32)
-            # Write 24-bit WAV manually
             with wave.open(wav_path, 'w') as wf:
                 wf.setnchannels(self.channels)
-                wf.setsampwidth(3)  # 24-bit = 3 bytes
+                wf.setsampwidth(3)
                 wf.setframerate(self.sample_rate)
-                # Convert int32 to 24-bit bytes
                 raw_bytes = b''
                 for sample in audio_int.flatten():
-                    # Take upper 3 bytes of int32
                     b = struct.pack('<i', sample)
                     raw_bytes += b[1:4]
                 wf.writeframes(raw_bytes)
         else:
-            # 16-bit
             with wave.open(wav_path, 'w') as wf:
                 wf.setnchannels(self.channels)
                 wf.setsampwidth(2)
                 wf.setframerate(self.sample_rate)
                 wf.writeframes(audio_data.tobytes())
-        
-        # Convert to MP3
-        mp3_ok = False
-        # Try LAME first
-        try:
-            subprocess.run([
-                'lame', '-b', str(self.mp3_bitrate),
-                '--quiet',
-                wav_path, mp3_path
-            ], check=True)
-            mp3_ok = True
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            pass
-
-        # Fallback: try pydub (needs ffmpeg)
-        if not mp3_ok:
-            try:
-                from pydub.utils import which
-                if which("ffmpeg") or which("avconv"):
-                    audio_seg = AudioSegment.from_wav(wav_path)
-                    audio_seg.export(mp3_path, format="mp3", bitrate=f"{self.mp3_bitrate}k")
-                    mp3_ok = True
-            except Exception as e:
-                print(f"MP3 conversion failed: {e}")
-
-        if mp3_ok:
-            os.remove(wav_path)
-        else:
-            # No encoder available — keep WAV as final output
-            print("No MP3 encoder (lame/ffmpeg) found, keeping WAV")
     
     def stop(self):
         """Stop recording cycle."""
@@ -665,6 +684,7 @@ class RecorderEngine:
                     'sample_rate': self.sample_rate,
                     'bit_depth': self.bit_depth,
                     'channels': self.channels,
+                    'output_format': self.output_format,
                     'mp3_bitrate': self.mp3_bitrate,
                     'countdown_seconds': self.countdown_seconds,
                     'record_seconds': self.record_seconds,
@@ -791,6 +811,9 @@ def create_web_app(engine: RecorderEngine):
             engine.bit_depth = int(data['bit_depth'])
         if 'channels' in data:
             engine.channels = int(data['channels'])
+        if 'output_format' in data:
+            if data['output_format'] in ('mp3', 'wav', 'flac'):
+                engine.output_format = data['output_format']
         if 'mp3_bitrate' in data:
             engine.mp3_bitrate = int(data['mp3_bitrate'])
         if 'countdown_seconds' in data:
@@ -1440,7 +1463,7 @@ body {
 <body>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.0</span></div>
+    <div class="logo">JM-Rec <span>v3.1</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -1590,6 +1613,14 @@ body {
                     </select>
                 </div>
                 <div class="d-form-group">
+                    <label class="d-form-label">Formaat</label>
+                    <select class="d-form-select" id="dFormat" onchange="document.getElementById('dBitrateGroup').style.display=this.value==='mp3'?'':'none'">
+                        <option value="mp3">MP3</option>
+                        <option value="wav">WAV</option>
+                        <option value="flac">FLAC</option>
+                    </select>
+                </div>
+                <div class="d-form-group" id="dBitrateGroup">
                     <label class="d-form-label">MP3 Bitrate</label>
                     <select class="d-form-select" id="dBitrate">
                         <option value="128">128 kbps</option>
@@ -1726,7 +1757,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.0</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.1</p>
     </div>
 </div>
 
@@ -1923,6 +1954,7 @@ async function dApplySettings() {
         sample_rate: parseInt(document.getElementById('dSampleRate').value),
         bit_depth: parseInt(document.getElementById('dBitDepth').value),
         channels: parseInt(document.getElementById('dChannels').value),
+        output_format: document.getElementById('dFormat').value,
         mp3_bitrate: parseInt(document.getElementById('dBitrate').value),
         record_gain: parseInt(document.getElementById('dGain').value) / 100,
         countdown_seconds: parseInt(document.getElementById('dCountdown').value),
@@ -1944,12 +1976,14 @@ function syncDrawer(state) {
     }
     // Keyboard selector (always sync - reflects project state)
     dBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
-    // Settings - only sync once at startup to avoid overwriting user edits
+    // Settings + devices - only sync once at startup to avoid overwriting user edits
+    const s = state.settings;
     if (!_settingsSyncDone) {
-        const s = state.settings;
         document.getElementById('dSampleRate').value = s.sample_rate;
         document.getElementById('dBitDepth').value = s.bit_depth;
         document.getElementById('dChannels').value = s.channels;
+        document.getElementById('dFormat').value = s.output_format || 'mp3';
+        document.getElementById('dBitrateGroup').style.display = (s.output_format || 'mp3') === 'mp3' ? '' : 'none';
         document.getElementById('dBitrate').value = s.mp3_bitrate;
         document.getElementById('dGain').value = Math.round((s.record_gain || 1.0) * 100);
         document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
@@ -1957,10 +1991,11 @@ function syncDrawer(state) {
         document.getElementById('dRecordDur').value = s.record_seconds;
         document.getElementById('dStartNote').value = s.start_note;
         document.getElementById('dEndNote').value = s.end_note;
+        if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
+        if (_loopbackList.length) dRenderLoopbackList(s.loopback_device_id);
         _settingsSyncDone = true;
     }
     // Input mode - always sync (toggled via buttons, not text fields)
-    const s = state.settings;
     if (s.input_mode && s.input_mode !== _dInputMode) {
         _dInputMode = s.input_mode;
         document.getElementById('dMicSection').style.display = s.input_mode === 'mic' ? '' : 'none';
@@ -1970,8 +2005,6 @@ function syncDrawer(state) {
         document.getElementById('dModeLoopback').style.borderColor = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
         document.getElementById('dModeLoopback').style.color = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
     }
-    if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
-    if (_loopbackList.length) dRenderLoopbackList(s.loopback_device_id);
 }
 
 dLoadDevices();
@@ -2026,7 +2059,8 @@ function updateUI(state) {
     const micCount = (s.device_indices && s.device_indices.length > 1) ? ' / ' + s.device_indices.length + ' mics' : '';
     document.getElementById('settingsInfo').textContent =
         s.sample_rate + 'Hz / ' + s.bit_depth + '-bit / ' +
-        (s.channels === 1 ? 'Mono' : 'Stereo') + ' / MP3 ' + s.mp3_bitrate + 'kbps' + micCount;
+        (s.channels === 1 ? 'Mono' : 'Stereo') + ' / ' +
+        ((s.output_format || 'mp3') === 'mp3' ? 'MP3 ' + s.mp3_bitrate + 'kbps' : (s.output_format || 'mp3').toUpperCase()) + micCount;
 
     document.getElementById('registerInfo').textContent = state.output_dir;
 }
@@ -2040,6 +2074,9 @@ setInterval(async () => {
         syncDrawer(state);
     } catch(e) {}
 }, 100);
+
+// Heartbeat to keep server alive
+setInterval(() => { fetch('/api/heartbeat', {method:'POST'}).catch(()=>{}); }, 5000);
 
 // Shutdown server when display page is closed
 window.addEventListener('beforeunload', function() {
@@ -2486,6 +2523,14 @@ body {
                 </select>
             </div>
             <div class="form-group">
+                <label class="form-label">Formaat</label>
+                <select class="form-select" id="fFormat" onchange="document.getElementById('fBitrateGroup').style.display=this.value==='mp3'?'':'none'">
+                    <option value="mp3">MP3</option>
+                    <option value="wav">WAV</option>
+                    <option value="flac">FLAC</option>
+                </select>
+            </div>
+            <div class="form-group" id="fBitrateGroup">
                 <label class="form-label">MP3 Bitrate</label>
                 <select class="form-select" id="fBitrate">
                     <option value="128">128 kbps</option>
@@ -2725,6 +2770,7 @@ async function applySettings() {
         sample_rate: parseInt(document.getElementById('fSampleRate').value),
         bit_depth: parseInt(document.getElementById('fBitDepth').value),
         channels: parseInt(document.getElementById('fChannels').value),
+        output_format: document.getElementById('fFormat').value,
         mp3_bitrate: parseInt(document.getElementById('fBitrate').value),
         record_gain: parseInt(document.getElementById('fGain').value) / 100,
         countdown_seconds: parseInt(document.getElementById('fCountdown').value),
@@ -2788,6 +2834,8 @@ function updateRemote(state) {
         document.getElementById('fSampleRate').value = s.sample_rate;
         document.getElementById('fBitDepth').value = s.bit_depth;
         document.getElementById('fChannels').value = s.channels;
+        document.getElementById('fFormat').value = s.output_format || 'mp3';
+        document.getElementById('fBitrateGroup').style.display = (s.output_format || 'mp3') === 'mp3' ? '' : 'none';
         document.getElementById('fBitrate').value = s.mp3_bitrate;
         document.getElementById('fGain').value = Math.round((s.record_gain || 1.0) * 100);
         document.getElementById('fGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
@@ -2832,6 +2880,9 @@ setInterval(async () => {
     }
 }, 150);
 
+// Heartbeat to keep server alive
+setInterval(() => { fetch('/api/heartbeat', {method:'POST'}).catch(()=>{}); }, 5000);
+
 // Init
 loadDevices();
 </script>
@@ -2845,6 +2896,10 @@ loadDevices();
 # ─────────────────────────────────────────────
 
 def main():
+    # PyInstaller onefile: freeze_support must be called before anything else
+    import multiprocessing
+    multiprocessing.freeze_support()
+
     import argparse
 
     # Fix console encoding on Windows
@@ -2862,20 +2917,47 @@ def main():
     parser.add_argument('--register', type=str, help='Register name')
     parser.add_argument('--output', type=str, help='Output directory')
     args = parser.parse_args()
-    
+
+    # Single-instance check: try to bind the port early
+    try:
+        _test = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        _test.bind(('127.0.0.1', args.port))
+        _test.close()
+    except OSError:
+        # Port already in use — another instance is running
+        webbrowser.open(f"http://localhost:{args.port}/display")
+        return
+
     # Create engine
     engine = RecorderEngine()
-    
+
     # Setup project if provided
     if args.project and args.register:
         engine.setup_project(args.project, args.register, args.output)
-    
+
     # Create web app
     app = create_web_app(engine)
-    
+
     # Get local IP
     local_ip = get_local_ip()
-    
+
+    # Track last browser heartbeat for auto-shutdown
+    _last_heartbeat = [time.time()]
+
+    @app.route('/api/heartbeat', methods=['POST'])
+    def heartbeat():
+        _last_heartbeat[0] = time.time()
+        return '', 204
+
+    def shutdown_monitor():
+        """Shut down Flask when no browser has connected for 30 seconds."""
+        while True:
+            time.sleep(5)
+            if time.time() - _last_heartbeat[0] > 30:
+                os._exit(0)
+
+    threading.Thread(target=shutdown_monitor, daemon=True).start()
+
     # Auto-open browser after short delay
     def open_browser():
         time.sleep(1.5)

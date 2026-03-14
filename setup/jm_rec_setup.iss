@@ -2,7 +2,7 @@
 ; Organ Sample Recorder - Standalone Installer
 
 #define MyAppName "JM-Rec"
-#define MyAppVersion "3.0"
+#define MyAppVersion "3.1"
 #define MyAppExeName "JM-Rec.exe"
 
 [Setup]

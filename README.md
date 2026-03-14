@@ -1,16 +1,23 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.0-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.1-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-GrandOrgue%20%7C%20Hauptwerk-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.0 — Organ Sample Recorder
+# JM-Rec v3.1 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met GrandOrgue/Hauptwerk-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.1
+- **Uitvoerformaat keuze** — sla samples op als MP3, WAV of FLAC
+- **Kleinere installer** — LAME MP3-encoder (~1MB) vervangt ffmpeg (~95MB)
+- **Geen console-vensters** — geen flitsende schermen meer tijdens opname
+- **Automatische afsluiting** — server stopt als alle browsers gesloten zijn
+- **Enkele instantie** — voorkomt dat twee exemplaren tegelijk draaien
 
 ### Nieuw in v3.0
 - **"Wat je hoort" opnamemodus** — neem systeemaudio op via WASAPI loopback in plaats van (of naast) een microfoon. Ideaal voor het samplen vanuit Hauptwerk, GrandOrgue of andere software direct op dezelfde PC.
@@ -149,11 +156,24 @@ Naamgeving volgt de **GrandOrgue/Hauptwerk**-conventie: `{MIDI-nummer}-{nootnaam
 | Samplerate | 44100 Hz | 44100 / 48000 / 96000 |
 | Bitdiepte | 16-bit | 16 / 24 |
 | Kanalen | Mono | Mono / Stereo |
+| Formaat | MP3 | MP3 / WAV / FLAC |
 | MP3 Bitrate | 192 kbps | 128 / 192 / 256 / 320 |
 | Afteltijd | 5 sec | 1–30 |
 | Opnameduur | 5 sec | 1–60 |
 | Startnoot | MIDI 36 (C2) | 0–127 |
 | Eindnoot | MIDI 96 (C7) | 0–127 |
+
+### Formaatvergelijking
+
+| | MP3 | WAV | FLAC |
+|---|---|---|---|
+| **Bestandsgrootte** | Klein (~1 MB/min) | Groot (~10 MB/min) | Gemiddeld (~5 MB/min) |
+| **Kwaliteit** | Lossy (goed) | Lossless (maximaal) | Lossless (maximaal) |
+| **GrandOrgue** | Ja | Ja (aanbevolen) | Nee |
+| **Hauptwerk** | Ja | Ja (aanbevolen) | Nee |
+| **Geschikt voor** | Snel samplen, preview | Definitieve opnames | Archivering |
+
+> **Tip:** Gebruik **WAV** of **FLAC** voor de hoogste kwaliteit. MP3 is handig voor snelle previews of als schijfruimte beperkt is. Let op: WAV-bestanden zijn ~10× groter dan MP3 en vragen meer opslagruimte.
 
 ---
 
