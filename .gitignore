@@ -8,7 +8,10 @@ venv/
 build/
 dist/
 output/
+
+# Exe (except installer)
 *.exe
+!JM-Rec-Setup.exe
 
 # IDE / tools
 .claude/
