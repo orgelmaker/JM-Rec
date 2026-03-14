@@ -11,7 +11,7 @@ hiddenimports += ['audioop', 'audioop_lts']
 a = Analysis(
     ['jm_rec.py'],
     pathex=[],
-    binaries=[],
+    binaries=[('ffmpeg.exe', '.')],
     datas=[],
     hiddenimports=hiddenimports,
     hookspath=[],

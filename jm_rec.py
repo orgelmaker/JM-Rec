@@ -27,6 +27,13 @@ import numpy as np
 import sounddevice as sd
 from pathlib import Path
 from flask import Flask, render_template_string, jsonify, request, Response
+
+# Add bundled ffmpeg to PATH (PyInstaller onefile extracts to _MEIPASS)
+_bundle_dir = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+_ffmpeg_path = os.path.join(_bundle_dir, 'ffmpeg.exe')
+if os.path.exists(_ffmpeg_path):
+    os.environ['PATH'] = _bundle_dir + os.pathsep + os.environ.get('PATH', '')
+
 from pydub import AudioSegment
 
 try:
@@ -550,23 +557,35 @@ class RecorderEngine:
                 wf.setframerate(self.sample_rate)
                 wf.writeframes(audio_data.tobytes())
         
-        # Convert to MP3 using lame
+        # Convert to MP3
+        mp3_ok = False
+        # Try LAME first
         try:
             subprocess.run([
-                'lame', '-b', str(self.mp3_bitrate), 
+                'lame', '-b', str(self.mp3_bitrate),
                 '--quiet',
                 wav_path, mp3_path
             ], check=True)
-            # Remove temporary WAV
-            os.remove(wav_path)
+            mp3_ok = True
         except (subprocess.CalledProcessError, FileNotFoundError):
-            # Fallback: use pydub
+            pass
+
+        # Fallback: try pydub (needs ffmpeg)
+        if not mp3_ok:
             try:
-                audio_seg = AudioSegment.from_wav(wav_path)
-                audio_seg.export(mp3_path, format="mp3", bitrate=f"{self.mp3_bitrate}k")
-                os.remove(wav_path)
+                from pydub.utils import which
+                if which("ffmpeg") or which("avconv"):
+                    audio_seg = AudioSegment.from_wav(wav_path)
+                    audio_seg.export(mp3_path, format="mp3", bitrate=f"{self.mp3_bitrate}k")
+                    mp3_ok = True
             except Exception as e:
-                print(f"MP3 conversion failed, keeping WAV: {e}")
+                print(f"MP3 conversion failed: {e}")
+
+        if mp3_ok:
+            os.remove(wav_path)
+        else:
+            # No encoder available — keep WAV as final output
+            print("No MP3 encoder (lame/ffmpeg) found, keeping WAV")
     
     def stop(self):
         """Stop recording cycle."""
@@ -1916,27 +1935,32 @@ async function dApplySettings() {
 
 // ── Sync drawer from state ──
 let _drawerSynced = false;
+let _settingsSyncDone = false;
 function syncDrawer(state) {
     if (!_drawerSynced && state.project) {
         document.getElementById('dOrganName').value = state.project;
         document.getElementById('dOutputDir').value = state.output_dir;
         _drawerSynced = true;
     }
-    // Keyboard selector
+    // Keyboard selector (always sync - reflects project state)
     dBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
-    // Settings
+    // Settings - only sync once at startup to avoid overwriting user edits
+    if (!_settingsSyncDone) {
+        const s = state.settings;
+        document.getElementById('dSampleRate').value = s.sample_rate;
+        document.getElementById('dBitDepth').value = s.bit_depth;
+        document.getElementById('dChannels').value = s.channels;
+        document.getElementById('dBitrate').value = s.mp3_bitrate;
+        document.getElementById('dGain').value = Math.round((s.record_gain || 1.0) * 100);
+        document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
+        document.getElementById('dCountdown').value = s.countdown_seconds;
+        document.getElementById('dRecordDur').value = s.record_seconds;
+        document.getElementById('dStartNote').value = s.start_note;
+        document.getElementById('dEndNote').value = s.end_note;
+        _settingsSyncDone = true;
+    }
+    // Input mode - always sync (toggled via buttons, not text fields)
     const s = state.settings;
-    document.getElementById('dSampleRate').value = s.sample_rate;
-    document.getElementById('dBitDepth').value = s.bit_depth;
-    document.getElementById('dChannels').value = s.channels;
-    document.getElementById('dBitrate').value = s.mp3_bitrate;
-    document.getElementById('dGain').value = Math.round((s.record_gain || 1.0) * 100);
-    document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
-    document.getElementById('dCountdown').value = s.countdown_seconds;
-    document.getElementById('dRecordDur').value = s.record_seconds;
-    document.getElementById('dStartNote').value = s.start_note;
-    document.getElementById('dEndNote').value = s.end_note;
-    // Input mode & device list sync
     if (s.input_mode && s.input_mode !== _dInputMode) {
         _dInputMode = s.input_mode;
         document.getElementById('dMicSection').style.display = s.input_mode === 'mic' ? '' : 'none';
