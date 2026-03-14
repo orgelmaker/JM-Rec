@@ -2,5 +2,6 @@ flask>=3.0
 sounddevice>=0.4
 numpy>=1.24
 pydub>=0.25
+audioop-lts>=0.2.2
 scipy>=1.10
 soundcard>=0.4
