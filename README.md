@@ -20,7 +20,7 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 - **Enkele instantie** — voorkomt dat twee exemplaren tegelijk draaien
 
 ### Nieuw in v3.0
-- **"Wat je hoort" opnamemodus** — neem systeemaudio op via WASAPI loopback in plaats van (of naast) een microfoon. Ideaal voor het samplen vanuit Hauptwerk, GrandOrgue of andere software direct op dezelfde PC.
+- **"Wat je hoort" opnamemodus** — neem systeemaudio op in plaats van (of naast) een microfoon
 
 ---
 
@@ -29,7 +29,7 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 - **Orgelstructuur** — stel klavieren, pedaal en registers in per orgel
 - **Registernaam-automatisering** — "Holpijp 8 voet" wordt automatisch `Holpijp_8`, "Mixtuur 4 sterk" wordt `Mixtuur_4st`
 - **Tremulant** — registermappen krijgen automatisch `_trem` suffix
-- **"Wat je hoort"** — neem systeemaudio op via WASAPI loopback, direct vanuit Hauptwerk/GrandOrgue op dezelfde PC
+- **"Wat je hoort"** — neem systeemaudio op vanuit software op dezelfde PC
 - **Multi-microfoon** — neem gelijktijdig op met meerdere microfoons (front, midden, rear) in aparte submappen
 - **Automatische noot-doorloop** — telt af, neemt op, gaat door naar de volgende noot
 - **Draadloze afstandsbediening** — bedien de opname vanaf je telefoon, tablet of tweede PC
@@ -95,7 +95,7 @@ Werkt op elk apparaat met een browser — telefoon, tablet of tweede PC.
 |---------|---------|
 | **Bediening** | Opnemen, Stop, Vorige, Opnieuw, Volgende |
 | **Project** | Orgel instellen, klavier selecteren, register starten (met tremulant) |
-| **Instellingen** | Invoermodus (Microfoon / Wat je hoort), microfoons (multi-mic), samplerate, bitdiepte, opnameduur, nootbereik |
+| **Instellingen** | Invoermodus, microfoons (multi-mic), samplerate, bitdiepte, opnameduur, nootbereik, bas/discant split |
 
 ---
 
@@ -213,7 +213,7 @@ JM-Rec.exe [opties]
 | **Windows** | 10/11 (64-bit) | 10/11 (64-bit) |
 | **Python** | Niet nodig | 3.10+ |
 | **MP3-encoder** | Ingebouwd | LAME of FFmpeg |
-| **soundcard** | Ingebouwd | `pip install soundcard` (optioneel, voor "Wat je hoort") |
+| **soundcard** | Ingebouwd | `pip install soundcard` (optioneel) |
 | **Netwerk** | WiFi voor remote | WiFi voor remote |
 
 ---
