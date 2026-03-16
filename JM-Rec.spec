@@ -6,6 +6,8 @@ hiddenimports += collect_submodules('qrcode')
 hiddenimports += collect_submodules('soundcard')
 hiddenimports += ['comtypes', 'comtypes.stream']
 hiddenimports += ['audioop', 'audioop_lts']
+hiddenimports += collect_submodules('jaraco')
+hiddenimports += ['soundfile']
 
 
 a = Analysis(
@@ -19,8 +21,8 @@ a = Analysis(
     runtime_hooks=[],
     excludes=[
         'pydub', 'tkinter', 'unittest', 'test', 'xmlrpc', 'pydoc',
-        'doctest', 'ftplib', 'lib2to3', 'curses', 'distutils',
-        'setuptools', 'pip', 'ensurepip', 'sqlite3',
+        'doctest', 'ftplib', 'lib2to3', 'curses',
+        'pip', 'ensurepip', 'sqlite3',
         'scipy.spatial', 'scipy.optimize', 'scipy.integrate',
         'scipy.interpolate', 'scipy.stats', 'scipy.linalg',
         'scipy.sparse', 'scipy.special', 'scipy.cluster',

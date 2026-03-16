@@ -22,7 +22,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 WizardStyle=modern
-SetupIconFile=jm_rec_icon.ico
+SetupIconFile=..\jm_rec_icon.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 UsePreviousAppDir=yes
 CreateUninstallRegKey=yes
@@ -35,9 +35,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Snelkoppeling op bureaublad aanmaken"; GroupDescription: "Snelkoppelingen:"; Flags: checkedonce
 
 [Files]
-Source: "JM-Rec.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "jm_rec_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
-Source: "README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\JM-Rec.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\jm_rec_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 Name: "{autodesktop}\JM-Rec"; Filename: "{app}\{#MyAppExeName}"; Parameters: "--port 5555"; WorkingDir: "{app}"; IconFilename: "{app}\jm_rec_icon.ico"; Comment: "JM-Rec - Organ Sample Recorder"; Tasks: desktopicon

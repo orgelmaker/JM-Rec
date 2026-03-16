@@ -130,6 +130,10 @@ class RecorderEngine:
         self.end_note = 96     # C7
         self.current_note = 36
 
+        # Bas/Discant split
+        self.bass_treble_split = False
+        self.split_note = 60   # C4 (middle C) — first note of discant
+
         # State
         self.state = "idle"  # idle, countdown, recording, paused
         self.countdown_value = 0
@@ -215,8 +219,14 @@ class RecorderEngine:
         reg_name = self.register_name
         if self.tremulant and not reg_name.endswith("_trem"):
             reg_name += "_trem"
-        return os.path.join(self.output_dir, self.project_name,
+        base = os.path.join(self.output_dir, self.project_name,
                             self.current_keyboard, reg_name)
+        if self.bass_treble_split:
+            if self.current_note < self.split_note:
+                return os.path.join(base, reg_name + "_bas")
+            else:
+                return os.path.join(base, reg_name + "_dis")
+        return base
     
     def get_current_filename(self):
         """Get filename for current note."""
@@ -536,19 +546,10 @@ class RecorderEngine:
             self._write_wav(os.path.join(path, filename + ".wav"), audio_data)
 
         elif fmt == "flac":
-            # Write WAV first, then convert to FLAC via ffmpeg
-            wav_path = os.path.join(path, filename + ".wav")
+            import soundfile as sf
             flac_path = os.path.join(path, filename + ".flac")
-            self._write_wav(wav_path, audio_data)
-            _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
-            try:
-                subprocess.run([
-                    'ffmpeg', '-y', '-i', wav_path, flac_path
-                ], check=True, creationflags=_cflags,
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                os.remove(wav_path)
-            except (subprocess.CalledProcessError, FileNotFoundError):
-                print("FLAC encoding requires ffmpeg — keeping WAV")
+            subtype = 'PCM_24' if self.bit_depth == 24 else 'PCM_16'
+            sf.write(flac_path, audio_data, self.sample_rate, subtype=subtype)
 
         else:  # mp3
             wav_path = os.path.join(path, filename + ".wav")
@@ -653,15 +654,29 @@ class RecorderEngine:
         self.register_name = register_name
         self.tremulant = tremulant
         self.current_note = self.start_note
-        path = self.get_current_register_path()
-        os.makedirs(path, exist_ok=True)
-        # Create multi-mic subdirs if applicable
-        if len(self.device_indices) > 1:
-            for idx in self.device_indices:
-                sub = self.device_names.get(idx, f"Mic_{idx}")
-                os.makedirs(os.path.join(path, sub), exist_ok=True)
+        # Create directories (including bas/discant if enabled)
+        if self.bass_treble_split:
+            reg_name = register_name
+            if tremulant and not reg_name.endswith("_trem"):
+                reg_name += "_trem"
+            base = os.path.join(self.output_dir, self.project_name,
+                                self.current_keyboard, reg_name)
+            for suffix in ("_bas", "_dis"):
+                sub = os.path.join(base, reg_name + suffix)
+                os.makedirs(sub, exist_ok=True)
+                if len(self.device_indices) > 1:
+                    for idx in self.device_indices:
+                        mic = self.device_names.get(idx, f"Mic_{idx}")
+                        os.makedirs(os.path.join(sub, mic), exist_ok=True)
+        else:
+            path = self.get_current_register_path()
+            os.makedirs(path, exist_ok=True)
+            if len(self.device_indices) > 1:
+                for idx in self.device_indices:
+                    sub = self.device_names.get(idx, f"Mic_{idx}")
+                    os.makedirs(os.path.join(path, sub), exist_ok=True)
         self._notify()
-        return path
+        return self.get_current_register_path()
     
     def get_state(self):
         """Get full state for UI/remote."""
@@ -697,6 +712,8 @@ class RecorderEngine:
                     'loopback_device_id': self.loopback_device_id,
                     'has_soundcard': HAS_SOUNDCARD,
                     'record_gain': self.record_gain,
+                    'bass_treble_split': self.bass_treble_split,
+                    'split_note': self.split_note,
                 }
             }
     
@@ -839,6 +856,10 @@ def create_web_app(engine: RecorderEngine):
             engine.loopback_device_id = data['loopback_device_id']
         if 'record_gain' in data:
             engine.record_gain = max(0.0, min(2.0, float(data['record_gain'])))
+        if 'bass_treble_split' in data:
+            engine.bass_treble_split = bool(data['bass_treble_split'])
+        if 'split_note' in data:
+            engine.split_note = int(data['split_note'])
         return jsonify({'success': True, 'state': engine.get_state()})
     
     @app.route('/api/record', methods=['POST'])
@@ -1653,11 +1674,31 @@ body {
             <div class="d-form-row">
                 <div class="d-form-group">
                     <label class="d-form-label">Startnoot (MIDI)</label>
-                    <input class="d-form-input" type="number" id="dStartNote" value="36" min="0" max="127">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input class="d-form-input" type="number" id="dStartNote" value="36" min="0" max="127" style="flex:1;" oninput="document.getElementById('dStartNoteLabel').textContent=dMidiToName(parseInt(this.value)||0)">
+                        <span id="dStartNoteLabel" style="color:var(--accent);min-width:32px;">C2</span>
+                    </div>
                 </div>
                 <div class="d-form-group">
                     <label class="d-form-label">Eindnoot (MIDI)</label>
-                    <input class="d-form-input" type="number" id="dEndNote" value="96" min="0" max="127">
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input class="d-form-input" type="number" id="dEndNote" value="96" min="0" max="127" style="flex:1;" oninput="document.getElementById('dEndNoteLabel').textContent=dMidiToName(parseInt(this.value)||0)">
+                        <span id="dEndNoteLabel" style="color:var(--accent);min-width:32px;">C7</span>
+                    </div>
+                </div>
+            </div>
+            <div class="d-form-row">
+                <div class="d-form-group" style="flex:1;">
+                    <label class="d-form-label" style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" id="dBasDiscant" onchange="document.getElementById('dSplitGroup').style.display=this.checked?'':'none'"> Bas/Discant splitsen
+                    </label>
+                </div>
+                <div class="d-form-group" id="dSplitGroup" style="display:none;">
+                    <label class="d-form-label">Splitstoets (MIDI)</label>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input class="d-form-input" type="number" id="dSplitNote" value="60" min="0" max="127" style="flex:1;" oninput="document.getElementById('dSplitNoteLabel').textContent=dMidiToName(parseInt(this.value)||0)">
+                        <span id="dSplitNoteLabel" style="color:var(--accent);min-width:32px;">C4</span>
+                    </div>
                 </div>
             </div>
             <button class="d-btn d-btn-primary" onclick="dApplySettings()" style="margin-top:8px;">Instellingen toepassen</button>
@@ -1788,6 +1829,9 @@ function toggleDrawer() {
     document.getElementById('settingsDrawer').classList.toggle('active');
     document.getElementById('drawerOverlay').classList.toggle('active');
 }
+
+const _dNoteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+function dMidiToName(midi) { return _dNoteNames[midi % 12] + (Math.floor(midi / 12) - 1); }
 
 async function dApi(url, data) {
     try {
@@ -1960,7 +2004,9 @@ async function dApplySettings() {
         countdown_seconds: parseInt(document.getElementById('dCountdown').value),
         record_seconds: parseInt(document.getElementById('dRecordDur').value),
         start_note: parseInt(document.getElementById('dStartNote').value),
-        end_note: parseInt(document.getElementById('dEndNote').value)
+        end_note: parseInt(document.getElementById('dEndNote').value),
+        bass_treble_split: document.getElementById('dBasDiscant').checked,
+        split_note: parseInt(document.getElementById('dSplitNote').value)
     };
     await dApi('/api/settings', data);
 }
@@ -1990,7 +2036,13 @@ function syncDrawer(state) {
         document.getElementById('dCountdown').value = s.countdown_seconds;
         document.getElementById('dRecordDur').value = s.record_seconds;
         document.getElementById('dStartNote').value = s.start_note;
+        document.getElementById('dStartNoteLabel').textContent = dMidiToName(s.start_note);
         document.getElementById('dEndNote').value = s.end_note;
+        document.getElementById('dEndNoteLabel').textContent = dMidiToName(s.end_note);
+        document.getElementById('dBasDiscant').checked = s.bass_treble_split || false;
+        document.getElementById('dSplitGroup').style.display = s.bass_treble_split ? '' : 'none';
+        document.getElementById('dSplitNote').value = s.split_note || 60;
+        document.getElementById('dSplitNoteLabel').textContent = dMidiToName(s.split_note || 60);
         if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
         if (_loopbackList.length) dRenderLoopbackList(s.loopback_device_id);
         _settingsSyncDone = true;
@@ -2574,6 +2626,18 @@ body {
                 <div class="form-label" style="margin-top:4px;" id="fEndNoteLabel">C7</div>
             </div>
         </div>
+        <div class="form-row" style="margin-top:12px;">
+            <div class="form-group" style="flex:1;">
+                <label class="form-label" style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="fBasDiscant" onchange="document.getElementById('fSplitGroup').style.display=this.checked?'':'none'"> Bas/Discant splitsen
+                </label>
+            </div>
+            <div class="form-group" id="fSplitGroup" style="display:none;">
+                <label class="form-label">Splitstoets</label>
+                <input class="form-input" type="number" id="fSplitNote" value="60" min="0" max="127">
+                <div class="form-label" style="margin-top:4px;" id="fSplitNoteLabel">C4</div>
+            </div>
+        </div>
         <button class="btn btn-primary" onclick="applySettings()" style="width:100%;margin-top:12px;">
             Instellingen toepassen
         </button>
@@ -2776,7 +2840,9 @@ async function applySettings() {
         countdown_seconds: parseInt(document.getElementById('fCountdown').value),
         record_seconds: parseInt(document.getElementById('fRecordDur').value),
         start_note: parseInt(document.getElementById('fStartNote').value),
-        end_note: parseInt(document.getElementById('fEndNote').value)
+        end_note: parseInt(document.getElementById('fEndNote').value),
+        bass_treble_split: document.getElementById('fBasDiscant').checked,
+        split_note: parseInt(document.getElementById('fSplitNote').value)
     };
     await apiCall('/api/settings', data);
 }
@@ -2787,6 +2853,9 @@ document.getElementById('fStartNote').addEventListener('input', function() {
 });
 document.getElementById('fEndNote').addEventListener('input', function() {
     document.getElementById('fEndNoteLabel').textContent = midiToName(parseInt(this.value) || 96);
+});
+document.getElementById('fSplitNote').addEventListener('input', function() {
+    document.getElementById('fSplitNoteLabel').textContent = midiToName(parseInt(this.value) || 60);
 });
 
 // Update UI from state
@@ -2842,7 +2911,13 @@ function updateRemote(state) {
         document.getElementById('fCountdown').value = s.countdown_seconds;
         document.getElementById('fRecordDur').value = s.record_seconds;
         document.getElementById('fStartNote').value = s.start_note;
+        document.getElementById('fStartNoteLabel').textContent = midiToName(s.start_note);
         document.getElementById('fEndNote').value = s.end_note;
+        document.getElementById('fEndNoteLabel').textContent = midiToName(s.end_note);
+        document.getElementById('fBasDiscant').checked = s.bass_treble_split || false;
+        document.getElementById('fSplitGroup').style.display = s.bass_treble_split ? '' : 'none';
+        document.getElementById('fSplitNote').value = s.split_note || 60;
+        document.getElementById('fSplitNoteLabel').textContent = midiToName(s.split_note || 60);
         window._settingsSynced = true;
     }
     // Input mode & device list sync
