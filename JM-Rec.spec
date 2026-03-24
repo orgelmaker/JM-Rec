@@ -7,8 +7,7 @@ hiddenimports += collect_submodules('soundcard')
 hiddenimports += ['comtypes', 'comtypes.stream']
 hiddenimports += ['audioop', 'audioop_lts']
 hiddenimports += collect_submodules('jaraco')
-hiddenimports += ['soundfile']
-
+hiddenimports += ['soundfile', '_soundfile_data']
 
 a = Analysis(
     ['jm_rec.py'],
@@ -37,9 +36,8 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='JM-Rec',
     debug=False,
     bootloader_ignore_signals=False,
@@ -54,4 +52,14 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=True,
+    upx_exclude=[],
+    name='JM-Rec',
 )

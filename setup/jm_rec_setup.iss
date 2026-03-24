@@ -2,7 +2,7 @@
 ; Organ Sample Recorder - Standalone Installer
 
 #define MyAppName "JM-Rec"
-#define MyAppVersion "3.1"
+#define MyAppVersion "3.2"
 #define MyAppExeName "JM-Rec.exe"
 
 [Setup]
@@ -35,7 +35,8 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 Name: "desktopicon"; Description: "Snelkoppeling op bureaublad aanmaken"; GroupDescription: "Snelkoppelingen:"; Flags: checkedonce
 
 [Files]
-Source: "..\dist\JM-Rec.exe"; DestDir: "{app}"; Flags: ignoreversion
+; Bundle entire onedir folder
+Source: "..\dist\JM-Rec\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\jm_rec_icon.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\README.md"; DestDir: "{app}"; Flags: ignoreversion
 
@@ -61,8 +62,8 @@ var
 
 function IsUpgrade(): Boolean;
 begin
-  Result := RegValueExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1', 'UninstallString')
-         or RegValueExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1', 'UninstallString');
+  Result := RegValueExists(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1', 'UninstallString')
+         or RegValueExists(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1', 'UninstallString');
 end;
 
 procedure InitializeWizard;
@@ -108,12 +109,11 @@ var
   sUnInstStr: String;
 begin
   Result := '';
-  sUnInstPath := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1';
+  sUnInstPath := 'Software\Microsoft\Windows\CurrentVersion\Uninstall\{B3F7A1D2-9C4E-4F8B-A6D1-3BM-JMREC-001}_is1';
   if RegQueryStringValue(HKCU, sUnInstPath, 'UninstallString', sUnInstStr) then
     Result := sUnInstStr
-  else
-    RegQueryStringValue(HKLM, sUnInstPath, 'UninstallString', sUnInstStr);
-  Result := sUnInstStr;
+  else if RegQueryStringValue(HKLM, sUnInstPath, 'UninstallString', sUnInstStr) then
+    Result := sUnInstStr;
 end;
 
 function NextButtonClick(CurPageID: Integer): Boolean;

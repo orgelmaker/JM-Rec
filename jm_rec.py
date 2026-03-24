@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 JM-Rec — Organ Sample Recorder
-Records pipe organ samples with GrandOrgue-compatible naming.
+Records pipe organ samples with standardized naming.
 Includes web-based remote control for Android, iOS or Windows.
 
 File naming convention: {MIDI_number}-{note_name}.mp3
@@ -42,6 +42,12 @@ except ImportError:
     HAS_QRCODE = False
 
 try:
+    import soundfile as sf
+    HAS_SOUNDFILE = True
+except ImportError:
+    HAS_SOUNDFILE = False
+
+try:
     import soundcard as sc
     HAS_SOUNDCARD = True
 except ImportError:
@@ -61,7 +67,7 @@ def midi_to_display(midi_num):
     return f"{note.upper()}{octave}"
 
 def midi_to_filename(midi_num):
-    """Convert MIDI number to GrandOrgue filename like 036-c, 037-c#, etc."""
+    """Convert MIDI number to filename like 036-c, 037-c#, etc."""
     note = NOTE_NAMES[midi_num % 12]
     return f"{midi_num:03d}-{note}"
 
@@ -116,7 +122,8 @@ class RecorderEngine:
         self.loopback_device_id = None # soundcard speaker ID
 
         # Orgel-structuur
-        self.keyboards = []        # ["Hoofdwerk", "Zwelwerk", ...]
+        self.keyboards = []        # [{"name": "Hoofdwerk", "zwelwerk": False}, ...]
+        self.couplers = []         # [{"source": "Zwelwerk", "target": "Hoofdwerk"}, ...]
         self.has_pedal = False
         self.current_keyboard = "" # selected keyboard/pedal name
         self.tremulant = False     # append _trem to register folder
@@ -133,6 +140,8 @@ class RecorderEngine:
         # Bas/Discant split
         self.bass_treble_split = False
         self.split_note = 60   # C4 (middle C) — first note of discant
+        self.split_record_bas = True
+        self.split_record_disc = True
 
         # State
         self.state = "idle"  # idle, countdown, recording, paused
@@ -154,17 +163,35 @@ class RecorderEngine:
         # Thread lock
         self.lock = threading.Lock()
 
+        # Review state
+        self.review_state = "idle"       # "idle" | "analyzing" | "done"
+        self.review_progress = 0.0       # 0.0 - 1.0
+        self.review_scope = ""
+        self.review_results = []
+        self.review_todo = []
+        self.review_current_idx = None
+
     @property
     def device_index(self):
         """Backwards-compatible: return first selected device or None."""
         return self.device_indices[0] if self.device_indices else None
 
     def get_devices(self):
-        """List available audio input devices."""
+        """List available audio input devices (WASAPI only to avoid duplicates)."""
         devices = sd.query_devices()
+        hostapis = sd.query_hostapis()
+        # Find WASAPI host api index
+        wasapi_idx = None
+        for idx, api in enumerate(hostapis):
+            if 'WASAPI' in api.get('name', ''):
+                wasapi_idx = idx
+                break
         input_devices = []
         for i, d in enumerate(devices):
             if d['max_input_channels'] > 0:
+                # Filter to WASAPI only (if available) to avoid 4x duplicates
+                if wasapi_idx is not None and d.get('hostapi') != wasapi_idx:
+                    continue
                 input_devices.append({
                     'index': i,
                     'name': d['name'],
@@ -193,22 +220,35 @@ class RecorderEngine:
             print(f"Error listing loopback devices: {e}")
             return []
 
+    def _normalize_keyboards(self, keyboards):
+        """Convert keyboard list to objects if needed. Accepts strings or dicts."""
+        result = []
+        for kb in keyboards:
+            if isinstance(kb, str):
+                result.append({"name": kb, "zwelwerk": False})
+            elif isinstance(kb, dict):
+                result.append({"name": kb.get("name", ""), "zwelwerk": bool(kb.get("zwelwerk", False))})
+        return result
+
+    def _kb_names(self):
+        """Get list of keyboard names."""
+        return [kb["name"] for kb in self.keyboards]
+
     def setup_organ(self, organ_name, keyboards, has_pedal, output_dir=None):
         """Set up organ project: creates main folder + keyboard/pedal subfolders."""
         self.project_name = organ_name
-        self.keyboards = keyboards
+        self.keyboards = self._normalize_keyboards(keyboards)
         self.has_pedal = has_pedal
         if output_dir:
             self.output_dir = output_dir
         base = os.path.join(self.output_dir, organ_name)
         os.makedirs(base, exist_ok=True)
-        for kb in keyboards:
-            os.makedirs(os.path.join(base, kb), exist_ok=True)
+        for kb in self.keyboards:
+            os.makedirs(os.path.join(base, kb["name"]), exist_ok=True)
         if has_pedal:
             os.makedirs(os.path.join(base, "Pedaal"), exist_ok=True)
-        # Select first keyboard by default
-        if keyboards:
-            self.current_keyboard = keyboards[0]
+        if self.keyboards:
+            self.current_keyboard = self.keyboards[0]["name"]
         elif has_pedal:
             self.current_keyboard = "Pedaal"
         self._notify()
@@ -282,9 +322,31 @@ class RecorderEngine:
         thread = threading.Thread(target=self._recording_cycle, daemon=True)
         thread.start()
     
+    def _should_skip_note(self):
+        """Check if current note should be skipped based on split settings."""
+        if not self.bass_treble_split:
+            return False
+        is_bas = self.current_note < self.split_note
+        if is_bas and not self.split_record_bas:
+            return True
+        if not is_bas and not self.split_record_disc:
+            return True
+        return False
+
     def _recording_cycle(self):
         """Main recording cycle: countdown → record → (auto)advance."""
         while self.is_running and self.current_note <= self.end_note:
+            # Skip notes not in selected split range
+            if self._should_skip_note():
+                if self.auto_advance and self.current_note < self.end_note:
+                    self.current_note += 1
+                    continue
+                else:
+                    self.state = "idle"
+                    self.is_running = False
+                    self._notify()
+                    return
+
             # Countdown phase
             self.state = "countdown"
             self._notify()
@@ -373,7 +435,8 @@ class RecorderEngine:
             self.current_level = 0.0
 
         except Exception as e:
-            print(f"Recording error: {e}")
+            print(f"Recording error: {e}", flush=True)
+            import traceback; traceback.print_exc()
             self.current_level = 0.0
 
     def _do_record_loopback(self):
@@ -546,7 +609,10 @@ class RecorderEngine:
             self._write_wav(os.path.join(path, filename + ".wav"), audio_data)
 
         elif fmt == "flac":
-            import soundfile as sf
+            if not HAS_SOUNDFILE:
+                print("FLAC not available: soundfile module missing, saving as WAV")
+                self._write_wav(os.path.join(path, filename + ".wav"), audio_data)
+                return
             flac_path = os.path.join(path, filename + ".flac")
             subtype = 'PCM_24' if self.bit_depth == 24 else 'PCM_16'
             sf.write(flac_path, audio_data, self.sample_rate, subtype=subtype)
@@ -607,6 +673,291 @@ class RecorderEngine:
                 wf.setframerate(self.sample_rate)
                 wf.writeframes(audio_data.tobytes())
     
+    # ─── Sample Review / Analysis ───────────────────────
+
+    def _load_audio_file(self, filepath):
+        """Load audio file as (float32 numpy array, sample_rate). Returns (None, None) on failure."""
+        ext = os.path.splitext(filepath)[1].lower()
+        try:
+            if ext in ('.wav', '.flac') and HAS_SOUNDFILE:
+                data, sr = sf.read(filepath, dtype='float32')
+                return data, sr
+            elif ext == '.wav':
+                with wave.open(filepath, 'r') as wf:
+                    sr = wf.getframerate()
+                    n = wf.getnframes()
+                    raw = wf.readframes(n)
+                    sw = wf.getsampwidth()
+                    if sw == 2:
+                        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+                    else:
+                        data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+                    return data, sr
+            elif ext == '.mp3':
+                _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                result = subprocess.run(
+                    ['lame', '--decode', filepath, '-'],
+                    capture_output=True, creationflags=_cflags
+                )
+                if result.returncode == 0 and len(result.stdout) > 44:
+                    buf = io.BytesIO(result.stdout)
+                    if HAS_SOUNDFILE:
+                        data, sr = sf.read(buf, dtype='float32')
+                        return data, sr
+                    else:
+                        with wave.open(buf, 'r') as wf:
+                            sr = wf.getframerate()
+                            raw = wf.readframes(wf.getnframes())
+                            data = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
+                            return data, sr
+        except Exception as e:
+            print(f"Load audio error ({filepath}): {e}")
+        return None, None
+
+    def _write_audio_file(self, filepath, data, sr):
+        """Write float32 numpy array back to file in its original format."""
+        ext = os.path.splitext(filepath)[1].lower()
+        try:
+            if ext == '.flac' and HAS_SOUNDFILE:
+                sf.write(filepath, data, sr, subtype='PCM_16')
+            elif ext == '.wav' and HAS_SOUNDFILE:
+                sf.write(filepath, data, sr, subtype='PCM_16')
+            elif ext == '.wav':
+                audio_int = (data * 32767).astype(np.int16)
+                with wave.open(filepath, 'w') as wf:
+                    ch = 2 if len(data.shape) > 1 and data.shape[1] == 2 else 1
+                    wf.setnchannels(ch)
+                    wf.setsampwidth(2)
+                    wf.setframerate(sr)
+                    wf.writeframes(audio_int.tobytes())
+            elif ext == '.mp3':
+                tmp_wav = filepath + '.tmp.wav'
+                if HAS_SOUNDFILE:
+                    sf.write(tmp_wav, data, sr, subtype='PCM_16')
+                else:
+                    audio_int = (data * 32767).astype(np.int16)
+                    with wave.open(tmp_wav, 'w') as wf:
+                        wf.setnchannels(1)
+                        wf.setsampwidth(2)
+                        wf.setframerate(sr)
+                        wf.writeframes(audio_int.tobytes())
+                _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
+                subprocess.run(
+                    ['lame', '-b', str(self.mp3_bitrate), '--quiet', tmp_wav, filepath],
+                    creationflags=_cflags, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
+                os.remove(tmp_wav)
+        except Exception as e:
+            print(f"Write audio error ({filepath}): {e}")
+
+    def _calculate_trim(self, data, sr, threshold_db=-40):
+        """Return (start_sample, end_sample) for non-silent region."""
+        threshold = 10 ** (threshold_db / 20.0)
+        abs_data = np.abs(data.flatten())
+        above = np.where(abs_data > threshold)[0]
+        if len(above) == 0:
+            return 0, 0
+        margin = int(sr * 0.01)
+        start = max(0, above[0] - margin)
+        end = min(len(abs_data), above[-1] + margin)
+        return start, end
+
+    def _check_silent(self, data, sr):
+        rms = np.sqrt(np.mean(data.astype(np.float64) ** 2))
+        peak = np.max(np.abs(data))
+        threshold = 10 ** (-40 / 20.0)
+        if rms < threshold and peak < threshold * 2:
+            return {"issue": "silent", "detail": f"Stil: RMS {20*np.log10(max(rms,1e-10)):.0f}dB", "severity": "error"}
+        return None
+
+    def _check_clipping(self, data, sr):
+        abs_data = np.abs(data.flatten())
+        clip_count = np.sum(abs_data >= 0.99)
+        if clip_count >= 10:
+            pct = clip_count / len(abs_data) * 100
+            sev = "error" if pct > 1.0 else "warning"
+            return {"issue": "clipping", "detail": f"Clipping: {pct:.1f}% overstuurd", "severity": sev}
+        return None
+
+    def _check_short(self, data, sr):
+        duration = len(data.flatten()) / sr
+        if duration < self.record_seconds * 0.5:
+            return {"issue": "short", "detail": f"Te kort: {duration:.1f}s (verwacht {self.record_seconds}s)", "severity": "warning"}
+        return None
+
+    def _check_noise(self, data, sr, stats):
+        if not stats or stats.get('rms_std', 0) == 0:
+            return None
+        rms = np.sqrt(np.mean(data.astype(np.float64) ** 2))
+        z = abs(rms - stats['rms_mean']) / stats['rms_std']
+        if z > 3.0:
+            return {"issue": "noise", "detail": f"Afwijkend volume: z-score {z:.1f}", "severity": "warning"}
+        return None
+
+    def _find_missing_notes(self, folder, start_note, end_note, fmt):
+        missing = []
+        for midi in range(start_note, end_note + 1):
+            if self.bass_treble_split:
+                if not self.split_record_bas and midi < self.split_note:
+                    continue
+                if not self.split_record_disc and midi >= self.split_note:
+                    continue
+            expected = midi_to_filename(midi) + "." + fmt
+            if not os.path.exists(os.path.join(folder, expected)):
+                missing.append(midi)
+        return missing
+
+    def start_review(self, scope, path, trim=True):
+        """Start sample review in background thread."""
+        if self.review_state == "analyzing":
+            return
+        self.review_state = "analyzing"
+        self.review_progress = 0.0
+        self.review_results = []
+        self.review_todo = []
+        self.review_current_idx = None
+        self.review_scope = scope
+        self._notify()
+        thread = threading.Thread(target=self._run_review, args=(path, trim), daemon=True)
+        thread.start()
+
+    def _run_review(self, base_path, trim):
+        """Background: scan and analyze all samples."""
+        try:
+            self._do_review(base_path, trim)
+        except Exception as e:
+            print(f"Review error: {e}")
+        self.review_state = "done"
+        self.review_progress = 1.0
+        self._notify()
+
+    def _do_review(self, base_path, trim):
+        """Core review logic with two passes."""
+        # Collect all audio files
+        files = []  # (full_path, keyboard, register, midi_num)
+        fmt = self.output_format
+
+        if not os.path.isdir(base_path):
+            return
+
+        # Walk and collect audio files
+        for root, dirs, filenames in os.walk(base_path):
+            for fn in sorted(filenames):
+                ext = os.path.splitext(fn)[1].lower().lstrip('.')
+                if ext not in ('mp3', 'wav', 'flac'):
+                    continue
+                # Extract MIDI number from filename like "036-c.mp3"
+                match = re.match(r'^(\d{3})-', fn)
+                if not match:
+                    continue
+                midi = int(match.group(1))
+                # Determine keyboard and register from path
+                rel = os.path.relpath(root, base_path)
+                parts = rel.replace('\\', '/').split('/')
+                parts = [p for p in parts if p != '.']
+                kb = parts[0] if len(parts) >= 2 else self.current_keyboard
+                reg = parts[1] if len(parts) >= 2 else (parts[0] if parts else self.register_name)
+                files.append((os.path.join(root, fn), kb, reg, midi))
+
+        total = len(files)
+        if total == 0:
+            return
+
+        # Pass 1: collect statistics per folder (0-50%)
+        folder_stats = {}
+        for i, (fpath, kb, reg, midi) in enumerate(files):
+            if self.review_state != "analyzing":
+                return
+            self.review_progress = (i / total) * 0.5
+            self._notify()
+            data, sr = self._load_audio_file(fpath)
+            if data is None:
+                continue
+            folder = os.path.dirname(fpath)
+            if folder not in folder_stats:
+                folder_stats[folder] = {'rms_values': [], 'fmt': os.path.splitext(fpath)[1].lower().lstrip('.')}
+            rms = np.sqrt(np.mean(data.astype(np.float64) ** 2))
+            folder_stats[folder]['rms_values'].append(rms)
+
+        # Compute means/stds
+        for folder in folder_stats:
+            vals = folder_stats[folder]['rms_values']
+            folder_stats[folder]['rms_mean'] = float(np.mean(vals)) if vals else 0
+            folder_stats[folder]['rms_std'] = float(np.std(vals)) if vals else 0
+
+        # Pass 2: analyze each file + trim (50-100%)
+        for i, (fpath, kb, reg, midi) in enumerate(files):
+            if self.review_state != "analyzing":
+                return
+            self.review_progress = 0.5 + (i / total) * 0.5
+            self._notify()
+            data, sr = self._load_audio_file(fpath)
+            if data is None:
+                continue
+
+            issues = []
+            r = self._check_silent(data, sr)
+            if r:
+                issues.append(r)
+            r = self._check_clipping(data, sr)
+            if r:
+                issues.append(r)
+            r = self._check_short(data, sr)
+            if r:
+                issues.append(r)
+            folder = os.path.dirname(fpath)
+            stats = folder_stats.get(folder, {})
+            r = self._check_noise(data, sr, stats)
+            if r:
+                issues.append(r)
+
+            # Trim silence (only if not silent)
+            if trim and not any(x['issue'] == 'silent' for x in issues):
+                start, end = self._calculate_trim(data, sr)
+                if end > start and (start > 0 or end < len(data.flatten())):
+                    if len(data.shape) > 1:
+                        trimmed = data[start:end, :]
+                    else:
+                        trimmed = data[start:end]
+                    self._write_audio_file(fpath, trimmed, sr)
+
+            for issue in issues:
+                self.review_results.append({
+                    "file": os.path.basename(fpath),
+                    "path": fpath,
+                    "midi": midi,
+                    "note": midi_to_display(midi),
+                    "keyboard": kb,
+                    "register": reg,
+                    **issue
+                })
+
+        # Check missing notes per register folder
+        for folder, stats in folder_stats.items():
+            ext = stats.get('fmt', fmt)
+            missing = self._find_missing_notes(folder, self.start_note, self.end_note, ext)
+            rel = os.path.relpath(folder, base_path)
+            parts = rel.replace('\\', '/').split('/')
+            parts = [p for p in parts if p != '.']
+            kb = parts[0] if len(parts) >= 2 else self.current_keyboard
+            reg = parts[1] if len(parts) >= 2 else (parts[0] if parts else self.register_name)
+            for midi in missing:
+                self.review_results.append({
+                    "file": midi_to_filename(midi) + "." + ext,
+                    "path": os.path.join(folder, midi_to_filename(midi) + "." + ext),
+                    "midi": midi,
+                    "note": midi_to_display(midi),
+                    "keyboard": kb,
+                    "register": reg,
+                    "issue": "missing",
+                    "detail": f"Ontbreekt: {midi_to_display(midi)}",
+                    "severity": "error"
+                })
+
+        # Build todo list (errors only, sorted)
+        self.review_todo = [r for r in self.review_results if r['severity'] == 'error']
+        self.review_todo.sort(key=lambda x: (x.get('keyboard', ''), x.get('register', ''), x.get('midi', 0)))
+
     def stop(self):
         """Stop recording cycle."""
         self.is_running = False
@@ -661,7 +1012,12 @@ class RecorderEngine:
                 reg_name += "_trem"
             base = os.path.join(self.output_dir, self.project_name,
                                 self.current_keyboard, reg_name)
-            for suffix in ("_bas", "_dis"):
+            parts = []
+            if self.split_record_bas:
+                parts.append("_bas")
+            if self.split_record_disc:
+                parts.append("_dis")
+            for suffix in parts:
                 sub = os.path.join(base, reg_name + suffix)
                 os.makedirs(sub, exist_ok=True)
                 if len(self.device_indices) > 1:
@@ -687,6 +1043,7 @@ class RecorderEngine:
                 'register': self.register_name,
                 'output_dir': self.output_dir,
                 'keyboards': self.keyboards,
+                'couplers': self.couplers,
                 'has_pedal': self.has_pedal,
                 'current_keyboard': self.current_keyboard,
                 'tremulant': self.tremulant,
@@ -714,6 +1071,18 @@ class RecorderEngine:
                     'record_gain': self.record_gain,
                     'bass_treble_split': self.bass_treble_split,
                     'split_note': self.split_note,
+                    'split_record_bas': self.split_record_bas,
+                    'split_record_disc': self.split_record_disc,
+                },
+                'review': {
+                    'state': self.review_state,
+                    'progress': self.review_progress,
+                    'scope': self.review_scope,
+                    'total': len(self.review_results),
+                    'errors': sum(1 for r in self.review_results if r.get('severity') == 'error'),
+                    'warnings': sum(1 for r in self.review_results if r.get('severity') == 'warning'),
+                    'todo_count': len(self.review_todo),
+                    'current_idx': self.review_current_idx,
                 }
             }
     
@@ -800,7 +1169,7 @@ def create_web_app(engine: RecorderEngine):
     def api_select_keyboard():
         data = request.json
         kb = data.get('keyboard', '').strip()
-        available = list(engine.keyboards)
+        available = engine._kb_names()
         if engine.has_pedal:
             available.append('Pedaal')
         if kb not in available:
@@ -860,6 +1229,10 @@ def create_web_app(engine: RecorderEngine):
             engine.bass_treble_split = bool(data['bass_treble_split'])
         if 'split_note' in data:
             engine.split_note = int(data['split_note'])
+        if 'split_record_bas' in data:
+            engine.split_record_bas = bool(data['split_record_bas'])
+        if 'split_record_disc' in data:
+            engine.split_record_disc = bool(data['split_record_disc'])
         return jsonify({'success': True, 'state': engine.get_state()})
     
     @app.route('/api/record', methods=['POST'])
@@ -946,6 +1319,175 @@ def create_web_app(engine: RecorderEngine):
         local_ip = get_local_ip()
         port = request.host.split(':')[-1] if ':' in request.host else '5555'
         return jsonify({'url': f"http://{local_ip}:{port}"})
+
+    # ── Project export ──
+
+    @app.route('/api/export-project', methods=['POST'])
+    def api_export_project():
+        """Export project metadata as JM-Rec JSON for JM-Orgue import."""
+        if not engine.project_name:
+            return jsonify({'success': False, 'error': 'Geen project ingesteld'})
+
+        # Scan all registers from disk
+        base = os.path.join(engine.output_dir, engine.project_name)
+        registers = {}
+        for kb in engine.keyboards:
+            kb_path = os.path.join(base, kb["name"])
+            if not os.path.isdir(kb_path):
+                continue
+            regs = []
+            for entry in sorted(os.listdir(kb_path)):
+                reg_path = os.path.join(kb_path, entry)
+                if os.path.isdir(reg_path):
+                    # Count samples
+                    samples = [f for f in os.listdir(reg_path)
+                               if f.endswith(('.mp3', '.wav', '.flac'))]
+                    # Check for sub-mic folders
+                    sub_mics = [d for d in os.listdir(reg_path)
+                                if os.path.isdir(os.path.join(reg_path, d))]
+                    if sub_mics and not samples:
+                        samples = [f for f in os.listdir(os.path.join(reg_path, sub_mics[0]))
+                                   if f.endswith(('.mp3', '.wav', '.flac'))]
+                    regs.append({
+                        "name": entry,
+                        "tremulant": entry.endswith("_trem"),
+                        "samples": len(samples),
+                        "mics": sub_mics if sub_mics else [],
+                    })
+            registers[kb["name"]] = regs
+
+        if engine.has_pedal:
+            pedaal_path = os.path.join(base, "Pedaal")
+            if os.path.isdir(pedaal_path):
+                regs = []
+                for entry in sorted(os.listdir(pedaal_path)):
+                    if os.path.isdir(os.path.join(pedaal_path, entry)):
+                        samples = [f for f in os.listdir(os.path.join(pedaal_path, entry))
+                                   if f.endswith(('.mp3', '.wav', '.flac'))]
+                        regs.append({"name": entry, "tremulant": entry.endswith("_trem"), "samples": len(samples), "mics": []})
+                registers["Pedaal"] = regs
+
+        project = {
+            "jm_rec_version": "3.2",
+            "organ": engine.project_name,
+            "keyboards": engine.keyboards,
+            "has_pedal": engine.has_pedal,
+            "couplers": engine.couplers,
+            "registers": registers,
+            "settings": {
+                "sample_rate": engine.sample_rate,
+                "bit_depth": engine.bit_depth,
+                "channels": engine.channels,
+                "output_format": engine.output_format,
+                "start_note": engine.start_note,
+                "end_note": engine.end_note,
+            }
+        }
+
+        export_path = os.path.join(base, engine.project_name + ".jm-rec.json")
+        with open(export_path, 'w', encoding='utf-8') as f:
+            json.dump(project, f, indent=2, ensure_ascii=False)
+
+        return jsonify({'success': True, 'path': export_path, 'project': project})
+
+    # ── Coupler endpoints ──
+
+    @app.route('/api/add-coupler', methods=['POST'])
+    def api_add_coupler():
+        data = request.json or {}
+        source = data.get('source', '').strip()
+        target = data.get('target', '').strip()
+        if not source or not target or source == target:
+            return jsonify({'success': False, 'error': 'Ongeldige koppel'})
+        coupler = {"source": source, "target": target}
+        if coupler not in engine.couplers:
+            engine.couplers.append(coupler)
+            engine._notify()
+        return jsonify({'success': True, 'couplers': engine.couplers})
+
+    @app.route('/api/remove-coupler', methods=['POST'])
+    def api_remove_coupler():
+        data = request.json or {}
+        idx = data.get('index')
+        if idx is not None and 0 <= idx < len(engine.couplers):
+            engine.couplers.pop(idx)
+            engine._notify()
+            return jsonify({'success': True, 'couplers': engine.couplers})
+        return jsonify({'success': False})
+
+    # ── Review endpoints ──
+
+    @app.route('/api/review-start', methods=['POST'])
+    def api_review_start():
+        data = request.json or {}
+        scope = data.get('scope', 'register')
+        trim = data.get('trim', True)
+        custom_path = data.get('path', '').strip()
+        if custom_path and os.path.isdir(custom_path):
+            path = custom_path
+        elif scope == 'register':
+            path = engine.get_current_register_path()
+        elif scope == 'keyboard':
+            path = os.path.join(engine.output_dir, engine.project_name, engine.current_keyboard)
+        else:
+            path = os.path.join(engine.output_dir, engine.project_name)
+        engine.start_review(scope, path, trim)
+        return jsonify({'success': True, 'path': path})
+
+    @app.route('/api/review-stop', methods=['POST'])
+    def api_review_stop():
+        engine.review_state = "idle"
+        engine.review_progress = 0.0
+        engine._notify()
+        return jsonify({'success': True})
+
+    @app.route('/api/review-results')
+    def api_review_results():
+        return jsonify({
+            'state': engine.review_state,
+            'progress': engine.review_progress,
+            'results': engine.review_results,
+            'todo': engine.review_todo,
+            'current_idx': engine.review_current_idx,
+        })
+
+    @app.route('/api/review-goto', methods=['POST'])
+    def api_review_goto():
+        data = request.json or {}
+        idx = data.get('index', 0)
+        if 0 <= idx < len(engine.review_todo):
+            item = engine.review_todo[idx]
+            engine.review_current_idx = idx
+            engine.current_keyboard = item.get('keyboard', engine.current_keyboard)
+            engine.register_name = item.get('register', engine.register_name)
+            engine.set_note(item['midi'])
+            return jsonify({'success': True, 'item': item})
+        return jsonify({'success': False, 'error': 'Ongeldig item'})
+
+    @app.route('/api/review-next', methods=['POST'])
+    def api_review_next():
+        idx = (engine.review_current_idx or 0) + 1
+        if idx < len(engine.review_todo):
+            item = engine.review_todo[idx]
+            engine.review_current_idx = idx
+            engine.current_keyboard = item.get('keyboard', engine.current_keyboard)
+            engine.register_name = item.get('register', engine.register_name)
+            engine.set_note(item['midi'])
+            return jsonify({'success': True, 'item': item})
+        return jsonify({'success': False, 'error': 'Geen volgend item'})
+
+    @app.route('/api/review-mark-done', methods=['POST'])
+    def api_review_mark_done():
+        data = request.json or {}
+        idx = data.get('index', engine.review_current_idx)
+        if idx is not None and 0 <= idx < len(engine.review_todo):
+            engine.review_todo.pop(idx)
+            if engine.review_current_idx is not None:
+                if engine.review_current_idx >= len(engine.review_todo):
+                    engine.review_current_idx = max(0, len(engine.review_todo) - 1) if engine.review_todo else None
+            engine._notify()
+            return jsonify({'success': True, 'remaining': len(engine.review_todo)})
+        return jsonify({'success': False})
 
     @app.route('/api/shutdown', methods=['POST'])
     def api_shutdown():
@@ -1484,12 +2026,13 @@ body {
 <body>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.1</span></div>
+    <div class="logo">JM-Rec <span>v3.2</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
         </div>
         <button class="header-btn" onclick="openModal('qrModal')">QR Remote</button>
+        <button class="header-btn" onclick="openModal('reviewModal')">Controle</button>
         <button class="header-btn" onclick="openModal('readmeModal')">? Info</button>
         <button class="header-btn" onclick="toggleDrawer()">Instellingen</button>
     </div>
@@ -1591,18 +2134,19 @@ body {
         </div>
 
         <div class="drawer-section">
-            <div class="drawer-section-title">Audiobron</div>
-            <div style="display:flex;gap:4px;margin-bottom:8px;">
-                <button class="d-btn" id="dModeMic" onclick="dSetInputMode('mic')" style="flex:1;">Microfoon</button>
-                <button class="d-btn" id="dModeLoopback" onclick="dSetInputMode('loopback')" style="flex:1;">Wat je hoort</button>
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <div class="drawer-section-title" style="margin:0;">Audiobron</div>
+                <button class="d-btn" onclick="dLoadDevices()" title="Apparaten verversen" style="padding:2px 8px;font-size:0.7rem;">&#x21bb; Verversen</button>
             </div>
+            <select class="d-form-select" id="dInputMode" onchange="dSetInputMode(this.value)" style="margin:8px 0;">
+                <option value="mic">Microfoon</option>
+                <option value="loopback">Wat je hoort</option>
+            </select>
             <div id="dMicSection">
                 <div id="dMicList">Laden...</div>
-                <button class="d-btn" onclick="dApplyMics()" style="margin-top:6px;">Microfoons toepassen</button>
             </div>
             <div id="dLoopbackSection" style="display:none;">
                 <div id="dLoopbackList" style="font-size:0.75rem;color:var(--dim);">Laden...</div>
-                <button class="d-btn" onclick="dApplyLoopback()" style="margin-top:6px;">Loopback toepassen</button>
             </div>
         </div>
 
@@ -1699,6 +2243,14 @@ body {
                         <input class="d-form-input" type="number" id="dSplitNote" value="60" min="0" max="127" style="flex:1;" oninput="document.getElementById('dSplitNoteLabel').textContent=dMidiToName(parseInt(this.value)||0)">
                         <span id="dSplitNoteLabel" style="color:var(--accent);min-width:32px;">C4</span>
                     </div>
+                    <div style="display:flex;gap:16px;margin-top:6px;">
+                        <label class="d-form-label" style="display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" id="dSplitBas" checked> Bas opnemen
+                        </label>
+                        <label class="d-form-label" style="display:flex;align-items:center;gap:4px;">
+                            <input type="checkbox" id="dSplitDisc" checked> Discant opnemen
+                        </label>
+                    </div>
                 </div>
             </div>
             <button class="d-btn d-btn-primary" onclick="dApplySettings()" style="margin-top:8px;">Instellingen toepassen</button>
@@ -1719,6 +2271,48 @@ body {
         </div>
         <div class="qr-url" id="qrUrl">Laden...</div>
         <div class="qr-hint">Zorg dat je telefoon op hetzelfde netwerk zit als deze PC</div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div class="modal-overlay" id="reviewModal" onclick="if(event.target===this)closeModal('reviewModal')">
+    <div class="modal" style="max-width:650px;max-height:80vh;overflow-y:auto;">
+        <button class="modal-close" onclick="closeModal('reviewModal')">&times;</button>
+        <div class="modal-title">Sample Controle</div>
+        <div style="margin-bottom:8px;">
+            <label class="d-form-label">Map</label>
+            <input class="d-form-input" id="dRevPath" placeholder="Pad naar register-, klavier- of orgelmap" style="font-size:0.7rem;">
+        </div>
+        <div style="display:flex;gap:4px;margin-bottom:8px;">
+            <button class="d-btn" id="dRevRegister" onclick="dSetReviewScope('register')" style="flex:1;">Register</button>
+            <button class="d-btn" id="dRevKeyboard" onclick="dSetReviewScope('keyboard')" style="flex:1;">Klavier</button>
+            <button class="d-btn" id="dRevOrgan" onclick="dSetReviewScope('organ')" style="flex:1;">Orgel</button>
+            <button class="d-btn" id="dRevCustom" onclick="dSetReviewScope('custom')" style="flex:1;border-color:var(--accent);color:var(--accent);">Map</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--dim);margin-bottom:8px;">
+            <input type="checkbox" id="dRevTrim" checked> Stilte knippen
+        </label>
+        <button class="d-btn d-btn-primary" id="dRevStart" onclick="dStartReview()" style="width:100%;">Analyseren</button>
+        <button class="d-btn" id="dRevStop" onclick="dApi('/api/review-stop')" style="width:100%;display:none;color:var(--recording);">Annuleren</button>
+        <div id="dRevProgress" style="display:none;margin-top:12px;">
+            <div style="background:var(--surface);border-radius:4px;height:8px;overflow:hidden;">
+                <div id="dRevBar" style="height:100%;background:var(--accent);width:0%;transition:width 0.3s;"></div>
+            </div>
+            <div id="dRevPct" style="text-align:center;font-size:0.75rem;color:var(--dim);margin-top:4px;">0%</div>
+        </div>
+        <div id="dRevResults" style="display:none;margin-top:12px;">
+            <div id="dRevSummary" style="font-size:0.8rem;color:var(--dim);margin-bottom:8px;"></div>
+            <div id="dRevList" style="max-height:350px;overflow-y:auto;"></div>
+        </div>
+        <div id="dRevRerecord" style="display:none;margin-top:12px;padding-top:8px;border-top:1px solid var(--border);">
+            <div style="font-size:0.8rem;color:var(--dim);margin-bottom:6px;">Her-opname:</div>
+            <div style="display:flex;gap:4px;">
+                <button class="d-btn" onclick="dRevPrev()" style="flex:1;">Vorige</button>
+                <button class="d-btn d-btn-primary" onclick="dApi('/api/record-single')" style="flex:1;">Opnemen</button>
+                <button class="d-btn" onclick="dRevMarkDone()" style="flex:1;color:var(--success);">Klaar</button>
+                <button class="d-btn" onclick="dRevNext()" style="flex:1;">Volgende</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -1750,7 +2344,7 @@ body {
         <p>Per noot: <strong>Aftellen</strong> (standaard 5s) &rarr; <strong>Opnemen</strong> (standaard 5s) &rarr; <strong>Volgende noot</strong>. Dit herhaalt zich automatisch tot de laatste noot.</p>
 
         <h2>Bestandsnamen</h2>
-        <p>Bestanden volgen de <strong>GrandOrgue/Hauptwerk</strong>-conventie:</p>
+        <p>Bestandsnaamgeving:</p>
         <div class="tip-box">
             <code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>
             Formaat: <code>{MIDI-nummer}-{nootnaam}.mp3</code>
@@ -1788,7 +2382,7 @@ body {
 
         <h2>Conversie naar WAV</h2>
         <div class="tip-box">
-            De MP3-bestanden kun je later converteren naar WAV voor GrandOrgue:<br><br>
+            MP3 naar WAV converteren:<br><br>
             <code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code>
         </div>
 
@@ -1798,7 +2392,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.1</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.2</p>
     </div>
 </div>
 
@@ -1851,7 +2445,9 @@ function dUpdateKbInputs() {
     c.innerHTML = '';
     for (let i = 0; i < n; i++) {
         c.innerHTML += '<div class="d-kbd-row"><span class="d-kbd-num">' + (i+1) + '.</span>' +
-            '<input class="d-form-input" id="dKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (defaults[i]||'') + '"></div>';
+            '<input class="d-form-input" id="dKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (defaults[i]||'') + '" style="flex:1;">' +
+            '<label style="display:flex;align-items:center;gap:3px;font-size:0.65rem;color:var(--dim);white-space:nowrap;">' +
+            '<input type="checkbox" id="dKbZw' + i + '"' + (defaults[i] === 'Zwelwerk' ? ' checked' : '') + '> Zwelkast</label></div>';
     }
 }
 dUpdateKbInputs();
@@ -1862,7 +2458,7 @@ async function dSetupOrgan() {
     const keyboards = [];
     for (let i = 0; i < n; i++) {
         const v = document.getElementById('dKb' + i).value.trim();
-        if (v) keyboards.push(v);
+        if (v) keyboards.push({ name: v, zwelwerk: document.getElementById('dKbZw' + i).checked });
     }
     const data = {
         organ: document.getElementById('dOrganName').value,
@@ -1877,14 +2473,15 @@ async function dSetupOrgan() {
 function dBuildKbSelector(keyboards, hasPedal, current) {
     const c = document.getElementById('dKbSelector');
     const sec = document.getElementById('dKbSection');
-    const all = [...keyboards];
-    if (hasPedal) all.push('Pedaal');
+    const all = keyboards.map(kb => typeof kb === 'string' ? {name: kb, zwelwerk: false} : kb);
+    if (hasPedal) all.push({name: 'Pedaal', zwelwerk: false});
     if (all.length === 0) { sec.style.display = 'none'; return; }
     sec.style.display = '';
     c.innerHTML = '';
     all.forEach(kb => {
-        const cls = kb === current ? 'd-kb-btn active' : 'd-kb-btn';
-        c.innerHTML += '<button class="' + cls + '" onclick="dSelectKb(\'' + kb.replace(/'/g,"\\'") + '\')">' + kb + '</button>';
+        const cls = kb.name === current ? 'd-kb-btn active' : 'd-kb-btn';
+        const zw = kb.zwelwerk ? ' <span style="font-size:0.6rem;opacity:0.5;">ZW</span>' : '';
+        c.innerHTML += '<button class="' + cls + '" onclick="dSelectKb(\'' + kb.name.replace(/'/g,"\\'") + '\')">' + kb.name + zw + '</button>';
     });
     // Show register section when organ is set up
     document.getElementById('dRegSection').style.display = '';
@@ -1923,12 +2520,9 @@ let _dInputMode = 'mic';
 
 function dSetInputMode(mode) {
     _dInputMode = mode;
+    document.getElementById('dInputMode').value = mode;
     document.getElementById('dMicSection').style.display = mode === 'mic' ? '' : 'none';
     document.getElementById('dLoopbackSection').style.display = mode === 'loopback' ? '' : 'none';
-    document.getElementById('dModeMic').style.borderColor = mode === 'mic' ? 'var(--accent)' : 'var(--border)';
-    document.getElementById('dModeMic').style.color = mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
-    document.getElementById('dModeLoopback').style.borderColor = mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
-    document.getElementById('dModeLoopback').style.color = mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
     dApi('/api/settings', { input_mode: mode });
 }
 
@@ -1954,9 +2548,9 @@ function dRenderMicList(activeIndices, activeNames) {
         const checked = activeIndices.includes(d.index) ? ' checked' : '';
         const posName = activeNames[d.index] || d.safe_name || '';
         html += '<div class="d-checkbox-row">' +
-            '<input type="checkbox" id="dMic' + d.index + '" data-idx="' + d.index + '"' + checked + '>' +
+            '<input type="checkbox" id="dMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="dApplyMics()">' +
             '<label for="dMic' + d.index + '">' + d.name + '</label>' +
-            '<input class="d-mic-name" id="dMicN' + d.index + '" placeholder="Positie" value="' + posName + '">' +
+            '<input class="d-mic-name" id="dMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="dApplyMics()">' +
             '</div>';
     });
     c.innerHTML = html;
@@ -1964,14 +2558,12 @@ function dRenderMicList(activeIndices, activeNames) {
 function dRenderLoopbackList(activeId) {
     const c = document.getElementById('dLoopbackList');
     if (!_loopbackList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.75rem;">Loopback niet beschikbaar (soundcard library ontbreekt)</span>'; return; }
-    let html = '';
+    let html = '<select class="d-form-select" id="dLoopbackSel" onchange="dApplyLoopback()" style="width:100%;">';
     _loopbackList.forEach(d => {
-        const checked = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' checked' : '';
-        html += '<div class="d-checkbox-row">' +
-            '<input type="radio" name="dLoopbackDev" id="dLB_' + d.id + '" value="' + d.id + '"' + checked + '>' +
-            '<label for="dLB_' + d.id + '">' + d.name + (d.is_default ? ' (standaard)' : '') + '</label>' +
-            '</div>';
+        const sel = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' selected' : '';
+        html += '<option value="' + d.id + '"' + sel + '>' + d.name + (d.is_default ? ' (standaard)' : '') + '</option>';
     });
+    html += '</select>';
     c.innerHTML = html;
 }
 async function dApplyMics() {
@@ -1988,7 +2580,7 @@ async function dApplyMics() {
     await dApi('/api/settings', { device_indices: indices, device_names: names });
 }
 async function dApplyLoopback() {
-    const sel = document.querySelector('input[name="dLoopbackDev"]:checked');
+    const sel = document.getElementById('dLoopbackSel');
     const devId = sel ? sel.value : null;
     await dApi('/api/settings', { input_mode: 'loopback', loopback_device_id: devId });
 }
@@ -2006,7 +2598,9 @@ async function dApplySettings() {
         start_note: parseInt(document.getElementById('dStartNote').value),
         end_note: parseInt(document.getElementById('dEndNote').value),
         bass_treble_split: document.getElementById('dBasDiscant').checked,
-        split_note: parseInt(document.getElementById('dSplitNote').value)
+        split_note: parseInt(document.getElementById('dSplitNote').value),
+        split_record_bas: document.getElementById('dSplitBas').checked,
+        split_record_disc: document.getElementById('dSplitDisc').checked
     };
     await dApi('/api/settings', data);
 }
@@ -2043,6 +2637,8 @@ function syncDrawer(state) {
         document.getElementById('dSplitGroup').style.display = s.bass_treble_split ? '' : 'none';
         document.getElementById('dSplitNote').value = s.split_note || 60;
         document.getElementById('dSplitNoteLabel').textContent = dMidiToName(s.split_note || 60);
+        document.getElementById('dSplitBas').checked = s.split_record_bas !== false;
+        document.getElementById('dSplitDisc').checked = s.split_record_disc !== false;
         if (_deviceList.length) dRenderMicList(s.device_indices || [], s.device_names || {});
         if (_loopbackList.length) dRenderLoopbackList(s.loopback_device_id);
         _settingsSyncDone = true;
@@ -2050,12 +2646,9 @@ function syncDrawer(state) {
     // Input mode - always sync (toggled via buttons, not text fields)
     if (s.input_mode && s.input_mode !== _dInputMode) {
         _dInputMode = s.input_mode;
+        document.getElementById('dInputMode').value = s.input_mode;
         document.getElementById('dMicSection').style.display = s.input_mode === 'mic' ? '' : 'none';
         document.getElementById('dLoopbackSection').style.display = s.input_mode === 'loopback' ? '' : 'none';
-        document.getElementById('dModeMic').style.borderColor = s.input_mode === 'mic' ? 'var(--accent)' : 'var(--border)';
-        document.getElementById('dModeMic').style.color = s.input_mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
-        document.getElementById('dModeLoopback').style.borderColor = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
-        document.getElementById('dModeLoopback').style.color = s.input_mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
     }
 }
 
@@ -2117,6 +2710,85 @@ function updateUI(state) {
     document.getElementById('registerInfo').textContent = state.output_dir;
 }
 
+// ── Review (Controle) ──
+let _dRevScope = 'register';
+let _dRevResultsLoaded = false;
+
+function dSetReviewScope(scope) {
+    _dRevScope = scope;
+    ['register','keyboard','organ','custom'].forEach(s => {
+        const el = document.getElementById('dRev' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (el) {
+            el.style.borderColor = s === scope ? 'var(--accent)' : 'var(--border)';
+            el.style.color = s === scope ? 'var(--accent)' : 'var(--dim)';
+        }
+    });
+}
+
+async function dStartReview() {
+    _dRevResultsLoaded = false;
+    const data = { scope: _dRevScope, trim: document.getElementById('dRevTrim').checked };
+    const customPath = document.getElementById('dRevPath').value.trim();
+    if (_dRevScope === 'custom' && customPath) data.path = customPath;
+    await dApi('/api/review-start', data);
+}
+
+function dUpdateReview(review) {
+    if (!review) return;
+    const analyzing = review.state === 'analyzing';
+    const done = review.state === 'done';
+    document.getElementById('dRevStart').style.display = analyzing ? 'none' : '';
+    document.getElementById('dRevStop').style.display = analyzing ? '' : 'none';
+    document.getElementById('dRevProgress').style.display = analyzing ? '' : 'none';
+    if (analyzing) {
+        const pct = Math.round(review.progress * 100);
+        document.getElementById('dRevBar').style.width = pct + '%';
+        document.getElementById('dRevPct').textContent = pct + '%';
+    }
+    if (done) {
+        document.getElementById('dRevResults').style.display = '';
+        document.getElementById('dRevSummary').textContent =
+            review.errors + ' fout' + (review.errors !== 1 ? 'en' : '') + ', ' +
+            review.warnings + ' waarschuwing' + (review.warnings !== 1 ? 'en' : '');
+        if (!_dRevResultsLoaded) { _dRevResultsLoaded = true; dLoadReviewResults(); }
+        document.getElementById('dRevRerecord').style.display = review.todo_count > 0 ? '' : 'none';
+        if (review.todo_count === 0 && review.total > 0) {
+            document.getElementById('dRevSummary').textContent += ' — Alles in orde!';
+        }
+    } else {
+        document.getElementById('dRevResults').style.display = 'none';
+        document.getElementById('dRevRerecord').style.display = 'none';
+    }
+}
+
+async function dLoadReviewResults() {
+    try {
+        const res = await fetch('/api/review-results');
+        const data = await res.json();
+        const list = document.getElementById('dRevList');
+        if (!data.results || !data.results.length) { list.innerHTML = '<div style="color:var(--dim);font-size:0.75rem;">Geen problemen gevonden</div>'; return; }
+        let html = '';
+        data.results.forEach((r, i) => {
+            const icon = r.severity === 'error' ? '<span style="color:var(--recording);">&#x2716;</span>' : '<span style="color:#f5a623;">&#x26A0;</span>';
+            const todoIdx = data.todo.findIndex(t => t.path === r.path && t.issue === r.issue);
+            const click = todoIdx >= 0 ? ' onclick="dRevGoto(' + todoIdx + ')" style="cursor:pointer;"' : '';
+            html += '<div' + click + ' style="display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid var(--border);font-size:0.75rem;">' +
+                icon + ' <span style="color:var(--accent);min-width:32px;">' + r.note + '</span>' +
+                '<span style="color:var(--text);flex:1;">' + r.detail + '</span>' +
+                '<span style="color:var(--dim);font-size:0.65rem;">' + r.register + '</span></div>';
+        });
+        list.innerHTML = html;
+    } catch(e) {}
+}
+
+async function dRevGoto(idx) { await dApi('/api/review-goto', { index: idx }); closeModal('reviewModal'); }
+async function dRevNext() { await dApi('/api/review-next'); _dRevResultsLoaded = false; }
+async function dRevPrev() {
+    const idx = (window._dRevIdx || 0) - 1;
+    if (idx >= 0) await dApi('/api/review-goto', { index: idx });
+}
+async function dRevMarkDone() { await dApi('/api/review-mark-done'); _dRevResultsLoaded = false; }
+
 // Poll state
 setInterval(async () => {
     try {
@@ -2124,6 +2796,7 @@ setInterval(async () => {
         const state = await res.json();
         updateUI(state);
         syncDrawer(state);
+        dUpdateReview(state.review);
     } catch(e) {}
 }, 100);
 
@@ -2441,6 +3114,7 @@ body {
     <div class="tab active" onclick="switchTab('control')">Bediening</div>
     <div class="tab" onclick="switchTab('setup')">Project</div>
     <div class="tab" onclick="switchTab('settings')">Instellingen</div>
+    <div class="tab" onclick="switchTab('review')">Controle</div>
 </div>
 
 <!-- CONTROL TAB -->
@@ -2528,23 +3202,38 @@ body {
             Register opnemen
         </button>
     </div>
+    <div class="section" id="fExportSection">
+        <button class="btn btn-primary" onclick="fExportProject()" style="width:100%;">Exporteer project (.jm-rec.json)</button>
+        <div id="fExportResult" style="font-size:0.75rem;color:var(--dim);margin-top:4px;"></div>
+    </div>
+    <div class="section" id="fCouplerSection">
+        <div class="section-title">Koppels</div>
+        <div id="fCouplerList" style="margin-bottom:8px;"></div>
+        <div style="display:flex;gap:6px;align-items:center;">
+            <select class="form-select" id="fCplSource" style="flex:1;font-size:0.8rem;"></select>
+            <span style="color:var(--dim);font-size:0.8rem;">naar</span>
+            <select class="form-select" id="fCplTarget" style="flex:1;font-size:0.8rem;"></select>
+            <button class="btn" onclick="fAddCoupler()" style="padding:6px 12px;">+</button>
+        </div>
+    </div>
 </div>
 
 <!-- SETTINGS TAB -->
 <div class="tab-content" id="tab-settings">
     <div class="section">
-        <div class="section-title">Audiobron</div>
-        <div style="display:flex;gap:6px;margin-bottom:8px;">
-            <button class="btn" id="fModeMic" onclick="fSetInputMode('mic')" style="flex:1;border-color:var(--accent);color:var(--accent);">Microfoon</button>
-            <button class="btn" id="fModeLoopback" onclick="fSetInputMode('loopback')" style="flex:1;">Wat je hoort</button>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div class="section-title" style="margin:0;">Audiobron</div>
+            <button class="btn" onclick="fLoadDevices()" style="padding:2px 8px;font-size:0.7rem;">&#x21bb; Verversen</button>
         </div>
+        <select class="form-select" id="fInputMode" onchange="fSetInputMode(this.value)" style="margin:8px 0;">
+            <option value="mic">Microfoon</option>
+            <option value="loopback">Wat je hoort</option>
+        </select>
         <div id="fMicSection">
             <div id="fMicList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
-            <button class="btn" onclick="fApplyMics()" style="width:100%;margin-top:8px;">Microfoons toepassen</button>
         </div>
         <div id="fLoopbackSection" style="display:none;">
             <div id="fLoopbackList" style="font-size:0.8rem;color:var(--dim);">Laden...</div>
-            <button class="btn" onclick="fApplyLoopback()" style="width:100%;margin-top:8px;">Loopback toepassen</button>
         </div>
     </div>
     <div class="section">
@@ -2636,11 +3325,63 @@ body {
                 <label class="form-label">Splitstoets</label>
                 <input class="form-input" type="number" id="fSplitNote" value="60" min="0" max="127">
                 <div class="form-label" style="margin-top:4px;" id="fSplitNoteLabel">C4</div>
+                <div style="display:flex;gap:16px;margin-top:6px;">
+                    <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+                        <input type="checkbox" id="fSplitBas" checked> Bas
+                    </label>
+                    <label class="form-label" style="display:flex;align-items:center;gap:4px;">
+                        <input type="checkbox" id="fSplitDisc" checked> Discant
+                    </label>
+                </div>
             </div>
         </div>
         <button class="btn btn-primary" onclick="applySettings()" style="width:100%;margin-top:12px;">
             Instellingen toepassen
         </button>
+    </div>
+</div>
+
+<!-- REVIEW TAB -->
+<div class="tab-content" id="tab-review">
+    <div class="section">
+        <div class="section-title">Sample Controle</div>
+        <div class="form-group" style="margin-bottom:8px;">
+            <label class="form-label">Map</label>
+            <input class="form-input" id="fRevPath" placeholder="Pad naar register-, klavier- of orgelmap" style="font-size:0.75rem;">
+        </div>
+        <div style="display:flex;gap:6px;margin-bottom:8px;">
+            <button class="btn" id="fRevRegister" onclick="fSetReviewScope('register')" style="flex:1;">Register</button>
+            <button class="btn" id="fRevKeyboard" onclick="fSetReviewScope('keyboard')" style="flex:1;">Klavier</button>
+            <button class="btn" id="fRevOrgan" onclick="fSetReviewScope('organ')" style="flex:1;">Orgel</button>
+            <button class="btn" id="fRevCustom" onclick="fSetReviewScope('custom')" style="flex:1;border-color:var(--accent);color:var(--accent);">Map</button>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.8rem;color:var(--dim);margin-bottom:8px;">
+            <input type="checkbox" id="fRevTrim" checked style="accent-color:var(--accent);"> Stilte knippen
+        </label>
+        <button class="btn btn-primary" id="fRevStart" onclick="fStartReview()" style="width:100%;">Analyseren</button>
+        <button class="btn btn-danger" id="fRevStop" onclick="apiCall('/api/review-stop')" style="width:100%;display:none;">Annuleren</button>
+    </div>
+    <div class="section" id="fRevProgress" style="display:none;">
+        <div class="section-title">Voortgang</div>
+        <div style="background:var(--surface);border-radius:4px;height:8px;overflow:hidden;">
+            <div id="fRevBar" style="height:100%;background:var(--accent);width:0%;transition:width 0.3s;"></div>
+        </div>
+        <div id="fRevPct" style="text-align:center;font-size:0.8rem;color:var(--dim);margin-top:4px;">0%</div>
+    </div>
+    <div class="section" id="fRevResults" style="display:none;">
+        <div class="section-title">Resultaten</div>
+        <div id="fRevSummary" style="font-size:0.85rem;color:var(--dim);margin-bottom:8px;"></div>
+        <div id="fRevList" style="max-height:300px;overflow-y:auto;"></div>
+    </div>
+    <div class="section" id="fRevRerecord" style="display:none;">
+        <div class="section-title">Her-opname</div>
+        <div id="fRevCurrentItem" style="font-size:0.85rem;color:var(--text);margin-bottom:8px;"></div>
+        <div style="display:flex;gap:6px;">
+            <button class="btn" onclick="fRevPrev()" style="flex:1;">Vorige</button>
+            <button class="btn btn-primary" onclick="apiCall('/api/record-single')" style="flex:1;">Opnemen</button>
+            <button class="btn" onclick="fRevMarkDone()" style="flex:1;color:var(--success);">Klaar</button>
+            <button class="btn" onclick="fRevNext()" style="flex:1;">Volgende</button>
+        </div>
     </div>
 </div>
 
@@ -2655,7 +3396,7 @@ function midiToName(midi) {
 // Tab switching
 function switchTab(name) {
     document.querySelectorAll('.tab').forEach((t, i) => {
-        t.classList.toggle('active', ['control','setup','settings'][i] === name);
+        t.classList.toggle('active', ['control','setup','settings','review'][i] === name);
     });
     document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
     document.getElementById('tab-' + name).classList.add('active');
@@ -2684,7 +3425,9 @@ function fUpdateKbInputs() {
     for (let i = 0; i < n; i++) {
         c.innerHTML += '<div style="display:flex;gap:6px;align-items:center;">' +
             '<span style="font-family:JetBrains Mono,monospace;font-size:0.7rem;color:var(--dim);min-width:16px;">' + (i+1) + '.</span>' +
-            '<input class="form-input" id="fKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (KB_DEFAULTS[i]||'') + '" style="padding:8px 10px;font-size:0.8rem;"></div>';
+            '<input class="form-input" id="fKb' + i + '" placeholder="Klavier ' + (i+1) + '" value="' + (KB_DEFAULTS[i]||'') + '" style="padding:8px 10px;font-size:0.8rem;flex:1;">' +
+            '<label style="display:flex;align-items:center;gap:3px;font-size:0.7rem;color:var(--dim);white-space:nowrap;">' +
+            '<input type="checkbox" id="fKbZw' + i + '"' + (KB_DEFAULTS[i] === 'Zwelwerk' ? ' checked' : '') + '> Zwelkast</label></div>';
     }
 }
 fUpdateKbInputs();
@@ -2695,7 +3438,7 @@ async function fSetupOrgan() {
     const keyboards = [];
     for (let i = 0; i < n; i++) {
         const v = document.getElementById('fKb' + i).value.trim();
-        if (v) keyboards.push(v);
+        if (v) keyboards.push({ name: v, zwelwerk: document.getElementById('fKbZw' + i).checked });
     }
     const res = await apiCall('/api/setup-organ', {
         organ: document.getElementById('fOrganName').value,
@@ -2710,14 +3453,15 @@ async function fSetupOrgan() {
 function fBuildKbSelector(keyboards, hasPedal, current) {
     const c = document.getElementById('fKbSelector');
     const sec = document.getElementById('fKbSection');
-    const all = [...keyboards];
-    if (hasPedal) all.push('Pedaal');
+    const all = (keyboards || []).map(kb => typeof kb === 'string' ? {name: kb, zwelwerk: false} : kb);
+    if (hasPedal) all.push({name: 'Pedaal', zwelwerk: false});
     if (all.length === 0) { sec.style.display = 'none'; return; }
     sec.style.display = '';
     c.innerHTML = '';
     all.forEach(kb => {
-        const cls = kb === current ? 'btn btn-primary' : 'btn';
-        c.innerHTML += '<button class="' + cls + '" style="padding:10px 16px;font-size:0.8rem;" onclick="fSelectKb(\'' + kb.replace(/'/g,"\\'") + '\')">' + kb + '</button>';
+        const cls = kb.name === current ? 'btn btn-primary' : 'btn';
+        const zw = kb.zwelwerk ? ' <span style="font-size:0.6rem;opacity:0.5;">ZW</span>' : '';
+        c.innerHTML += '<button class="' + cls + '" style="padding:10px 16px;font-size:0.8rem;" onclick="fSelectKb(\'' + kb.name.replace(/'/g,"\\'") + '\')">' + kb.name + zw + '</button>';
     });
     document.getElementById('fRegSection').style.display = '';
 }
@@ -2758,13 +3502,14 @@ let _fInputMode = 'mic';
 
 function fSetInputMode(mode) {
     _fInputMode = mode;
+    document.getElementById('fInputMode').value = mode;
     document.getElementById('fMicSection').style.display = mode === 'mic' ? '' : 'none';
     document.getElementById('fLoopbackSection').style.display = mode === 'loopback' ? '' : 'none';
-    document.getElementById('fModeMic').style.borderColor = mode === 'mic' ? 'var(--accent)' : 'var(--border)';
-    document.getElementById('fModeMic').style.color = mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
-    document.getElementById('fModeLoopback').style.borderColor = mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
-    document.getElementById('fModeLoopback').style.color = mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
     apiCall('/api/settings', { input_mode: mode });
+}
+
+async function fLoadDevices() {
+    await loadDevices();
 }
 
 async function loadDevices() {
@@ -2789,9 +3534,9 @@ function fRenderMicList(activeIndices, activeNames) {
         const checked = activeIndices.includes(d.index) ? ' checked' : '';
         const posName = activeNames[d.index] || d.safe_name || '';
         html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
-            '<input type="checkbox" id="fMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' style="accent-color:var(--accent);width:16px;height:16px;">' +
+            '<input type="checkbox" id="fMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="fApplyMics()" style="accent-color:var(--accent);width:16px;height:16px;">' +
             '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + d.name + '</label>' +
-            '<input id="fMicN' + d.index + '" placeholder="Positie" value="' + posName + '" style="width:80px;padding:4px 8px;font-family:JetBrains Mono,monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;">' +
+            '<input id="fMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="fApplyMics()" style="width:80px;padding:4px 8px;font-family:JetBrains Mono,monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;">' +
             '</div>';
     });
     c.innerHTML = html;
@@ -2799,14 +3544,12 @@ function fRenderMicList(activeIndices, activeNames) {
 function fRenderLoopbackList(activeId) {
     const c = document.getElementById('fLoopbackList');
     if (!_rLoopbackList.length) { c.innerHTML = '<span style="color:var(--dim);font-size:0.8rem;">Loopback niet beschikbaar (soundcard library ontbreekt)</span>'; return; }
-    let html = '';
+    let html = '<select class="form-select" id="fLoopbackSel" onchange="fApplyLoopback()" style="width:100%;">';
     _rLoopbackList.forEach(d => {
-        const checked = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' checked' : '';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
-            '<input type="radio" name="fLoopbackDev" id="fLB_' + d.id + '" value="' + d.id + '"' + checked + ' style="accent-color:var(--accent);width:16px;height:16px;">' +
-            '<label for="fLB_' + d.id + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + d.name + (d.is_default ? ' (standaard)' : '') + '</label>' +
-            '</div>';
+        const sel = (activeId && d.id === activeId) || (!activeId && d.is_default) ? ' selected' : '';
+        html += '<option value="' + d.id + '"' + sel + '>' + d.name + (d.is_default ? ' (standaard)' : '') + '</option>';
     });
+    html += '</select>';
     c.innerHTML = html;
 }
 async function fApplyMics() {
@@ -2823,7 +3566,7 @@ async function fApplyMics() {
     await apiCall('/api/settings', { device_indices: indices, device_names: names });
 }
 async function fApplyLoopback() {
-    const sel = document.querySelector('input[name="fLoopbackDev"]:checked');
+    const sel = document.getElementById('fLoopbackSel');
     const devId = sel ? sel.value : null;
     await apiCall('/api/settings', { input_mode: 'loopback', loopback_device_id: devId });
 }
@@ -2842,7 +3585,9 @@ async function applySettings() {
         start_note: parseInt(document.getElementById('fStartNote').value),
         end_note: parseInt(document.getElementById('fEndNote').value),
         bass_treble_split: document.getElementById('fBasDiscant').checked,
-        split_note: parseInt(document.getElementById('fSplitNote').value)
+        split_note: parseInt(document.getElementById('fSplitNote').value),
+        split_record_bas: document.getElementById('fSplitBas').checked,
+        split_record_disc: document.getElementById('fSplitDisc').checked
     };
     await apiCall('/api/settings', data);
 }
@@ -2894,6 +3639,7 @@ function updateRemote(state) {
 
     // Keyboard selector
     fBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
+    fRenderCouplers(state.couplers || [], state.keyboards || []);
 
     // Sync settings to form (initial load)
     if (!window._settingsSynced && state.project) {
@@ -2918,18 +3664,17 @@ function updateRemote(state) {
         document.getElementById('fSplitGroup').style.display = s.bass_treble_split ? '' : 'none';
         document.getElementById('fSplitNote').value = s.split_note || 60;
         document.getElementById('fSplitNoteLabel').textContent = midiToName(s.split_note || 60);
+        document.getElementById('fSplitBas').checked = s.split_record_bas !== false;
+        document.getElementById('fSplitDisc').checked = s.split_record_disc !== false;
         window._settingsSynced = true;
     }
     // Input mode & device list sync
     const s2 = state.settings;
     if (s2.input_mode && s2.input_mode !== _fInputMode) {
         _fInputMode = s2.input_mode;
+        document.getElementById('fInputMode').value = s2.input_mode;
         document.getElementById('fMicSection').style.display = s2.input_mode === 'mic' ? '' : 'none';
         document.getElementById('fLoopbackSection').style.display = s2.input_mode === 'loopback' ? '' : 'none';
-        document.getElementById('fModeMic').style.borderColor = s2.input_mode === 'mic' ? 'var(--accent)' : 'var(--border)';
-        document.getElementById('fModeMic').style.color = s2.input_mode === 'mic' ? 'var(--accent)' : 'var(--dim)';
-        document.getElementById('fModeLoopback').style.borderColor = s2.input_mode === 'loopback' ? 'var(--accent)' : 'var(--border)';
-        document.getElementById('fModeLoopback').style.color = s2.input_mode === 'loopback' ? 'var(--accent)' : 'var(--dim)';
     }
     if (_rDeviceList.length) {
         fRenderMicList(s2.device_indices || [], s2.device_names || {});
@@ -2939,6 +3684,172 @@ function updateRemote(state) {
     }
 }
 
+// ── Project export ──
+async function fExportProject() {
+    const res = await apiCall('/api/export-project');
+    const el = document.getElementById('fExportResult');
+    if (res && res.success) {
+        el.textContent = 'Opgeslagen: ' + res.path;
+        el.style.color = 'var(--success)';
+    } else {
+        el.textContent = res ? res.error : 'Export mislukt';
+        el.style.color = 'var(--recording)';
+    }
+}
+
+// ── Couplers ──
+async function fAddCoupler() {
+    const source = document.getElementById('fCplSource').value;
+    const target = document.getElementById('fCplTarget').value;
+    if (source && target && source !== target) {
+        await apiCall('/api/add-coupler', { source, target });
+    }
+}
+async function fRemoveCoupler(idx) {
+    await apiCall('/api/remove-coupler', { index: idx });
+}
+function fRenderCouplers(couplers, keyboards) {
+    const c = document.getElementById('fCouplerList');
+    if (!couplers || !couplers.length) { c.innerHTML = '<div style="color:var(--dim);font-size:0.75rem;">Geen koppels</div>'; return; }
+    c.innerHTML = couplers.map((cp, i) =>
+        '<div style="display:flex;align-items:center;gap:6px;padding:4px 0;font-size:0.8rem;">' +
+        '<span style="color:var(--text);">' + cp.source + ' &rarr; ' + cp.target + '</span>' +
+        '<button class="btn" onclick="fRemoveCoupler(' + i + ')" style="padding:2px 8px;font-size:0.7rem;margin-left:auto;">&times;</button></div>'
+    ).join('');
+    // Update selects with available keyboards
+    if (keyboards && keyboards.length) {
+        const names = keyboards.map(kb => typeof kb === 'string' ? kb : kb.name);
+        ['fCplSource','fCplTarget'].forEach(id => {
+            const sel = document.getElementById(id);
+            const cur = sel.value;
+            sel.innerHTML = names.map(n => '<option value="' + n + '">' + n + '</option>').join('');
+            if (cur) sel.value = cur;
+        });
+    }
+}
+
+// ── Review (Controle) ──
+let _fRevScope = 'register';
+let _fRevResultsLoaded = false;
+
+function fSetReviewScope(scope) {
+    _fRevScope = scope;
+    ['register','keyboard','organ','custom'].forEach(s => {
+        const el = document.getElementById('fRev' + s.charAt(0).toUpperCase() + s.slice(1));
+        if (el) {
+            el.style.borderColor = s === scope ? 'var(--accent)' : 'var(--border)';
+            el.style.color = s === scope ? 'var(--accent)' : 'var(--dim)';
+        }
+    });
+}
+
+async function fStartReview() {
+    _fRevResultsLoaded = false;
+    const data = {
+        scope: _fRevScope,
+        trim: document.getElementById('fRevTrim').checked
+    };
+    const customPath = document.getElementById('fRevPath').value.trim();
+    if (_fRevScope === 'custom' && customPath) {
+        data.path = customPath;
+    }
+    await apiCall('/api/review-start', data);
+}
+
+function fUpdateReview(review) {
+    if (!review) return;
+    const analyzing = review.state === 'analyzing';
+    const done = review.state === 'done';
+
+    document.getElementById('fRevStart').style.display = analyzing ? 'none' : '';
+    document.getElementById('fRevStop').style.display = analyzing ? '' : 'none';
+    document.getElementById('fRevProgress').style.display = analyzing ? '' : 'none';
+
+    if (analyzing) {
+        const pct = Math.round(review.progress * 100);
+        document.getElementById('fRevBar').style.width = pct + '%';
+        document.getElementById('fRevPct').textContent = pct + '%';
+    }
+
+    if (done) {
+        document.getElementById('fRevResults').style.display = '';
+        document.getElementById('fRevSummary').textContent =
+            review.errors + ' fout' + (review.errors !== 1 ? 'en' : '') + ', ' +
+            review.warnings + ' waarschuwing' + (review.warnings !== 1 ? 'en' : '') +
+            ' (' + review.total + ' samples gecontroleerd)';
+
+        // Load full results once
+        if (!_fRevResultsLoaded) {
+            _fRevResultsLoaded = true;
+            fLoadReviewResults();
+        }
+
+        // Show re-record panel if there are todos
+        document.getElementById('fRevRerecord').style.display = review.todo_count > 0 ? '' : 'none';
+        if (review.todo_count === 0 && review.total > 0) {
+            document.getElementById('fRevSummary').textContent += ' — Alles in orde!';
+        }
+    } else {
+        document.getElementById('fRevResults').style.display = 'none';
+        document.getElementById('fRevRerecord').style.display = 'none';
+    }
+}
+
+async function fLoadReviewResults() {
+    try {
+        const res = await fetch('/api/review-results');
+        const data = await res.json();
+        const list = document.getElementById('fRevList');
+        if (!data.results || !data.results.length) {
+            list.innerHTML = '<div style="color:var(--dim);font-size:0.8rem;padding:8px;">Geen problemen gevonden</div>';
+            return;
+        }
+        let html = '';
+        data.results.forEach((r, i) => {
+            const icon = r.severity === 'error' ? '<span style="color:var(--recording);">&#x2716;</span>' : '<span style="color:#f5a623;">&#x26A0;</span>';
+            const todoIdx = data.todo.findIndex(t => t.path === r.path && t.issue === r.issue);
+            const clickable = todoIdx >= 0 ? ' onclick="fRevGoto(' + todoIdx + ')" style="cursor:pointer;"' : '';
+            html += '<div' + clickable + ' style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.8rem;">' +
+                icon + ' <span style="color:var(--accent);min-width:36px;">' + r.note + '</span>' +
+                '<span style="color:var(--text);flex:1;">' + r.detail + '</span>' +
+                '<span style="color:var(--dim);font-size:0.7rem;">' + r.register + '</span>' +
+                '</div>';
+        });
+        list.innerHTML = html;
+    } catch(e) {}
+}
+
+async function fRevGoto(idx) {
+    await apiCall('/api/review-goto', { index: idx });
+    fUpdateRevCurrent(idx);
+    switchTab('control');
+}
+
+async function fRevNext() {
+    const res = await apiCall('/api/review-next');
+    if (res && res.success) {
+        fUpdateRevCurrent((res.item && res.item.midi) ? undefined : undefined);
+        _fRevResultsLoaded = false;
+    }
+}
+
+async function fRevPrev() {
+    const idx = (window._fRevCurrentIdx || 0) - 1;
+    if (idx >= 0) {
+        await apiCall('/api/review-goto', { index: idx });
+        fUpdateRevCurrent(idx);
+    }
+}
+
+async function fRevMarkDone() {
+    await apiCall('/api/review-mark-done');
+    _fRevResultsLoaded = false;
+}
+
+function fUpdateRevCurrent(idx) {
+    window._fRevCurrentIdx = idx;
+}
+
 // Poll
 let pollFailCount = 0;
 setInterval(async () => {
@@ -2946,6 +3857,7 @@ setInterval(async () => {
         const res = await fetch('/api/state');
         const state = await res.json();
         updateRemote(state);
+        fUpdateReview(state.review);
         pollFailCount = 0;
     } catch(e) {
         pollFailCount++;
