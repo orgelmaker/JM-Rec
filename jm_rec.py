@@ -97,6 +97,462 @@ def sanitize_device_name(name):
     return name.strip("_") or "Device"
 
 
+def normalize_output_dir(path):
+    """Make a user-entered output directory safe for os.path.join.
+
+    A bare Windows drive letter like 'D:' is drive-RELATIVE, so
+    os.path.join('D:', 'Orgel') yields 'D:Orgel' (invalid, WinError 123).
+    Append a separator so it becomes an absolute root ('D:\\').
+    Also strips stray surrounding quotes/whitespace.
+    """
+    if not path:
+        return path
+    p = str(path).strip().strip('"').strip("'").strip()
+    if re.match(r"^[A-Za-z]:$", p):
+        p += os.sep
+    return p
+
+
+# Characters Windows forbids in a file/folder name (drive colon excluded
+# because components are joined under a separate drive root).
+_ILLEGAL_PATH_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
+
+
+def sanitize_path_component(name):
+    """Strip characters that are illegal in a Windows file/folder name.
+
+    A single path component (organ, keyboard, register or mic position name)
+    containing e.g. ':' '\"' '?' '*' raises WinError 123 the moment a path is
+    built from it. Keeps spaces and other legal characters intact, and removes
+    trailing dots/spaces (also forbidden by Windows).
+    """
+    if not name:
+        return name
+    cleaned = _ILLEGAL_PATH_CHARS.sub('', str(name))
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    cleaned = cleaned.rstrip('. ')
+    return cleaned
+
+
+JM_REC_VERSION = "3.5"
+
+
+# ─────────────────────────────────────────────
+# i18n — served as /i18n.js to both DISPLAY and REMOTE pages.
+# Dutch is the source in the HTML; the dictionary maps NL → EN/DE/FR and a
+# DOM walker swaps the text at load. Anything missing degrades to Dutch.
+# ─────────────────────────────────────────────
+I18N_JS = r'''
+(function(){
+  const I18N = {
+  "en": {
+    // header / nav
+    "Registers":"Registers","Controle":"Review","? Info":"? Help","Nieuw orgel":"New organ","Instellingen":"Settings","QR Remote":"QR Remote",
+    "Bediening":"Control","Project":"Project",
+    // startup
+    "Welkom":"Welcome","Doorgaan met dit orgel":"Continue with this organ","Nieuw orgel instellen":"Set up a new organ",
+    // wizard chrome
+    "Orgel instellen":"Set up organ","Stap":"Step","Vorige":"Back","Volgende":"Next","Opslaan & starten":"Save & start","Vorige →":"Back","Volgende →":"Next →","← Vorige":"← Back",
+    // step 1
+    "1. Opslaglocatie":"1. Storage location","Map waarin alle opnames worden bewaard.":"Folder where all recordings are stored.","Opslagmap":"Storage folder","Bladeren…":"Browse…","bijv. D:\\Opnames":"e.g. D:\\Recordings",
+    // step 2
+    "2. Microfoon(s)":"2. Microphone(s)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Choose the input source. With multiple microphones each gets its own position name (subfolder).","Bron":"Source","Microfoon(s)":"Microphone(s)","Wat je hoort (loopback)":"What you hear (loopback)","positie":"position","Geen microfoons gevonden.":"No microphones found.","Kon apparaten niet laden.":"Could not load devices.","Speaker (loopback)":"Speaker (loopback)","Geen loopback-apparaten.":"No loopback devices.",
+    // step 3-5
+    "3. Plaatsnaam":"3. Town","Plaats waar het orgel staat.":"Town where the organ is located.","bijv. Puttershoek":"e.g. Puttershoek","Mapcode wordt:":"Folder code:",
+    "4. Kerknaam":"4. Church name","Naam van de kerk/gebouw (wordt als info bewaard).":"Name of the church/building (stored as info).","bijv. Hervormde Kerk":"e.g. St. Mary's Church",
+    "5. Orgelbouwer":"5. Organ builder","De bouwer van het orgel.":"The builder of the organ.","bijv. Muller":"e.g. Muller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Folder name (4 letters town + 4 letters builder, editable)",
+    // step 6-7
+    "6. Klavieren en pedaal":"6. Manuals and pedal","Hoeveel klavieren (manualen) heeft het orgel?":"How many manuals does the organ have?","Aantal klavieren":"Number of manuals","Pedaal aanwezig":"Pedal present",
+    "7. Naam per klavier":"7. Name per manual","Geef elk klavier een naam.":"Give each manual a name.","Klavier":"Manual",
+    // step 8
+    "8. Tremulant en zwelkast":"8. Tremulant and swell box","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"With a tremulant each register is recorded twice (normal and _trem).","Tremulant":"Tremulant","Geen tremulant":"No tremulant","Heel het orgel":"Whole organ","Per klavier":"Per manual","Zwelkast (zwelwerk) per klavier":"Swell box per manual","Tremulant op":"Tremulant on","Zwelkast op":"Swell box on",
+    // step 9
+    "9. Registers per klavier":"9. Registers per manual","Naam":"Name","Voet":"Foot","Begin":"Begin","Eind":"End","Bas/disc":"Bass/Treble","+ Register":"+ Register","Prestant":"Principal",
+    // step 10
+    "10. Opname-instellingen en koppels":"10. Recording settings and couplers","Samplerate":"Sample rate","Bitdiepte":"Bit depth","Kanalen":"Channels","Formaat":"Format","Aftellen (sec)":"Countdown (sec)","Opnameduur (sec)":"Record duration (sec)","Splitstoets bas/disc (MIDI)":"Bass/treble split note (MIDI)","Koppels":"Couplers","+ Koppel":"+ Coupler","Mono":"Mono","Stereo":"Stereo",
+    // main controls + legend
+    "Opnemen":"Record","Pauze":"Pause","Stop":"Stop","Vorige noot":"Previous note","Opnieuw":"Redo","Volgende noot":"Next note","Opname":"Recording","Enkele opname (zonder auto-advance)":"Single recording (no auto-advance)",
+    "nog op te nemen":"to be recorded","niet compleet":"incomplete","nog te controleren":"to be reviewed","nog controleren":"to review","goed":"approved","controleren":"review",
+    "Register kiezen":"Select register","Geen registers":"No registers","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"No registers defined. Set up the organ on the master PC.","Geen registers gedefinieerd op de master-PC.":"No registers defined on the master PC.",
+    // check prompt
+    "Register compleet":"Register complete","Nu controleren":"Review now","Goedgekeurd":"Approved","Later":"Later","Controleren":"Review",
+    // register modal
+    "Registerbeheer":"Register manager","Klavier":"Manual","Nieuw register":"New register","Nog geen registers.":"No registers yet.","normaal":"normal","tremulant":"tremulant","gecontroleerd":"reviewed","beginnoot":"begin note","eindnoot":"end note","bas/disc":"bass/treble","naam (bijv. Prestant)":"name (e.g. Principal)",
+    // state labels
+    "GEREED":"READY","AFTELLEN":"COUNTDOWN","OPNAME":"RECORDING","GEPAUZEERD":"PAUSED","IDLE":"IDLE",
+    // drawer
+    "Instellingen & Bediening":"Settings & Control","Audiobron":"Audio source","Verversen":"Refresh","Microfoon":"Microphone","Wat je hoort":"What you hear","Audio":"Audio","Volume":"Volume","Workflow":"Workflow","Startnoot (MIDI)":"Start note (MIDI)","Eindnoot (MIDI)":"End note (MIDI)","Bas/Discant splitsen":"Bass/treble split","Splitstoets (MIDI)":"Split note (MIDI)","Bas opnemen":"Record bass","Discant opnemen":"Record treble","Orgelnaam":"Organ name","Opslaglocatie":"Storage location","Pedaal":"Pedal","Toepassen":"Apply","Instellingen toepassen":"Apply settings",
+    // QR / hotspot
+    "Remote Control":"Remote Control","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Make sure your phone is on the same network as this PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choose the network your phone is connected to:","Directe verbinding (geen WiFi nodig)":"Direct connection (no WiFi needed)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"No WiFi at this location? Let this PC broadcast its own network and connect your phone or tablet to it.","Open hotspot-instellingen":"Open hotspot settings",
+    // review modal
+    "Sample Controle":"Sample Review","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done",
+    // handleiding
+    "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Quick start","Kleurcodes per register":"Colour codes per register","Kleur":"Colour","Betekenis":"Meaning","Knop":"Button","Functie":"Function",
+    "Register":"Register","op":"on","is volledig opgenomen":"is fully recorded","Wil je het nu controleren?":"Review it now?","is compleet":"is complete","Controleren?":"Review?",
+    "Klavier / Pedaal":"Manual / Pedal","Register opnemen":"Record register","Apparaten verversen":"Refresh devices","Laden...":"Loading...","MP3 Bitrate":"MP3 bitrate","Mapnaam:":"Folder name:","Mapnaam: —":"Folder name: —","Scan de QR-code met je telefoon of tablet":"Scan the QR code with your phone or tablet","om de afstandsbediening te openen":"to open the remote control","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet is not required — control works without it. Keep this window open; if the hotspot turns off, switch it on again.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Click 'Open hotspot settings' and turn the Mobile hotspot ON.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Note the network name and password that Windows shows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connect your iPad/iPhone or Android to that network.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Select the hotspot network above and scan the QR code (or type the address).","Pad naar register-, klavier- of orgelmap":"Path to register, manual or organ folder","Her-opname:":"Re-record:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Add/remove registers per manual. Bottom C = MIDI 36.","Register toevoegen":"Add register"
+  },
+  "de": {
+    "Registers":"Register","Controle":"Kontrolle","? Info":"? Hilfe","Nieuw orgel":"Neue Orgel","Instellingen":"Einstellungen","QR Remote":"QR Remote","Bediening":"Steuerung","Project":"Projekt",
+    "Welkom":"Willkommen","Doorgaan met dit orgel":"Mit dieser Orgel fortfahren","Nieuw orgel instellen":"Neue Orgel einrichten",
+    "Orgel instellen":"Orgel einrichten","Stap":"Schritt","Vorige":"Zurück","Volgende":"Weiter","Opslaan & starten":"Speichern & starten","Vorige →":"Zurück","Volgende →":"Weiter →","← Vorige":"← Zurück",
+    "1. Opslaglocatie":"1. Speicherort","Map waarin alle opnames worden bewaard.":"Ordner, in dem alle Aufnahmen gespeichert werden.","Opslagmap":"Speicherordner","Bladeren…":"Durchsuchen…","bijv. D:\\Opnames":"z. B. D:\\Aufnahmen",
+    "2. Microfoon(s)":"2. Mikrofon(e)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Wählen Sie die Aufnahmequelle. Bei mehreren Mikrofonen erhält jedes einen eigenen Positionsnamen (Unterordner).","Bron":"Quelle","Microfoon(s)":"Mikrofon(e)","Wat je hoort (loopback)":"Was du hörst (Loopback)","positie":"Position","Geen microfoons gevonden.":"Keine Mikrofone gefunden.","Kon apparaten niet laden.":"Geräte konnten nicht geladen werden.","Speaker (loopback)":"Lautsprecher (Loopback)","Geen loopback-apparaten.":"Keine Loopback-Geräte.",
+    "3. Plaatsnaam":"3. Ort","Plaats waar het orgel staat.":"Ort, an dem die Orgel steht.","bijv. Puttershoek":"z. B. Puttershoek","Mapcode wordt:":"Ordnercode:",
+    "4. Kerknaam":"4. Kirchenname","Naam van de kerk/gebouw (wordt als info bewaard).":"Name der Kirche/des Gebäudes (wird als Info gespeichert).","bijv. Hervormde Kerk":"z. B. Marienkirche",
+    "5. Orgelbouwer":"5. Orgelbauer","De bouwer van het orgel.":"Der Erbauer der Orgel.","bijv. Muller":"z. B. Müller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Ordnername (4 Buchstaben Ort + 4 Buchstaben Erbauer, anpassbar)",
+    "6. Klavieren en pedaal":"6. Manuale und Pedal","Hoeveel klavieren (manualen) heeft het orgel?":"Wie viele Manuale hat die Orgel?","Aantal klavieren":"Anzahl Manuale","Pedaal aanwezig":"Pedal vorhanden",
+    "7. Naam per klavier":"7. Name pro Manual","Geef elk klavier een naam.":"Geben Sie jedem Manual einen Namen.","Klavier":"Manual",
+    "8. Tremulant en zwelkast":"8. Tremulant und Schwellkasten","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Bei einem Tremulant wird jedes Register zweimal aufgenommen (normal und _trem).","Tremulant":"Tremulant","Geen tremulant":"Kein Tremulant","Heel het orgel":"Ganze Orgel","Per klavier":"Pro Manual","Zwelkast (zwelwerk) per klavier":"Schwellkasten pro Manual","Tremulant op":"Tremulant für","Zwelkast op":"Schwellkasten für",
+    "9. Registers per klavier":"9. Register pro Manual","Naam":"Name","Voet":"Fuß","Begin":"Anfang","Eind":"Ende","Bas/disc":"Bass/Diskant","+ Register":"+ Register","Prestant":"Prinzipal",
+    "10. Opname-instellingen en koppels":"10. Aufnahme-Einstellungen und Koppeln","Samplerate":"Abtastrate","Bitdiepte":"Bittiefe","Kanalen":"Kanäle","Formaat":"Format","Aftellen (sec)":"Countdown (Sek.)","Opnameduur (sec)":"Aufnahmedauer (Sek.)","Splitstoets bas/disc (MIDI)":"Trennton Bass/Diskant (MIDI)","Koppels":"Koppeln","+ Koppel":"+ Koppel","Mono":"Mono","Stereo":"Stereo",
+    "Opnemen":"Aufnehmen","Pauze":"Pause","Stop":"Stopp","Vorige noot":"Vorherige Note","Opnieuw":"Wiederholen","Volgende noot":"Nächste Note","Opname":"Aufnahme","Enkele opname (zonder auto-advance)":"Einzelaufnahme (ohne Auto-Vorlauf)",
+    "nog op te nemen":"noch aufzunehmen","niet compleet":"unvollständig","nog te controleren":"noch zu prüfen","nog controleren":"prüfen","goed":"freigegeben","controleren":"prüfen",
+    "Register kiezen":"Register wählen","Geen registers":"Keine Register","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Keine Register definiert. Richten Sie die Orgel am Master-PC ein.","Geen registers gedefinieerd op de master-PC.":"Keine Register am Master-PC definiert.",
+    "Register compleet":"Register vollständig","Nu controleren":"Jetzt prüfen","Goedgekeurd":"Freigegeben","Later":"Später","Controleren":"Prüfen",
+    "Registerbeheer":"Registerverwaltung","Klavier":"Manual","Nieuw register":"Neues Register","Nog geen registers.":"Noch keine Register.","normaal":"normal","tremulant":"Tremulant","gecontroleerd":"geprüft","beginnoot":"Anfangsnote","eindnoot":"Endnote","bas/disc":"Bass/Diskant","naam (bijv. Prestant)":"Name (z. B. Prinzipal)",
+    "GEREED":"BEREIT","AFTELLEN":"COUNTDOWN","OPNAME":"AUFNAHME","GEPAUZEERD":"PAUSIERT","IDLE":"BEREIT",
+    "Instellingen & Bediening":"Einstellungen & Steuerung","Audiobron":"Audioquelle","Verversen":"Aktualisieren","Microfoon":"Mikrofon","Wat je hoort":"Was du hörst","Audio":"Audio","Volume":"Lautstärke","Workflow":"Ablauf","Startnoot (MIDI)":"Startnote (MIDI)","Eindnoot (MIDI)":"Endnote (MIDI)","Bas/Discant splitsen":"Bass/Diskant trennen","Splitstoets (MIDI)":"Trennton (MIDI)","Bas opnemen":"Bass aufnehmen","Discant opnemen":"Diskant aufnehmen","Orgelnaam":"Orgelname","Opslaglocatie":"Speicherort","Pedaal":"Pedal","Toepassen":"Anwenden","Instellingen toepassen":"Einstellungen anwenden",
+    "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
+    "Sample Controle":"Sample-Kontrolle","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
+    "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
+    "Register":"Register","op":"auf","is volledig opgenomen":"ist vollständig aufgenommen","Wil je het nu controleren?":"Möchten Sie es jetzt prüfen?","is compleet":"ist vollständig","Controleren?":"Prüfen?",
+    "Klavier / Pedaal":"Manual / Pedal","Register opnemen":"Register aufnehmen","Apparaten verversen":"Geräte aktualisieren","Laden...":"Lädt...","MP3 Bitrate":"MP3-Bitrate","Mapnaam:":"Ordnername:","Mapnaam: —":"Ordnername: —","Scan de QR-code met je telefoon of tablet":"Scannen Sie den QR-Code mit Ihrem Telefon oder Tablet","om de afstandsbediening te openen":"um die Fernsteuerung zu öffnen","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet ist nicht nötig — die Steuerung funktioniert auch ohne. Lassen Sie dieses Fenster offen; schaltet sich der Hotspot ab, schalten Sie ihn erneut ein.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Klicken Sie auf 'Hotspot-Einstellungen öffnen' und schalten Sie den Mobilen Hotspot EIN.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notieren Sie den Netzwerknamen und das Passwort, die Windows anzeigt.","Verbind je iPad/iPhone of Android met dat netwerk.":"Verbinden Sie Ihr iPad/iPhone oder Android mit diesem Netzwerk.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wählen Sie oben das Hotspot-Netzwerk und scannen Sie den QR-Code (oder tippen Sie die Adresse).","Pad naar register-, klavier- of orgelmap":"Pfad zum Register-, Manual- oder Orgelordner","Her-opname:":"Neuaufnahme:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Register pro Manual hinzufügen/entfernen. Großes C = MIDI 36.","Register toevoegen":"Register hinzufügen"
+  },
+  "fr": {
+    "Registers":"Jeux","Controle":"Contrôle","? Info":"? Aide","Nieuw orgel":"Nouvel orgue","Instellingen":"Réglages","QR Remote":"QR Remote","Bediening":"Commande","Project":"Projet",
+    "Welkom":"Bienvenue","Doorgaan met dit orgel":"Continuer avec cet orgue","Nieuw orgel instellen":"Configurer un nouvel orgue",
+    "Orgel instellen":"Configurer l'orgue","Stap":"Étape","Vorige":"Précédent","Volgende":"Suivant","Opslaan & starten":"Enregistrer & démarrer","Vorige →":"Précédent","Volgende →":"Suivant →","← Vorige":"← Précédent",
+    "1. Opslaglocatie":"1. Emplacement de stockage","Map waarin alle opnames worden bewaard.":"Dossier où tous les enregistrements sont conservés.","Opslagmap":"Dossier de stockage","Bladeren…":"Parcourir…","bijv. D:\\Opnames":"p. ex. D:\\Enregistrements",
+    "2. Microfoon(s)":"2. Microphone(s)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Choisissez la source. Avec plusieurs micros, chacun reçoit un nom de position (sous-dossier).","Bron":"Source","Microfoon(s)":"Microphone(s)","Wat je hoort (loopback)":"Ce que vous entendez (loopback)","positie":"position","Geen microfoons gevonden.":"Aucun microphone trouvé.","Kon apparaten niet laden.":"Impossible de charger les appareils.","Speaker (loopback)":"Haut-parleur (loopback)","Geen loopback-apparaten.":"Aucun appareil loopback.",
+    "3. Plaatsnaam":"3. Localité","Plaats waar het orgel staat.":"Localité où se trouve l'orgue.","bijv. Puttershoek":"p. ex. Puttershoek","Mapcode wordt:":"Code du dossier :",
+    "4. Kerknaam":"4. Nom de l'église","Naam van de kerk/gebouw (wordt als info bewaard).":"Nom de l'église/du bâtiment (conservé comme info).","bijv. Hervormde Kerk":"p. ex. église Saint-Pierre",
+    "5. Orgelbouwer":"5. Facteur d'orgues","De bouwer van het orgel.":"Le facteur de l'orgue.","bijv. Muller":"p. ex. Muller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Nom du dossier (4 lettres localité + 4 lettres facteur, modifiable)",
+    "6. Klavieren en pedaal":"6. Claviers et pédalier","Hoeveel klavieren (manualen) heeft het orgel?":"Combien de claviers possède l'orgue ?","Aantal klavieren":"Nombre de claviers","Pedaal aanwezig":"Pédalier présent",
+    "7. Naam per klavier":"7. Nom par clavier","Geef elk klavier een naam.":"Donnez un nom à chaque clavier.","Klavier":"Clavier",
+    "8. Tremulant en zwelkast":"8. Tremblant et boîte expressive","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Avec un tremblant, chaque jeu est enregistré deux fois (normal et _trem).","Tremulant":"Tremblant","Geen tremulant":"Pas de tremblant","Heel het orgel":"Tout l'orgue","Per klavier":"Par clavier","Zwelkast (zwelwerk) per klavier":"Boîte expressive par clavier","Tremulant op":"Tremblant sur","Zwelkast op":"Boîte expressive sur",
+    "9. Registers per klavier":"9. Jeux par clavier","Naam":"Nom","Voet":"Pieds","Begin":"Début","Eind":"Fin","Bas/disc":"Basse/Dessus","+ Register":"+ Jeu","Prestant":"Montre",
+    "10. Opname-instellingen en koppels":"10. Réglages d'enregistrement et accouplements","Samplerate":"Fréquence","Bitdiepte":"Profondeur","Kanalen":"Canaux","Formaat":"Format","Aftellen (sec)":"Compte à rebours (s)","Opnameduur (sec)":"Durée d'enregistrement (s)","Splitstoets bas/disc (MIDI)":"Note de coupure basse/dessus (MIDI)","Koppels":"Accouplements","+ Koppel":"+ Accouplement","Mono":"Mono","Stereo":"Stéréo",
+    "Opnemen":"Enregistrer","Pauze":"Pause","Stop":"Arrêt","Vorige noot":"Note précédente","Opnieuw":"Refaire","Volgende noot":"Note suivante","Opname":"Enregistrement","Enkele opname (zonder auto-advance)":"Enregistrement simple (sans avance auto)",
+    "nog op te nemen":"à enregistrer","niet compleet":"incomplet","nog te controleren":"à contrôler","nog controleren":"à contrôler","goed":"validé","controleren":"contrôler",
+    "Register kiezen":"Choisir un jeu","Geen registers":"Aucun jeu","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Aucun jeu défini. Configurez l'orgue sur le PC maître.","Geen registers gedefinieerd op de master-PC.":"Aucun jeu défini sur le PC maître.",
+    "Register compleet":"Jeu complet","Nu controleren":"Contrôler maintenant","Goedgekeurd":"Validé","Later":"Plus tard","Controleren":"Contrôler",
+    "Registerbeheer":"Gestion des jeux","Klavier":"Clavier","Nieuw register":"Nouveau jeu","Nog geen registers.":"Aucun jeu pour l'instant.","normaal":"normal","tremulant":"tremblant","gecontroleerd":"contrôlé","beginnoot":"note de début","eindnoot":"note de fin","bas/disc":"basse/dessus","naam (bijv. Prestant)":"nom (p. ex. Montre)",
+    "GEREED":"PRÊT","AFTELLEN":"COMPTE À REBOURS","OPNAME":"ENREGISTREMENT","GEPAUZEERD":"EN PAUSE","IDLE":"PRÊT",
+    "Instellingen & Bediening":"Réglages & Commande","Audiobron":"Source audio","Verversen":"Actualiser","Microfoon":"Microphone","Wat je hoort":"Ce que vous entendez","Audio":"Audio","Volume":"Volume","Workflow":"Déroulement","Startnoot (MIDI)":"Note de départ (MIDI)","Eindnoot (MIDI)":"Note de fin (MIDI)","Bas/Discant splitsen":"Séparer basse/dessus","Splitstoets (MIDI)":"Note de coupure (MIDI)","Bas opnemen":"Enregistrer la basse","Discant opnemen":"Enregistrer le dessus","Orgelnaam":"Nom de l'orgue","Opslaglocatie":"Emplacement de stockage","Pedaal":"Pédalier","Toepassen":"Appliquer","Instellingen toepassen":"Appliquer les réglages",
+    "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
+    "Sample Controle":"Contrôle des samples","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
+    "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
+    "Register":"Jeu","op":"sur","is volledig opgenomen":"est entièrement enregistré","Wil je het nu controleren?":"Le contrôler maintenant ?","is compleet":"est complet","Controleren?":"Contrôler ?",
+    "Klavier / Pedaal":"Clavier / Pédalier","Register opnemen":"Enregistrer le jeu","Apparaten verversen":"Actualiser les appareils","Laden...":"Chargement...","MP3 Bitrate":"Débit MP3","Mapnaam:":"Nom du dossier :","Mapnaam: —":"Nom du dossier : —","Scan de QR-code met je telefoon of tablet":"Scannez le QR code avec votre téléphone ou tablette","om de afstandsbediening te openen":"pour ouvrir la télécommande","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet n'est pas nécessaire — la commande fonctionne sans. Gardez cette fenêtre ouverte ; si le point d'accès se coupe, réactivez-le.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Cliquez sur « Ouvrir les réglages du point d'accès » et activez le point d'accès mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notez le nom du réseau et le mot de passe affichés par Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connectez votre iPad/iPhone ou Android à ce réseau.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Choisissez le réseau du point d'accès ci-dessus et scannez le QR code (ou tapez l'adresse).","Pad naar register-, klavier- of orgelmap":"Chemin vers le dossier jeu, clavier ou orgue","Her-opname:":"Réenregistrement :","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Ajouter/supprimer des jeux par clavier. Do grave = MIDI 36.","Register toevoegen":"Ajouter un jeu"
+  }
+  };
+  const HANDLEIDING = {
+    "en": `<div class="modal-title">JM-Rec — Manual</div>
+<h2>Quick start</h2>
+<ul>
+<li>On startup, go through the <strong>wizard</strong> (10 steps) to define the organ + registers — or choose <strong>Continue</strong> with the last organ.</li>
+<li>On the <strong>main screen</strong>: select a register and press <strong>Record</strong>.</li>
+<li>Scan the <strong>QR code</strong> (QR Remote) to control from your phone.</li>
+<li>Edit afterwards: button <strong>Registers</strong> (add/remove, mark reviewed) or <strong>New organ</strong>.</li>
+</ul>
+<h2>Control</h2>
+<table>
+<tr><th>Button</th><th>Function</th></tr>
+<tr><td><code>Record</code></td><td>Start the automatic recording cycle of the selected register</td></tr>
+<tr><td><code>Pause</code></td><td>Pauses after the current note</td></tr>
+<tr><td><code>Stop</code></td><td>Stops immediately</td></tr>
+<tr><td><code>Previous note / Next note</code></td><td>Jump to another note</td></tr>
+<tr><td><code>Redo</code></td><td>Re-record the current note</td></tr>
+</table>
+<h2>Colour codes per register</h2>
+<table>
+<tr><th>Colour</th><th>Meaning</th></tr>
+<tr><td>🔴 red</td><td>to be recorded (0 notes)</td></tr>
+<tr><td>🟠 orange</td><td>started, not yet complete</td></tr>
+<tr><td>🟣 purple</td><td>fully recorded, to be reviewed</td></tr>
+<tr><td>🟢 green</td><td>reviewed and approved</td></tr>
+</table>
+<p>Mark a register as <strong>reviewed</strong> (purple → green) via the <strong>Registers</strong> button.</p>
+<p>As soon as a register is fully recorded, the question <strong>Review now / Approved / Later</strong> appears automatically — on the PC and the remote.</p>
+<h2>Recording cycle</h2>
+<p>Per note: <strong>Countdown</strong> (default 5s) → <strong>Record</strong> (default 5s) → <strong>Next note</strong>. This repeats automatically until the last note.</p>
+<h2>File names</h2>
+<p>File naming:</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-number}-{note-name}.mp3</code></div>
+<h2>Folder structure</h2>
+<div class="tip-box"><code>Storage / Organ / Manual / Register / 036-c.mp3</code><br>With multi-mic: <code>... / Register / Position / 036-c.mp3</code></div>
+<h2>Adjustable parameters</h2>
+<table>
+<tr><th>Parameter</th><th>Default</th><th>Options</th></tr>
+<tr><td>Sample rate</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Bit depth</td><td>16-bit</td><td>16 / 24</td></tr>
+<tr><td>Channels</td><td>Mono</td><td>Mono / Stereo</td></tr>
+<tr><td>MP3 bitrate</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Countdown</td><td>5 sec</td><td>1 – 30</td></tr>
+<tr><td>Record duration</td><td>5 sec</td><td>1 – 60</td></tr>
+<tr><td>Start note</td><td>MIDI 36 (C2)</td><td>0 – 127</td></tr>
+<tr><td>End note</td><td>MIDI 96 (C7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Recording tips</h2>
+<ul>
+<li>Use a <strong>condenser microphone</strong> for the best quality</li>
+<li>Record in <strong>24-bit</strong> for maximum dynamics</li>
+<li>Use <strong>Stereo</strong> with an AB or ORTF microphone setup</li>
+<li>Set the record duration long enough for slow-speaking pipes (<strong>10+ sec</strong> for 16')</li>
+<li>Keep the <strong>wind pressure constant</strong> — wait until the organ is stable before starting</li>
+<li>Record in a <strong>quiet environment</strong> — avoid traffic, wind and church bells</li>
+<li>Place the microphone <strong>1-2 metres</strong> from the pipes for a natural sound</li>
+</ul>
+<h2>Conversion to WAV</h2>
+<div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Network &amp; Connection</h2>
+<div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`,
+    "de": `<div class="modal-title">JM-Rec — Handbuch</div>
+<h2>Schnellstart</h2>
+<ul>
+<li>Gehen Sie beim Start durch den <strong>Assistenten</strong> (10 Schritte), um die Orgel + Register festzulegen — oder wählen Sie <strong>Fortfahren</strong> mit der letzten Orgel.</li>
+<li>Auf dem <strong>Hauptbildschirm</strong>: wählen Sie ein Register und drücken Sie <strong>Aufnehmen</strong>.</li>
+<li>Scannen Sie den <strong>QR-Code</strong> (QR Remote), um per Telefon zu steuern.</li>
+<li>Später bearbeiten: Schaltfläche <strong>Register</strong> (hinzufügen/entfernen, als geprüft markieren) oder <strong>Neue Orgel</strong>.</li>
+</ul>
+<h2>Steuerung</h2>
+<table>
+<tr><th>Taste</th><th>Funktion</th></tr>
+<tr><td><code>Aufnehmen</code></td><td>Startet den automatischen Aufnahmezyklus des gewählten Registers</td></tr>
+<tr><td><code>Pause</code></td><td>Pausiert nach der aktuellen Note</td></tr>
+<tr><td><code>Stopp</code></td><td>Stoppt sofort</td></tr>
+<tr><td><code>Vorherige Note / Nächste Note</code></td><td>Zu einer anderen Note springen</td></tr>
+<tr><td><code>Wiederholen</code></td><td>Aktuelle Note neu aufnehmen</td></tr>
+</table>
+<h2>Farbcodes pro Register</h2>
+<table>
+<tr><th>Farbe</th><th>Bedeutung</th></tr>
+<tr><td>🔴 rot</td><td>noch aufzunehmen (0 Noten)</td></tr>
+<tr><td>🟠 orange</td><td>begonnen, noch nicht vollständig</td></tr>
+<tr><td>🟣 lila</td><td>vollständig aufgenommen, noch zu prüfen</td></tr>
+<tr><td>🟢 grün</td><td>geprüft und freigegeben</td></tr>
+</table>
+<p>Markieren Sie ein Register als <strong>geprüft</strong> (lila → grün) über die Schaltfläche <strong>Register</strong>.</p>
+<p>Sobald ein Register vollständig aufgenommen ist, erscheint automatisch die Frage <strong>Jetzt prüfen / Freigegeben / Später</strong> — am PC und an der Fernsteuerung.</p>
+<h2>Aufnahmezyklus</h2>
+<p>Pro Note: <strong>Countdown</strong> (Standard 5s) → <strong>Aufnehmen</strong> (Standard 5s) → <strong>Nächste Note</strong>. Dies wiederholt sich automatisch bis zur letzten Note.</p>
+<h2>Dateinamen</h2>
+<p>Dateibenennung:</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-Nummer}-{Notenname}.mp3</code></div>
+<h2>Ordnerstruktur</h2>
+<div class="tip-box"><code>Speicherort / Orgel / Manual / Register / 036-c.mp3</code><br>Bei Multi-Mikrofon: <code>... / Register / Position / 036-c.mp3</code></div>
+<h2>Einstellbare Parameter</h2>
+<table>
+<tr><th>Parameter</th><th>Standard</th><th>Optionen</th></tr>
+<tr><td>Abtastrate</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Bittiefe</td><td>16-bit</td><td>16 / 24</td></tr>
+<tr><td>Kanäle</td><td>Mono</td><td>Mono / Stereo</td></tr>
+<tr><td>MP3-Bitrate</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Countdown</td><td>5 Sek.</td><td>1 – 30</td></tr>
+<tr><td>Aufnahmedauer</td><td>5 Sek.</td><td>1 – 60</td></tr>
+<tr><td>Startnote</td><td>MIDI 36 (C2)</td><td>0 – 127</td></tr>
+<tr><td>Endnote</td><td>MIDI 96 (C7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Aufnahmetipps</h2>
+<ul>
+<li>Verwenden Sie ein <strong>Kondensatormikrofon</strong> für beste Qualität</li>
+<li>Nehmen Sie in <strong>24-bit</strong> für maximale Dynamik auf</li>
+<li>Verwenden Sie <strong>Stereo</strong> bei einer AB- oder ORTF-Aufstellung</li>
+<li>Stellen Sie die Aufnahmedauer lang genug für langsam ansprechende Pfeifen ein (<strong>10+ Sek.</strong> für 16')</li>
+<li>Halten Sie den <strong>Winddruck konstant</strong> — warten Sie, bis die Orgel stabil ist</li>
+<li>Nehmen Sie in <strong>ruhiger Umgebung</strong> auf — vermeiden Sie Verkehr, Wind und Kirchenglocken</li>
+<li>Platzieren Sie das Mikrofon <strong>1-2 Meter</strong> von den Pfeifen entfernt</li>
+</ul>
+<h2>Konvertierung zu WAV</h2>
+<div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Netzwerk &amp; Verbindung</h2>
+<div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`,
+    "fr": `<div class="modal-title">JM-Rec — Manuel</div>
+<h2>Démarrage rapide</h2>
+<ul>
+<li>Au démarrage, suivez l'<strong>assistant</strong> (10 étapes) pour définir l'orgue + les jeux — ou choisissez <strong>Continuer</strong> avec le dernier orgue.</li>
+<li>Sur l'<strong>écran principal</strong> : choisissez un jeu et appuyez sur <strong>Enregistrer</strong>.</li>
+<li>Scannez le <strong>QR code</strong> (QR Remote) pour commander depuis votre téléphone.</li>
+<li>Modifier ensuite : bouton <strong>Jeux</strong> (ajouter/supprimer, marquer contrôlé) ou <strong>Nouvel orgue</strong>.</li>
+</ul>
+<h2>Commande</h2>
+<table>
+<tr><th>Bouton</th><th>Fonction</th></tr>
+<tr><td><code>Enregistrer</code></td><td>Démarre le cycle d'enregistrement automatique du jeu choisi</td></tr>
+<tr><td><code>Pause</code></td><td>Met en pause après la note actuelle</td></tr>
+<tr><td><code>Arrêt</code></td><td>Arrête immédiatement</td></tr>
+<tr><td><code>Note précédente / Note suivante</code></td><td>Aller à une autre note</td></tr>
+<tr><td><code>Refaire</code></td><td>Réenregistrer la note actuelle</td></tr>
+</table>
+<h2>Codes couleur par jeu</h2>
+<table>
+<tr><th>Couleur</th><th>Signification</th></tr>
+<tr><td>🔴 rouge</td><td>à enregistrer (0 note)</td></tr>
+<tr><td>🟠 orange</td><td>commencé, pas encore complet</td></tr>
+<tr><td>🟣 violet</td><td>entièrement enregistré, à contrôler</td></tr>
+<tr><td>🟢 vert</td><td>contrôlé et validé</td></tr>
+</table>
+<p>Marquez un jeu comme <strong>contrôlé</strong> (violet → vert) via le bouton <strong>Jeux</strong>.</p>
+<p>Dès qu'un jeu est entièrement enregistré, la question <strong>Contrôler maintenant / Validé / Plus tard</strong> apparaît automatiquement — sur le PC et la télécommande.</p>
+<h2>Cycle d'enregistrement</h2>
+<p>Par note : <strong>Compte à rebours</strong> (5s par défaut) → <strong>Enregistrer</strong> (5s par défaut) → <strong>Note suivante</strong>. Cela se répète automatiquement jusqu'à la dernière note.</p>
+<h2>Noms de fichiers</h2>
+<p>Nommage des fichiers :</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format : <code>{numéro-MIDI}-{nom-de-note}.mp3</code></div>
+<h2>Structure des dossiers</h2>
+<div class="tip-box"><code>Stockage / Orgue / Clavier / Jeu / 036-c.mp3</code><br>Avec multi-micro : <code>... / Jeu / Position / 036-c.mp3</code></div>
+<h2>Paramètres réglables</h2>
+<table>
+<tr><th>Paramètre</th><th>Défaut</th><th>Options</th></tr>
+<tr><td>Fréquence</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Profondeur</td><td>16 bits</td><td>16 / 24</td></tr>
+<tr><td>Canaux</td><td>Mono</td><td>Mono / Stéréo</td></tr>
+<tr><td>Débit MP3</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Compte à rebours</td><td>5 s</td><td>1 – 30</td></tr>
+<tr><td>Durée d'enregistrement</td><td>5 s</td><td>1 – 60</td></tr>
+<tr><td>Note de départ</td><td>MIDI 36 (do2)</td><td>0 – 127</td></tr>
+<tr><td>Note de fin</td><td>MIDI 96 (do7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Conseils d'enregistrement</h2>
+<ul>
+<li>Utilisez un <strong>microphone à condensateur</strong> pour la meilleure qualité</li>
+<li>Enregistrez en <strong>24 bits</strong> pour une dynamique maximale</li>
+<li>Utilisez la <strong>stéréo</strong> avec une prise AB ou ORTF</li>
+<li>Réglez une durée suffisante pour les tuyaux à parole lente (<strong>10+ s</strong> pour 16')</li>
+<li>Maintenez une <strong>pression de vent constante</strong> — attendez que l'orgue soit stable</li>
+<li>Enregistrez dans un <strong>environnement calme</strong> — évitez le trafic, le vent et les cloches</li>
+<li>Placez le micro à <strong>1-2 mètres</strong> des tuyaux pour un son naturel</li>
+</ul>
+<h2>Conversion en WAV</h2>
+<div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Réseau &amp; Connexion</h2>
+<div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`
+  };
+  let LANG = 'nl';
+  window.jmLangs = ['nl','en','de','fr'];
+  window.jmInitLang = function(){
+    let l = null; try { l = localStorage.getItem('jmLang'); } catch(e){}
+    if(!l){ const n=(navigator.language||'en').slice(0,2).toLowerCase(); l = window.jmLangs.indexOf(n)>=0 ? n : 'en'; }
+    LANG = l; window.LANG = l; return l;
+  };
+  window.tr = function(s){
+    if(LANG==='nl' || s==null) return s;
+    const m=I18N[LANG]; if(!m) return s;
+    const k=(''+s).trim();
+    return (m[k]!==undefined) ? m[k] : s;
+  };
+  window.translateTree = function(root){
+    if(LANG==='nl') return; const m=I18N[LANG]; if(!m) return;
+    root = root||document.body;
+    try {
+      const w=document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+      const arr=[]; while(w.nextNode()) arr.push(w.currentNode);
+      arr.forEach(n=>{
+        const raw=n.nodeValue; const t=raw.trim(); if(!t) return;
+        if(m[t]!==undefined){ n.nodeValue=raw.replace(t, function(){return m[t];}); return; }
+        // strip leading/trailing symbols/emoji (▶ ■ ◀ ↻ 🔍 ✓ 🎉 →) and match the core text
+        let core=t;
+        try { core = t.replace(/^[^\p{L}\p{N}]+/u,'').replace(/[^\p{L}\p{N}?!.)]+$/u,''); } catch(e){ core = t.replace(/^[^A-Za-z0-9À-ÿ]+/,'').replace(/[^A-Za-z0-9À-ÿ?!.)]+$/,''); }
+        core=core.trim();
+        if(core && core!==t && m[core]!==undefined){ n.nodeValue=raw.replace(core, function(){return m[core];}); }
+      });
+      root.querySelectorAll('[placeholder]').forEach(e=>{ const t=(e.getAttribute('placeholder')||'').trim(); if(m[t]!==undefined) e.setAttribute('placeholder', m[t]); });
+      root.querySelectorAll('[title]').forEach(e=>{ const t=(e.getAttribute('title')||'').trim(); if(m[t]!==undefined) e.setAttribute('title', m[t]); });
+    } catch(e){}
+  };
+  window.jmSetLang = function(l){ try { localStorage.setItem('jmLang', l); } catch(e){} location.reload(); };
+  window.jmLangSelectorHtml = function(){
+    return '<select onchange="jmSetLang(this.value)" title="Taal / Language" style="font-family:inherit;font-size:0.78rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:6px;padding:3px 6px;opacity:0.75;cursor:pointer;">'+
+      window.jmLangs.map(function(l){return '<option value="'+l+'" style="color:#111;"'+(l===window.LANG?' selected':'')+'>'+l.toUpperCase()+'</option>';}).join('')+'</select>';
+  };
+  window.applyHandleiding = function(){
+    if(LANG==='nl') return;
+    const h=HANDLEIDING[LANG]; const el=document.getElementById('readmeBody');
+    if(h && el) el.innerHTML=h;
+  };
+  window.jmApplyLang = function(l){ LANG=l; window.LANG=l; try{translateTree(document.body);}catch(e){} try{applyHandleiding();}catch(e){} };
+})();
+'''
+
+
+def default_folder_code(plaats, bouwer):
+    """Project folder code = first 4 letters of place + first 4 of organ builder."""
+    p = sanitize_path_component(plaats or "").replace(" ", "")[:4]
+    b = sanitize_path_component(bouwer or "").replace(" ", "")[:4]
+    return (p + b) or "Orgel"
+
+
+def _last_project_pointer_path():
+    return os.path.join(str(Path.home()), ".jm-rec", "last_project.json")
+
+
+def get_last_project():
+    """Return the saved 'last project' pointer dict, or None if missing/stale."""
+    try:
+        p = _last_project_pointer_path()
+        if not os.path.isfile(p):
+            return None
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+        if data.get("path") and os.path.exists(data["path"]):
+            return data
+    except Exception:
+        pass
+    return None
+
+
+def pick_folder_dialog(title="Kies opslagmap"):
+    """Open a native Windows folder-picker and return the chosen path (or None).
+    Pure ctypes (SHBrowseForFolder) — no extra dependency, works windowless."""
+    if sys.platform != "win32":
+        return None
+    import ctypes
+    from ctypes import wintypes
+    shell32 = ctypes.windll.shell32
+    ole32 = ctypes.windll.ole32
+
+    class BROWSEINFO(ctypes.Structure):
+        _fields_ = [
+            ("hwndOwner", wintypes.HWND),
+            ("pidlRoot", ctypes.c_void_p),
+            ("pszDisplayName", wintypes.LPWSTR),
+            ("lpszTitle", wintypes.LPCWSTR),
+            ("ulFlags", wintypes.UINT),
+            ("lpfn", ctypes.c_void_p),
+            ("lParam", wintypes.LPARAM),
+            ("iImage", ctypes.c_int),
+        ]
+
+    shell32.SHBrowseForFolderW.restype = ctypes.c_void_p
+    shell32.SHBrowseForFolderW.argtypes = [ctypes.POINTER(BROWSEINFO)]
+    shell32.SHGetPathFromIDListW.argtypes = [ctypes.c_void_p, wintypes.LPWSTR]
+
+    try:
+        ole32.CoInitialize(None)
+    except Exception:
+        pass
+    disp = ctypes.create_unicode_buffer(260)
+    bi = BROWSEINFO()
+    bi.hwndOwner = 0
+    bi.pidlRoot = None
+    bi.pszDisplayName = ctypes.cast(disp, wintypes.LPWSTR)
+    bi.lpszTitle = title
+    bi.ulFlags = 0x00000001 | 0x00000040  # BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE
+    pidl = shell32.SHBrowseForFolderW(ctypes.byref(bi))
+    if not pidl:
+        return None
+    path_buf = ctypes.create_unicode_buffer(260)
+    ok = shell32.SHGetPathFromIDListW(ctypes.c_void_p(pidl), path_buf)
+    try:
+        ole32.CoTaskMemFree(pidl)
+    except Exception:
+        pass
+    return path_buf.value if ok else None
+
+
 # ─────────────────────────────────────────────
 # Recorder Engine
 # ─────────────────────────────────────────────
@@ -122,11 +578,33 @@ class RecorderEngine:
         self.loopback_device_id = None # soundcard speaker ID
 
         # Orgel-structuur
-        self.keyboards = []        # [{"name": "Hoofdwerk", "zwelwerk": False}, ...]
+        # keyboards: [{"name","zwelwerk","tremulant","registers":[...]}, ...]
+        #   register: {"name","display","foot","begin_note","end_note","bass_treble"}
+        self.keyboards = []
+        self.pedal_registers = []  # registers for the pedal (same register shape)
         self.couplers = []         # [{"source": "Zwelwerk", "target": "Hoofdwerk"}, ...]
         self.has_pedal = False
         self.current_keyboard = "" # selected keyboard/pedal name
         self.tremulant = False     # append _trem to register folder
+
+        # Orgel-metadata (wizard)
+        self.plaats = ""           # plaatsnaam
+        self.kerk = ""             # kerknaam
+        self.bouwer = ""           # orgelbouwer
+        self.tremulant_scope = "none"  # "none" | "organ" | "keyboard"
+
+        # Actieve registerselectie (door wizard/afstandsbediening gekozen reeks)
+        self.active_keyboard = ""
+        self.active_register = ""
+        self.active_variant = "normal"  # "normal" | "trem"
+
+        # Controle-prompt: gezet zodra een reeks 100% is opgenomen
+        self.check_prompt = None  # {keyboard, register, variant, display, recorded, expected}
+
+        # Plan-cache (disk-scan voortgang) — bijgewerkt door een achtergrond-thread
+        # zodat get_state nooit schijf-I/O doet in de poll-hot-path (anti-hang).
+        self._plan_cache = None
+        self._plan_stop = False
 
         # Recording workflow settings
         self.countdown_seconds = 5
@@ -149,6 +627,7 @@ class RecorderEngine:
         self.recording_data = []
         self.is_running = False
         self.auto_advance = True
+        self.last_error = ""   # last recording error, surfaced in UI
 
         # Volume / gain
         self.record_gain = 1.0     # 0.0 – 2.0, applied before save
@@ -170,6 +649,20 @@ class RecorderEngine:
         self.review_results = []
         self.review_todo = []
         self.review_current_idx = None
+
+        # Background thread that refreshes the disk-scan progress cache.
+        threading.Thread(target=self._plan_refresh_loop, daemon=True).start()
+
+    def _plan_refresh_loop(self):
+        """Refresh the plan/progress cache off the request path so get_state()
+        never blocks on disk I/O (prevents the UI from hanging on big organs)."""
+        while not self._plan_stop:
+            try:
+                if self.project_name:
+                    self._plan_cache = self.build_plan()
+            except Exception:
+                pass
+            time.sleep(2.0)
 
     @property
     def device_index(self):
@@ -221,27 +714,88 @@ class RecorderEngine:
             return []
 
     def _normalize_keyboards(self, keyboards):
-        """Convert keyboard list to objects if needed. Accepts strings or dicts."""
+        """Convert keyboard list to objects if needed. Accepts strings or dicts.
+        Tolerates old dicts lacking 'tremulant'/'registers'."""
         result = []
         for kb in keyboards:
             if isinstance(kb, str):
-                result.append({"name": kb, "zwelwerk": False})
+                result.append({"name": kb, "zwelwerk": False, "tremulant": False, "registers": []})
             elif isinstance(kb, dict):
-                result.append({"name": kb.get("name", ""), "zwelwerk": bool(kb.get("zwelwerk", False))})
+                result.append({
+                    "name": kb.get("name", ""),
+                    "zwelwerk": bool(kb.get("zwelwerk", False)),
+                    "tremulant": bool(kb.get("tremulant", False)),
+                    "registers": self._normalize_registers(kb.get("registers", [])),
+                })
+        return result
+
+    def _normalize_registers(self, registers):
+        """Normalize a list of register dicts to the canonical shape."""
+        result = []
+        for r in registers or []:
+            if not isinstance(r, dict):
+                continue
+            display = r.get("display") or r.get("name") or ""
+            name = sanitize_path_component(r.get("name") or format_register_name(display))
+            if not name:
+                continue
+            try:
+                begin = int(r.get("begin_note", self.start_note))
+                end = int(r.get("end_note", self.end_note))
+            except (ValueError, TypeError):
+                begin, end = self.start_note, self.end_note
+            if end < begin:
+                begin, end = end, begin
+            checked = r.get("checked", {})
+            if not isinstance(checked, dict):
+                checked = {}
+            result.append({
+                "name": name,
+                "display": display or name,
+                "foot": str(r.get("foot", "")),
+                "begin_note": begin,
+                "end_note": end,
+                "bass_treble": bool(r.get("bass_treble", False)),
+                "checked": {"normal": bool(checked.get("normal", False)),
+                            "trem": bool(checked.get("trem", False))},
+            })
         return result
 
     def _kb_names(self):
         """Get list of keyboard names."""
         return [kb["name"] for kb in self.keyboards]
 
+    def _find_keyboard(self, name):
+        """Find a keyboard dict by name. 'Pedaal' returns a synthetic entry
+        backed by self.pedal_registers."""
+        if name == "Pedaal" and self.has_pedal:
+            return {"name": "Pedaal", "zwelwerk": False,
+                    "tremulant": False, "registers": self.pedal_registers}
+        for kb in self.keyboards:
+            if kb["name"] == name:
+                return kb
+        return None
+
+    def _find_register(self, kb, register_name):
+        """Find a register dict within a keyboard by its (sanitized) name."""
+        if not kb:
+            return None
+        for r in kb.get("registers", []):
+            if r["name"] == register_name:
+                return r
+        return None
+
     def setup_organ(self, organ_name, keyboards, has_pedal, output_dir=None):
         """Set up organ project: creates main folder + keyboard/pedal subfolders."""
-        self.project_name = organ_name
+        self.project_name = sanitize_path_component(organ_name)
         self.keyboards = self._normalize_keyboards(keyboards)
+        # Keep stored names filesystem-safe so folders match the save path.
+        for kb in self.keyboards:
+            kb["name"] = sanitize_path_component(kb["name"])
         self.has_pedal = has_pedal
         if output_dir:
-            self.output_dir = output_dir
-        base = os.path.join(self.output_dir, organ_name)
+            self.output_dir = normalize_output_dir(output_dir)
+        base = os.path.join(self.output_dir, self.project_name)
         os.makedirs(base, exist_ok=True)
         for kb in self.keyboards:
             os.makedirs(os.path.join(base, kb["name"]), exist_ok=True)
@@ -256,11 +810,15 @@ class RecorderEngine:
 
     def get_current_register_path(self):
         """Get the full path for current register."""
-        reg_name = self.register_name
+        reg_name = sanitize_path_component(self.register_name)
         if self.tremulant and not reg_name.endswith("_trem"):
             reg_name += "_trem"
-        base = os.path.join(self.output_dir, self.project_name,
-                            self.current_keyboard, reg_name)
+        # Sanitize every component so a stray illegal char in the organ,
+        # keyboard or register name can't break the path (WinError 123).
+        base = os.path.join(self.output_dir,
+                            sanitize_path_component(self.project_name),
+                            sanitize_path_component(self.current_keyboard),
+                            reg_name)
         if self.bass_treble_split:
             if self.current_note < self.split_note:
                 return os.path.join(base, reg_name + "_bas")
@@ -297,10 +855,10 @@ class RecorderEngine:
     
     def setup_project(self, project_name, register_name, output_dir=None):
         """Set up project and register directories."""
-        self.project_name = project_name
-        self.register_name = register_name
+        self.project_name = sanitize_path_component(project_name)
+        self.register_name = sanitize_path_component(register_name)
         if output_dir:
-            self.output_dir = output_dir
+            self.output_dir = normalize_output_dir(output_dir)
 
         # Create directories
         path = self.get_current_register_path()
@@ -308,7 +866,7 @@ class RecorderEngine:
         # Create multi-mic subdirs if applicable
         if len(self.device_indices) > 1:
             for idx in self.device_indices:
-                sub = self.device_names.get(idx, f"Mic_{idx}")
+                sub = sanitize_path_component(self.device_names.get(idx, f"Mic_{idx}"))
                 os.makedirs(os.path.join(path, sub), exist_ok=True)
         return path
     
@@ -319,8 +877,30 @@ class RecorderEngine:
                 return
             self.state = "countdown"
             self.is_running = True
+            self.last_error = ""
+            self.check_prompt = None
         thread = threading.Thread(target=self._recording_cycle, daemon=True)
         thread.start()
+
+    def _check_completion_prompt(self):
+        """If the active register series is now fully recorded (and not yet
+        approved), set check_prompt so the UI can offer to review it."""
+        if not self.active_register:
+            return
+        prog = self.register_progress(self.active_keyboard, self.active_register, self.active_variant)
+        if prog["expected"] <= 0 or prog["recorded"] < prog["expected"]:
+            return
+        reg = self._find_register(self._find_keyboard(self.active_keyboard), self.active_register)
+        if reg and reg.get("checked", {}).get(self.active_variant, False):
+            return  # already approved
+        self.check_prompt = {
+            "keyboard": self.active_keyboard,
+            "register": self.active_register,
+            "variant": self.active_variant,
+            "display": (reg.get("display", self.active_register) if reg else self.active_register),
+            "recorded": prog["recorded"], "expected": prog["expected"],
+        }
+        self._refresh_plan_cache()
     
     def _should_skip_note(self):
         """Check if current note should be skipped based on split settings."""
@@ -344,6 +924,7 @@ class RecorderEngine:
                 else:
                     self.state = "idle"
                     self.is_running = False
+                    self._check_completion_prompt()
                     self._notify()
                     return
 
@@ -377,19 +958,66 @@ class RecorderEngine:
                 time.sleep(0.5)
             else:
                 self.state = "paused"
+                self._check_completion_prompt()
                 self._notify()
                 return
-        
+
         # All done
         self.state = "idle"
         self.is_running = False
+        self._check_completion_prompt()
         self._notify()
     
+    def _resolve_record_params(self, device_index):
+        """Return a (samplerate, channels) the device actually supports.
+
+        WASAPI rejects mismatched settings outright (e.g. 44100 Hz on a mic that
+        only runs at 48000), which raises an error the instant recording starts.
+        Prefer the configured values, but fall back to the device's native rate
+        and channel count so recording never fails silently.
+        """
+        sr, ch = self.sample_rate, self.channels
+        dtype = 'float32' if self.bit_depth == 24 else 'int16'
+        try:
+            if device_index is not None:
+                info = sd.query_devices(device_index)
+            else:
+                info = sd.query_devices(kind='input')
+            native_sr = int(info.get('default_samplerate', sr))
+            max_ch = int(info.get('max_input_channels', ch)) or ch
+        except Exception:
+            native_sr, max_ch = sr, ch
+        # 1) configured combo as-is
+        try:
+            sd.check_input_settings(device=device_index, samplerate=sr, channels=ch, dtype=dtype)
+            return sr, ch
+        except Exception:
+            pass
+        # 2) device's native rate, keep configured channel count
+        sr = native_sr
+        try:
+            sd.check_input_settings(device=device_index, samplerate=sr, channels=ch, dtype=dtype)
+            return sr, ch
+        except Exception:
+            pass
+        # 3) native rate + device's own channel count
+        return sr, max_ch
+
     def _do_record(self):
         """Record audio from selected device(s)."""
         if self.input_mode == "loopback":
             self._do_record_loopback()
             return
+
+        dev = self.device_index  # None or single index
+
+        # Auto-adjust sample rate / channels to what the device supports, so a
+        # WASAPI rate mismatch can't make recording fail silently.
+        sr, ch = self._resolve_record_params(dev)
+        if sr != self.sample_rate or ch != self.channels:
+            self.sample_rate = sr
+            self.channels = ch
+            self._notify()
 
         frames = int(self.sample_rate * self.record_seconds)
         channels = self.channels
@@ -398,7 +1026,6 @@ class RecorderEngine:
         if len(self.device_indices) > 1:
             self._do_record_multi(frames, channels, dtype)
         else:
-            dev = self.device_index  # None or single index
             self._do_record_single(dev, frames, channels, dtype)
 
     def _do_record_single(self, device_index, frames, channels, dtype):
@@ -433,11 +1060,14 @@ class RecorderEngine:
             sd.wait()
             self._save_audio(audio_data)
             self.current_level = 0.0
+            self.last_error = ""
 
         except Exception as e:
             print(f"Recording error: {e}", flush=True)
             import traceback; traceback.print_exc()
             self.current_level = 0.0
+            self.last_error = f"Opname mislukt: {e}"
+            self._notify()
 
     def _do_record_loopback(self):
         """Record system audio ('what you hear') via WASAPI loopback."""
@@ -489,10 +1119,13 @@ class RecorderEngine:
 
             self._save_audio(audio_data)
             self.current_level = 0.0
+            self.last_error = ""
 
         except Exception as e:
             print(f"Loopback recording error: {e}")
             self.current_level = 0.0
+            self.last_error = f"Loopback-opname mislukt: {e}"
+            self._notify()
 
     def _do_record_multi(self, frames, channels, dtype):
         """Record from multiple devices simultaneously using InputStream per device."""
@@ -530,6 +1163,8 @@ class RecorderEngine:
 
             if not streams:
                 print("No devices could be opened for multi-mic recording")
+                self.last_error = "Opname mislukt: geen van de microfoons kon worden geopend"
+                self._notify()
                 return
 
             # Start all streams
@@ -570,17 +1205,20 @@ class RecorderEngine:
                     elif len(audio_data) < frames:
                         pad_shape = (frames - len(audio_data),) + audio_data.shape[1:]
                         audio_data = np.concatenate([audio_data, np.zeros(pad_shape, dtype=audio_data.dtype)])
-                    sub = self.device_names.get(dev_idx, f"Mic_{dev_idx}")
+                    sub = sanitize_path_component(self.device_names.get(dev_idx, f"Mic_{dev_idx}"))
                     self._save_audio(audio_data, subdirectory=sub)
                 except Exception as e:
                     print(f"Save error for device {dev_idx}: {e}")
 
             self.current_level = 0.0
             self.current_levels.clear()
+            self.last_error = ""
 
         except Exception as e:
             print(f"Multi-recording error: {e}")
             self.current_level = 0.0
+            self.last_error = f"Multi-opname mislukt: {e}"
+            self._notify()
             for stream in streams.values():
                 try:
                     stream.stop()
@@ -593,7 +1231,8 @@ class RecorderEngine:
         path = self.get_current_register_path()
         if subdirectory:
             path = os.path.join(path, subdirectory)
-            os.makedirs(path, exist_ok=True)
+        # Ensure the target folder exists (covers bass/treble split subfolders too)
+        os.makedirs(path, exist_ok=True)
         filename = midi_to_filename(self.current_note)
 
         # Apply recording gain
@@ -999,41 +1638,468 @@ class RecorderEngine:
             self.current_note = midi_num
             self._notify()
     
+    def _ensure_folders(self, keyboard, register_name, tremulant=False, bass_treble=False):
+        """Create the folder(s) for a register series on disk (idempotent).
+        Handles the _trem variant, _bas/_dis split and multi-mic subfolders."""
+        reg_name = sanitize_path_component(register_name)
+        if tremulant and not reg_name.endswith("_trem"):
+            reg_name += "_trem"
+        base = os.path.join(self.output_dir,
+                            sanitize_path_component(self.project_name),
+                            sanitize_path_component(keyboard),
+                            reg_name)
+        targets = []
+        if bass_treble:
+            if self.split_record_bas:
+                targets.append(os.path.join(base, reg_name + "_bas"))
+            if self.split_record_disc:
+                targets.append(os.path.join(base, reg_name + "_dis"))
+            if not targets:
+                targets.append(base)
+        else:
+            targets.append(base)
+        for t in targets:
+            os.makedirs(t, exist_ok=True)
+            if len(self.device_indices) > 1:
+                for idx in self.device_indices:
+                    mic = sanitize_path_component(self.device_names.get(idx, f"Mic_{idx}"))
+                    os.makedirs(os.path.join(t, mic), exist_ok=True)
+
     def new_register(self, register_name, tremulant=False):
-        """Start a new register."""
+        """Start a new register (legacy / master-side ad-hoc creation)."""
         self.stop()
         self.register_name = register_name
         self.tremulant = tremulant
         self.current_note = self.start_note
-        # Create directories (including bas/discant if enabled)
-        if self.bass_treble_split:
-            reg_name = register_name
-            if tremulant and not reg_name.endswith("_trem"):
-                reg_name += "_trem"
-            base = os.path.join(self.output_dir, self.project_name,
-                                self.current_keyboard, reg_name)
-            parts = []
-            if self.split_record_bas:
-                parts.append("_bas")
-            if self.split_record_disc:
-                parts.append("_dis")
-            for suffix in parts:
-                sub = os.path.join(base, reg_name + suffix)
-                os.makedirs(sub, exist_ok=True)
-                if len(self.device_indices) > 1:
-                    for idx in self.device_indices:
-                        mic = self.device_names.get(idx, f"Mic_{idx}")
-                        os.makedirs(os.path.join(sub, mic), exist_ok=True)
-        else:
-            path = self.get_current_register_path()
-            os.makedirs(path, exist_ok=True)
-            if len(self.device_indices) > 1:
-                for idx in self.device_indices:
-                    sub = self.device_names.get(idx, f"Mic_{idx}")
-                    os.makedirs(os.path.join(path, sub), exist_ok=True)
+        self._ensure_folders(self.current_keyboard, register_name,
+                             tremulant, self.bass_treble_split)
         self._notify()
         return self.get_current_register_path()
-    
+
+    def select_register(self, keyboard, register_name, variant="normal"):
+        """Load a defined register series as the active recording target.
+        Drives the existing recording-cycle inputs; the cycle itself is untouched."""
+        self.stop()
+        kb = self._find_keyboard(keyboard)
+        reg = self._find_register(kb, register_name)
+        if not reg:
+            return False
+        self.current_keyboard = self.active_keyboard = keyboard
+        self.register_name = self.active_register = register_name
+        self.active_variant = "trem" if variant == "trem" else "normal"
+        self.tremulant = (self.active_variant == "trem")
+        self.start_note = int(reg["begin_note"])
+        self.end_note = int(reg["end_note"])
+        self.current_note = self.start_note
+        self.bass_treble_split = bool(reg.get("bass_treble", False))
+        self._ensure_folders(keyboard, register_name, self.tremulant, self.bass_treble_split)
+        self._notify()
+        return True
+
+    def _count_samples_in(self, base):
+        """Count distinct recorded notes under base. Recurses into _bas/_dis and
+        mic subfolders, counting unique note basenames so multi-mic / split don't
+        inflate the count."""
+        exts = ('.mp3', '.wav', '.flac')
+        if not os.path.isdir(base):
+            return 0
+        notes = set()
+
+        def collect(folder):
+            try:
+                entries = os.listdir(folder)
+            except OSError:
+                return
+            for e in entries:
+                full = os.path.join(folder, e)
+                if os.path.isfile(full) and e.lower().endswith(exts):
+                    notes.add(os.path.splitext(e)[0])
+                elif os.path.isdir(full):
+                    collect(full)
+
+        collect(base)
+        return len(notes)
+
+    def register_progress(self, keyboard, register_name, variant="normal"):
+        """Return {recorded, expected} for one register series."""
+        reg = self._find_register(self._find_keyboard(keyboard), register_name)
+        if not reg:
+            return {"recorded": 0, "expected": 0}
+        reg_name = sanitize_path_component(register_name)
+        if variant == "trem" and not reg_name.endswith("_trem"):
+            reg_name += "_trem"
+        base = os.path.join(self.output_dir,
+                            sanitize_path_component(self.project_name),
+                            sanitize_path_component(keyboard),
+                            reg_name)
+        expected = int(reg["end_note"]) - int(reg["begin_note"]) + 1
+        return {"recorded": self._count_samples_in(base), "expected": expected}
+
+    # ─── Organ plan: commit / persist / load ───────────────
+
+    def _apply_settings_dict(self, s):
+        """Apply a settings dict (subset of /api/settings keys) to the engine."""
+        if not s:
+            return
+        if 'sample_rate' in s: self.sample_rate = int(s['sample_rate'])
+        if 'bit_depth' in s: self.bit_depth = int(s['bit_depth'])
+        if 'channels' in s: self.channels = int(s['channels'])
+        if s.get('output_format') in ('mp3', 'wav', 'flac'):
+            self.output_format = s['output_format']
+        if 'mp3_bitrate' in s: self.mp3_bitrate = int(s['mp3_bitrate'])
+        if 'countdown_seconds' in s: self.countdown_seconds = int(s['countdown_seconds'])
+        if 'record_seconds' in s: self.record_seconds = int(s['record_seconds'])
+        if 'record_gain' in s: self.record_gain = max(0.0, min(2.0, float(s['record_gain'])))
+        if 'device_indices' in s:
+            self.device_indices = [int(i) for i in s['device_indices']] if s['device_indices'] else []
+        if 'device_names' in s and isinstance(s['device_names'], dict):
+            self.device_names = {int(k): v for k, v in s['device_names'].items()}
+        if 'input_mode' in s:
+            self.input_mode = s['input_mode'] if s['input_mode'] in ('mic', 'loopback') else 'mic'
+        if 'loopback_device_id' in s:
+            self.loopback_device_id = s['loopback_device_id']
+
+    def _keyboard_entries(self):
+        """All keyboards incl. a synthetic Pedaal entry (backed by pedal_registers)."""
+        entries = [(kb["name"], kb) for kb in self.keyboards]
+        if self.has_pedal:
+            entries.append(("Pedaal", {"name": "Pedaal", "zwelwerk": False,
+                                       "tremulant": False, "registers": self.pedal_registers}))
+        return entries
+
+    @staticmethod
+    def _series_status(recorded, expected, checked):
+        """Colour status: todo(red) / partial(orange) / review(purple) / done(green)."""
+        if expected <= 0 or recorded <= 0:
+            return "todo"
+        if recorded < expected:
+            return "partial"
+        return "done" if checked else "review"
+
+    def _series_entry(self, kb_name, reg, variant):
+        prog = self.register_progress(kb_name, reg["name"], variant)
+        checked = bool(reg.get("checked", {}).get(variant, False))
+        folder = reg["name"] + ("_trem" if variant == "trem" else "")
+        return dict(variant=variant, folder=folder, checked=checked,
+                    status=self._series_status(prog["recorded"], prog["expected"], checked),
+                    **prog)
+
+    def build_plan(self):
+        """Per-keyboard register list with per-series recorded/expected progress."""
+        plan = []
+        for name, kb in self._keyboard_entries():
+            regs = []
+            for r in kb.get("registers", []):
+                series = [self._series_entry(name, r, "normal")]
+                if kb.get("tremulant"):
+                    series.append(self._series_entry(name, r, "trem"))
+                regs.append({
+                    "name": r["name"], "display": r.get("display", r["name"]),
+                    "foot": r.get("foot", ""), "begin_note": r["begin_note"],
+                    "end_note": r["end_note"], "bass_treble": r.get("bass_treble", False),
+                    "series": series,
+                })
+            plan.append({"name": name, "zwelwerk": kb.get("zwelwerk", False),
+                         "tremulant": kb.get("tremulant", False), "registers": regs})
+        return plan
+
+    def mark_register_checked(self, keyboard, register_name, variant, checked):
+        """Mark a register series as checked ('gecontroleerd') → green when full."""
+        reg = self._find_register(self._find_keyboard(keyboard), register_name)
+        if not reg:
+            return False
+        if not isinstance(reg.get("checked"), dict):
+            reg["checked"] = {}
+        reg["checked"]["trem" if variant == "trem" else "normal"] = bool(checked)
+        self._refresh_plan_cache()
+        self.save_manifest()
+        self._notify()
+        return True
+
+    def get_plan_cached(self):
+        """Return the last computed plan/progress instantly (no disk I/O).
+        The cache is refreshed by the background _plan_refresh_loop and by
+        user actions (commit/add/edit/remove/mark/load)."""
+        return self._plan_cache if self._plan_cache is not None else []
+
+    def _refresh_plan_cache(self):
+        """Rebuild the plan cache now (used after user actions for instant UI)."""
+        try:
+            self._plan_cache = self.build_plan()
+        except Exception:
+            pass
+
+    def build_manifest(self):
+        """Full serializable project plan (no progress) for the manifest file."""
+        return {
+            "jm_rec_version": JM_REC_VERSION,
+            "organ": self.project_name,
+            "plaats": self.plaats, "kerk": self.kerk, "bouwer": self.bouwer,
+            "tremulant_scope": self.tremulant_scope,
+            "has_pedal": self.has_pedal,
+            "split_note": self.split_note,
+            "split_record_bas": self.split_record_bas,
+            "split_record_disc": self.split_record_disc,
+            "couplers": self.couplers,
+            "keyboards": self.keyboards,
+            "pedal_registers": self.pedal_registers,
+            "settings": {
+                "sample_rate": self.sample_rate, "bit_depth": self.bit_depth,
+                "channels": self.channels, "output_format": self.output_format,
+                "mp3_bitrate": self.mp3_bitrate, "countdown_seconds": self.countdown_seconds,
+                "record_seconds": self.record_seconds, "record_gain": self.record_gain,
+                "device_indices": list(self.device_indices),
+                "device_names": {str(k): v for k, v in self.device_names.items()},
+                "input_mode": self.input_mode, "loopback_device_id": self.loopback_device_id,
+            },
+        }
+
+    def _select_first_register(self):
+        """Pick the first defined register as the active series (no auto-start)."""
+        for name, kb in self._keyboard_entries():
+            if kb.get("registers"):
+                self.select_register(name, kb["registers"][0]["name"], "normal")
+                return
+        # Nothing defined yet
+        self.active_keyboard = self.current_keyboard = (
+            self._keyboard_entries()[0][0] if self._keyboard_entries() else "")
+        self.active_register = self.register_name = ""
+
+    def _build_folders(self):
+        """(Re)create the full folder tree for the current plan (idempotent)."""
+        base = os.path.join(self.output_dir, self.project_name)
+        os.makedirs(base, exist_ok=True)
+        for name, kb in self._keyboard_entries():
+            os.makedirs(os.path.join(base, name), exist_ok=True)
+            for r in kb.get("registers", []):
+                self._ensure_folders(name, r["name"], False, r.get("bass_treble", False))
+                if kb.get("tremulant"):
+                    self._ensure_folders(name, r["name"], True, r.get("bass_treble", False))
+
+    def commit_organ(self, plan):
+        """Accept the full wizard plan, build folders, persist and select first register."""
+        self.stop()
+        self.plaats = (plan.get("plaats") or "").strip()
+        self.kerk = (plan.get("kerk") or "").strip()
+        self.bouwer = (plan.get("bouwer") or "").strip()
+        self.tremulant_scope = plan.get("tremulant_scope", "none")
+        folder = plan.get("folder_name") or default_folder_code(self.plaats, self.bouwer)
+        self.project_name = sanitize_path_component(folder) or "Orgel"
+        if plan.get("output_dir"):
+            self.output_dir = normalize_output_dir(plan["output_dir"])
+        self.has_pedal = bool(plan.get("has_pedal", False))
+        self.split_note = int(plan.get("split_note", self.split_note))
+        self.split_record_bas = bool(plan.get("split_record_bas", True))
+        self.split_record_disc = bool(plan.get("split_record_disc", True))
+        self.keyboards = self._normalize_keyboards(plan.get("keyboards", []))
+        for kb in self.keyboards:
+            kb["name"] = sanitize_path_component(kb["name"])
+            if self.tremulant_scope == "organ":
+                kb["tremulant"] = True
+            elif self.tremulant_scope == "none":
+                kb["tremulant"] = False
+        self.pedal_registers = self._normalize_registers(plan.get("pedal_registers", []))
+        self.couplers = plan.get("couplers", []) or []
+        self._apply_settings_dict(plan.get("settings") or {})
+        self._build_folders()
+        self._select_first_register()
+        self._refresh_plan_cache()
+        self.save_manifest()
+        self._remember_last_project()
+        self._notify()
+        return os.path.join(self.output_dir, self.project_name)
+
+    def add_register(self, keyboard, display, foot="", begin_note=None,
+                     end_note=None, bass_treble=False):
+        """Master-side: add a register to a keyboard (or Pedaal)."""
+        reg = self._normalize_registers([{
+            "display": display, "foot": foot,
+            "begin_note": begin_note if begin_note is not None else self.start_note,
+            "end_note": end_note if end_note is not None else self.end_note,
+            "bass_treble": bass_treble,
+        }])
+        if not reg:
+            return False
+        reg = reg[0]
+        kb = self._find_keyboard(keyboard)
+        if kb is None:
+            return False
+        if self._find_register(kb, reg["name"]):
+            return False  # already exists
+        kb["registers"].append(reg)
+        self._ensure_folders(keyboard, reg["name"], False, reg["bass_treble"])
+        if kb.get("tremulant"):
+            self._ensure_folders(keyboard, reg["name"], True, reg["bass_treble"])
+        self._refresh_plan_cache()
+        self.save_manifest()
+        self._notify()
+        return True
+
+    def edit_register(self, keyboard, register_name, **fields):
+        """Master-side: edit register fields (foot/begin/end/bass_treble/display)."""
+        reg = self._find_register(self._find_keyboard(keyboard), register_name)
+        if not reg:
+            return False
+        if 'foot' in fields: reg['foot'] = str(fields['foot'])
+        if 'display' in fields and fields['display']: reg['display'] = fields['display']
+        if 'begin_note' in fields: reg['begin_note'] = int(fields['begin_note'])
+        if 'end_note' in fields: reg['end_note'] = int(fields['end_note'])
+        if reg['end_note'] < reg['begin_note']:
+            reg['begin_note'], reg['end_note'] = reg['end_note'], reg['begin_note']
+        if 'bass_treble' in fields: reg['bass_treble'] = bool(fields['bass_treble'])
+        self._refresh_plan_cache()
+        self.save_manifest()
+        self._notify()
+        return True
+
+    def remove_register(self, keyboard, register_name):
+        """Master-side: remove a register from the plan (audio on disk left intact)."""
+        kb = self._find_keyboard(keyboard)
+        if not kb:
+            return False
+        before = len(kb["registers"])
+        kb["registers"][:] = [r for r in kb["registers"] if r["name"] != register_name]
+        if len(kb["registers"]) == before:
+            return False
+        self._refresh_plan_cache()
+        self.save_manifest()
+        self._notify()
+        return True
+
+    def save_manifest(self):
+        """Persist the full plan to <output>/<project>/<project>.jm-rec.json."""
+        if not self.project_name:
+            return
+        try:
+            base = os.path.join(self.output_dir, self.project_name)
+            os.makedirs(base, exist_ok=True)
+            path = os.path.join(base, self.project_name + ".jm-rec.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(self.build_manifest(), f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            print(f"save_manifest error: {e}", flush=True)
+
+    def _remember_last_project(self):
+        try:
+            ptr = _last_project_pointer_path()
+            os.makedirs(os.path.dirname(ptr), exist_ok=True)
+            manifest_path = os.path.join(self.output_dir, self.project_name,
+                                         self.project_name + ".jm-rec.json")
+            with open(ptr, "w", encoding="utf-8") as f:
+                json.dump({"path": manifest_path, "organ": self.project_name,
+                           "plaats": self.plaats, "kerk": self.kerk,
+                           "bouwer": self.bouwer}, f, ensure_ascii=False)
+        except Exception as e:
+            print(f"remember_last_project error: {e}", flush=True)
+
+    def _load_from_manifest(self, m):
+        self.plaats = m.get("plaats", "")
+        self.kerk = m.get("kerk", "")
+        self.bouwer = m.get("bouwer", "")
+        self.tremulant_scope = m.get("tremulant_scope", "none")
+        self.has_pedal = bool(m.get("has_pedal", False))
+        self.split_note = int(m.get("split_note", self.split_note))
+        self.split_record_bas = bool(m.get("split_record_bas", True))
+        self.split_record_disc = bool(m.get("split_record_disc", True))
+        self.keyboards = self._normalize_keyboards(m.get("keyboards", []))
+        self.pedal_registers = self._normalize_registers(m.get("pedal_registers", []))
+        self.couplers = m.get("couplers", []) or []
+        self._apply_settings_dict(m.get("settings") or {})
+
+    def _infer_plan_from_disk(self, folder):
+        """Build a minimal plan by scanning an existing project folder (no manifest)."""
+        exts = ('.mp3', '.wav', '.flac')
+
+        def note_range(regfolder):
+            lo, hi = None, None
+            for root, _dirs, files in os.walk(regfolder):
+                for fn in files:
+                    if fn.lower().endswith(exts):
+                        try:
+                            n = int(fn.split('-')[0])
+                        except (ValueError, IndexError):
+                            continue
+                        lo = n if lo is None else min(lo, n)
+                        hi = n if hi is None else max(hi, n)
+            return lo, hi
+
+        keyboards = []
+        pedal_regs = []
+        has_pedal = False
+        for kb_entry in sorted(os.listdir(folder)):
+            kb_path = os.path.join(folder, kb_entry)
+            if not os.path.isdir(kb_path):
+                continue
+            regs = []
+            kb_trem = False
+            for reg_entry in sorted(os.listdir(kb_path)):
+                reg_path = os.path.join(kb_path, reg_entry)
+                if not os.path.isdir(reg_path):
+                    continue
+                is_trem = reg_entry.endswith("_trem")
+                base_name = reg_entry[:-5] if is_trem else reg_entry
+                if is_trem:
+                    kb_trem = True
+                    if any(r["name"] == base_name for r in regs):
+                        continue
+                lo, hi = note_range(reg_path)
+                bass_treble = any(d.endswith(("_bas", "_dis"))
+                                  for d in os.listdir(reg_path)
+                                  if os.path.isdir(os.path.join(reg_path, d)))
+                regs.append({
+                    "name": base_name, "display": base_name, "foot": "",
+                    "begin_note": lo if lo is not None else self.start_note,
+                    "end_note": hi if hi is not None else self.end_note,
+                    "bass_treble": bass_treble,
+                })
+            if kb_entry == "Pedaal":
+                has_pedal = True
+                pedal_regs = self._normalize_registers(regs)
+            else:
+                keyboards.append({"name": kb_entry, "zwelwerk": False,
+                                  "tremulant": kb_trem,
+                                  "registers": self._normalize_registers(regs)})
+        self.keyboards = keyboards
+        self.pedal_registers = pedal_regs
+        self.has_pedal = has_pedal
+        self.tremulant_scope = "keyboard"
+
+    def load_project(self, path):
+        """Load a project from a manifest file or a project folder. Rebuilds state
+        and reconciles (recreates) any missing folders. Audio is left intact."""
+        manifest = None
+        if os.path.isfile(path):
+            folder = os.path.dirname(path)
+            try:
+                with open(path, encoding="utf-8") as f:
+                    manifest = json.load(f)
+            except Exception:
+                manifest = None
+        elif os.path.isdir(path):
+            folder = path
+            for fn in os.listdir(folder):
+                if fn.endswith(".jm-rec.json"):
+                    try:
+                        with open(os.path.join(folder, fn), encoding="utf-8") as f:
+                            manifest = json.load(f)
+                        break
+                    except Exception:
+                        pass
+        else:
+            return False
+        self.output_dir = os.path.dirname(folder)
+        self.project_name = sanitize_path_component(os.path.basename(folder))
+        if manifest:
+            self._load_from_manifest(manifest)
+        else:
+            self._infer_plan_from_disk(folder)
+        self._build_folders()
+        self._select_first_register()
+        self._refresh_plan_cache()
+        self._remember_last_project()
+        self._notify()
+        return True
+
     def get_state(self):
         """Get full state for UI/remote."""
         with self.lock:
@@ -1052,6 +2118,19 @@ class RecorderEngine:
                 'progress': self.get_progress(),
                 'level': self.current_level,
                 'levels': dict(self.current_levels),
+                'last_error': self.last_error,
+                'has_manifest': bool(self.project_name),
+                'organ_meta': {
+                    'plaats': self.plaats, 'kerk': self.kerk,
+                    'bouwer': self.bouwer, 'tremulant_scope': self.tremulant_scope,
+                },
+                'active': {
+                    'keyboard': self.active_keyboard,
+                    'register': self.active_register,
+                    'variant': self.active_variant,
+                },
+                'check_prompt': self.check_prompt,
+                'plan': self.get_plan_cached(),
                 'settings': {
                     'sample_rate': self.sample_rate,
                     'bit_depth': self.bit_depth,
@@ -1099,16 +2178,98 @@ class RecorderEngine:
 # Web Server (Remote Control)
 # ─────────────────────────────────────────────
 
-def get_local_ip():
-    """Get local IP address for remote access."""
+def _route_ip():
+    """IP of the interface that holds the default route (real WiFi/LAN when
+    online). Returns None with no internet (e.g. hotspot-only)."""
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80))
         ip = s.getsockname()[0]
         s.close()
         return ip
-    except:
-        return "127.0.0.1"
+    except Exception:
+        return None
+
+
+def _rank_ip(ip, route_ip=None):
+    """Rank candidate IPs so the most useful one for remote access sorts first.
+    Hotspot host wins; then the default-route interface (real WiFi/LAN)."""
+    if ip.startswith("192.168.137."):
+        return 0  # Windows Mobile Hotspot / ICS host
+    if route_ip and ip == route_ip:
+        return 1  # interface with the default route (real WiFi/LAN)
+    if ip.startswith("127.") or ip.startswith("169.254."):
+        return 9  # loopback / APIPA (only if nothing else)
+    if ip.startswith("192.168.") or ip.startswith("10.") or \
+       re.match(r"^172\.(1[6-9]|2[0-9]|3[01])\.", ip):
+        return 2  # other private LAN
+    return 3      # other routable
+
+
+def _ips_from_getaddrinfo():
+    """All local IPv4 addresses via DNS-free hostname resolution."""
+    ips = []
+    try:
+        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
+            ip = info[4][0]
+            if ip and ip not in ips:
+                ips.append(ip)
+    except Exception:
+        pass
+    return ips
+
+
+def _ips_from_ipconfig():
+    """Fallback: parse `ipconfig` output for IPv4 addresses (Windows)."""
+    ips = []
+    if sys.platform != "win32":
+        return ips
+    try:
+        flags = subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0
+        out = subprocess.run(["ipconfig"], capture_output=True, text=True,
+                             creationflags=flags, timeout=5).stdout
+        for m in re.finditer(r"IPv4.*?:\s*([\d.]+)", out):
+            ip = m.group(1)
+            if ip and ip not in ips:
+                ips.append(ip)
+    except Exception:
+        pass
+    return ips
+
+
+def get_local_ips():
+    """Return all local IPv4 addresses, best-for-remote-access first.
+
+    Merges socket.getaddrinfo and (Windows) ipconfig, drops loopback/APIPA
+    unless nothing else is available, and ranks the hotspot host first.
+    Works even with no internet connection (hotspot scenario).
+    """
+    ips = _ips_from_getaddrinfo()
+    for ip in _ips_from_ipconfig():
+        if ip not in ips:
+            ips.append(ip)
+    route_ip = _route_ip()
+    if route_ip and route_ip not in ips:
+        ips.append(route_ip)
+    # Drop loopback/APIPA unless they are all we have.
+    usable = [ip for ip in ips if _rank_ip(ip, route_ip) < 9]
+    if usable:
+        ips = usable
+    ips.sort(key=lambda ip: _rank_ip(ip, route_ip))
+    return ips or ["127.0.0.1"]
+
+
+def get_hotspot_ip():
+    """Return the Windows Mobile Hotspot host IP (192.168.137.x) if present."""
+    for ip in get_local_ips():
+        if ip.startswith("192.168.137."):
+            return ip
+    return None
+
+
+def get_local_ip():
+    """Get the single best local IP address for remote access."""
+    return get_local_ips()[0]
 
 
 def create_web_app(engine: RecorderEngine):
@@ -1125,6 +2286,11 @@ def create_web_app(engine: RecorderEngine):
     @app.route('/display')
     def display():
         return render_template_string(DISPLAY_HTML)
+
+    # ── i18n script (shared by display + remote) ──
+    @app.route('/i18n.js')
+    def i18n_js():
+        return Response(I18N_JS, mimetype='application/javascript')
     
     # ── API Endpoints ──
     @app.route('/api/state')
@@ -1233,8 +2399,96 @@ def create_web_app(engine: RecorderEngine):
             engine.split_record_bas = bool(data['split_record_bas'])
         if 'split_record_disc' in data:
             engine.split_record_disc = bool(data['split_record_disc'])
+        if engine.project_name:
+            engine.save_manifest()
         return jsonify({'success': True, 'state': engine.get_state()})
-    
+
+    @app.route('/api/commit-organ', methods=['POST'])
+    def api_commit_organ():
+        plan = request.json or {}
+        if not plan.get('keyboards') and not plan.get('has_pedal'):
+            return jsonify({'success': False, 'error': 'Minstens één klavier of pedaal nodig'})
+        try:
+            path = engine.commit_organ(plan)
+            return jsonify({'success': True, 'path': path, 'state': engine.get_state()})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+
+    @app.route('/api/last-project')
+    def api_last_project():
+        lp = get_last_project()
+        if lp:
+            return jsonify({'exists': True, **lp})
+        return jsonify({'exists': False})
+
+    @app.route('/api/load-project', methods=['POST'])
+    def api_load_project():
+        data = request.json or {}
+        path = data.get('path')
+        if not path:
+            lp = get_last_project()
+            path = lp.get('path') if lp else None
+        if not path:
+            return jsonify({'success': False, 'error': 'Geen project om te laden'})
+        try:
+            ok = engine.load_project(path)
+            return jsonify({'success': bool(ok), 'state': engine.get_state()})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+
+    @app.route('/api/select-register', methods=['POST'])
+    def api_select_register():
+        data = request.json or {}
+        kb = (data.get('keyboard') or '').strip()
+        reg = (data.get('register') or '').strip()
+        variant = data.get('variant', 'normal')
+        ok = engine.select_register(kb, reg, variant)
+        return jsonify({'success': bool(ok), 'state': engine.get_state()})
+
+    @app.route('/api/mark-register', methods=['POST'])
+    def api_mark_register():
+        d = request.json or {}
+        ok = engine.mark_register_checked((d.get('keyboard') or '').strip(),
+                                          (d.get('register') or '').strip(),
+                                          d.get('variant', 'normal'),
+                                          bool(d.get('checked', True)))
+        return jsonify({'success': bool(ok), 'state': engine.get_state()})
+
+    @app.route('/api/dismiss-check', methods=['POST'])
+    def api_dismiss_check():
+        engine.check_prompt = None
+        engine._notify()
+        return jsonify({'success': True})
+
+    @app.route('/api/add-register', methods=['POST'])
+    def api_add_register():
+        d = request.json or {}
+        ok = engine.add_register(
+            (d.get('keyboard') or engine.current_keyboard or '').strip(),
+            d.get('name') or d.get('display') or '',
+            foot=d.get('foot', ''),
+            begin_note=d.get('begin_note'),
+            end_note=d.get('end_note'),
+            bass_treble=bool(d.get('bass_treble', False)),
+        )
+        return jsonify({'success': bool(ok), 'state': engine.get_state()})
+
+    @app.route('/api/edit-register', methods=['POST'])
+    def api_edit_register():
+        d = request.json or {}
+        kb = (d.get('keyboard') or '').strip()
+        name = (d.get('register') or '').strip()
+        fields = {k: d[k] for k in ('foot', 'display', 'begin_note', 'end_note', 'bass_treble') if k in d}
+        ok = engine.edit_register(kb, name, **fields)
+        return jsonify({'success': bool(ok), 'state': engine.get_state()})
+
+    @app.route('/api/remove-register', methods=['POST'])
+    def api_remove_register():
+        d = request.json or {}
+        ok = engine.remove_register((d.get('keyboard') or '').strip(),
+                                    (d.get('register') or '').strip())
+        return jsonify({'success': bool(ok), 'state': engine.get_state()})
+
     @app.route('/api/record', methods=['POST'])
     def api_record():
         engine.auto_advance = True
@@ -1289,36 +2543,76 @@ def create_web_app(engine: RecorderEngine):
             return jsonify({'success': True, 'path': path, 'formatted_name': name})
         return jsonify({'success': False, 'error': 'Missing register name'})
 
-    @app.route('/api/qr.svg')
-    def api_qr_svg():
-        """Generate QR code SVG for the remote control URL."""
-        local_ip = get_local_ip()
-        port = request.host.split(':')[-1] if ':' in request.host else '5555'
-        remote_url = f"http://{local_ip}:{port}"
+    def _request_port():
+        return request.host.split(':')[-1] if ':' in request.host else '5555'
 
+    def _build_qr_svg(url):
+        """Render a QR code SVG for the given URL (or a placeholder)."""
         if HAS_QRCODE:
             qr = qrcode.QRCode(version=1, box_size=10, border=2)
-            qr.add_data(remote_url)
+            qr.add_data(url)
             qr.make(fit=True)
             factory = qrcode.image.svg.SvgPathImage
             img = qr.make_image(image_factory=factory, fill_color="#000000", back_color="#ffffff")
             buf = io.BytesIO()
             img.save(buf)
             return Response(buf.getvalue(), mimetype='image/svg+xml')
-        else:
-            # Fallback: return a simple placeholder SVG
-            svg = f'''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60">
+        svg = '''<svg xmlns="http://www.w3.org/2000/svg" width="200" height="60">
                 <rect width="200" height="60" rx="8" fill="#12121a" stroke="#1e1e2e"/>
                 <text x="100" y="35" text-anchor="middle" fill="#6b6b8a" font-family="monospace" font-size="11">QR niet beschikbaar</text>
             </svg>'''
-            return Response(svg, mimetype='image/svg+xml')
+        return Response(svg, mimetype='image/svg+xml')
+
+    @app.route('/api/qr.svg')
+    def api_qr_svg():
+        """Generate QR code SVG for the remote control URL.
+        Optional ?ip= selects a specific (detected) local IP for the URL."""
+        ips = get_local_ips()
+        requested = request.args.get('ip')
+        local_ip = requested if requested in ips else (ips[0] if ips else get_local_ip())
+        port = _request_port()
+        return _build_qr_svg(f"http://{local_ip}:{port}")
 
     @app.route('/api/remote-url')
     def api_remote_url():
         """Get the remote control URL."""
-        local_ip = get_local_ip()
-        port = request.host.split(':')[-1] if ':' in request.host else '5555'
-        return jsonify({'url': f"http://{local_ip}:{port}"})
+        port = _request_port()
+        return jsonify({'url': f"http://{get_local_ip()}:{port}"})
+
+    @app.route('/api/network-info')
+    def api_network_info():
+        """List candidate local IPs (hotspot-aware) for the remote URL/QR."""
+        ips = get_local_ips()
+        hotspot = get_hotspot_ip()
+        port = _request_port()
+        best = ips[0] if ips else '127.0.0.1'
+        return jsonify({
+            'ips': ips,
+            'hotspot_ip': hotspot,
+            'port': port,
+            'url': f"http://{best}:{port}",
+        })
+
+    @app.route('/api/open-hotspot-settings', methods=['POST'])
+    def api_open_hotspot_settings():
+        """Open the Windows Mobile Hotspot settings page so the user can
+        enable it. Works from the windowless build via ShellExecute."""
+        if sys.platform != 'win32':
+            return jsonify({'success': False, 'error': 'Alleen beschikbaar op Windows'})
+        try:
+            os.startfile('ms-settings:network-mobilehotspot')
+            return jsonify({'success': True})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
+
+    @app.route('/api/pick-folder', methods=['POST'])
+    def api_pick_folder():
+        """Open a native folder-picker on the host PC and return the path."""
+        try:
+            path = pick_folder_dialog("Kies opslagmap voor opnames")
+            return jsonify({'success': bool(path), 'path': path or ''})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
 
     # ── Project export ──
 
@@ -1368,7 +2662,7 @@ def create_web_app(engine: RecorderEngine):
                 registers["Pedaal"] = regs
 
         project = {
-            "jm_rec_version": "3.2",
+            "jm_rec_version": JM_REC_VERSION,
             "organ": engine.project_name,
             "keyboards": engine.keyboards,
             "has_pedal": engine.has_pedal,
@@ -1402,6 +2696,8 @@ def create_web_app(engine: RecorderEngine):
         coupler = {"source": source, "target": target}
         if coupler not in engine.couplers:
             engine.couplers.append(coupler)
+            if engine.project_name:
+                engine.save_manifest()
             engine._notify()
         return jsonify({'success': True, 'couplers': engine.couplers})
 
@@ -1411,6 +2707,8 @@ def create_web_app(engine: RecorderEngine):
         idx = data.get('index')
         if idx is not None and 0 <= idx < len(engine.couplers):
             engine.couplers.pop(idx)
+            if engine.project_name:
+                engine.save_manifest()
             engine._notify()
             return jsonify({'success': True, 'couplers': engine.couplers})
         return jsonify({'success': False})
@@ -1515,6 +2813,7 @@ DISPLAY_HTML = r"""
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JM-Rec — Display</title>
+<script src="/i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -1587,6 +2886,21 @@ body {
     color: var(--dim);
     transition: all 0.3s;
 }
+/* Error banner */
+.error-banner {
+    display: none;
+    max-width: 90%;
+    text-align: center;
+    font-size: 0.95rem;
+    padding: 10px 18px;
+    border-radius: 10px;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid var(--recording);
+    color: var(--recording);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.error-banner.show { display: block; }
 .state-badge.recording {
     background: rgba(255,59,92,0.15);
     border-color: var(--recording);
@@ -1776,6 +3090,58 @@ body {
     color: var(--dim);
     margin-top: 12px;
 }
+.qr-modal select {
+    font-family: inherit;
+    font-size: 0.85rem;
+    background: var(--bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-top: 6px;
+    max-width: 100%;
+}
+.qr-ip-row { margin-top: 12px; font-size: 0.8rem; color: var(--dim); }
+.qr-ip-row label { display: block; margin-bottom: 4px; }
+.qr-direct {
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    text-align: left;
+}
+.qr-direct-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent);
+    margin-bottom: 6px;
+    text-align: center;
+}
+.qr-direct-intro { font-size: 0.82rem; color: var(--dim); margin-bottom: 8px; }
+.qr-direct-steps {
+    font-size: 0.82rem;
+    color: var(--text);
+    margin: 0 0 10px 18px;
+    padding: 0;
+    line-height: 1.5;
+}
+.qr-direct-steps li { margin-bottom: 3px; }
+.qr-direct-btn {
+    display: block;
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 10px;
+    cursor: pointer;
+}
+.qr-direct-btn:hover { opacity: 0.9; }
+.qr-direct-foot { font-size: 0.75rem; color: var(--dim); margin-top: 10px; text-align: center; }
 
 /* README Modal */
 .readme-modal { max-width: 700px; }
@@ -2025,22 +3391,217 @@ body {
 </head>
 <body>
 
+<style>
+.startup-overlay, .wiz-overlay {
+    position: fixed; inset: 0; z-index: 5000;
+    background: rgba(8,8,14,0.97); display: none;
+    align-items: center; justify-content: center; padding: 20px;
+}
+.wiz-card, .startup-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 16px; padding: 26px 30px; width: 100%; max-width: 780px;
+    max-height: 92vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+.startup-card { max-width: 520px; text-align: center; }
+.wiz-head { display:flex; align-items:baseline; justify-content:space-between; margin-bottom: 4px; }
+.wiz-title { font-family:'JetBrains Mono',monospace; font-size:1.2rem; color:var(--accent); }
+.wiz-steplabel { font-family:'JetBrains Mono',monospace; font-size:0.8rem; color:var(--dim); }
+.wiz-progress-bg { height:6px; background:var(--bg); border-radius:6px; margin:10px 0 20px; overflow:hidden; }
+.wiz-progress { height:100%; background:linear-gradient(90deg,var(--accent),var(--success)); transition:width .25s; }
+.wiz-step { display:none; }
+.wiz-step h2 { font-size:1.05rem; margin:0 0 6px; color:var(--text); }
+.wiz-step p.hint { font-size:0.85rem; color:var(--dim); margin:0 0 14px; }
+.wiz-label { display:block; font-size:0.8rem; color:var(--dim); margin:12px 0 4px; }
+.wiz-input, .wiz-select {
+    width:100%; box-sizing:border-box; font-family:inherit; font-size:0.95rem;
+    background:var(--bg); color:var(--text); border:1px solid var(--border);
+    border-radius:8px; padding:9px 12px; outline:none;
+}
+.wiz-input:focus, .wiz-select:focus { border-color:var(--accent); }
+.wiz-foot { font-family:'JetBrains Mono',monospace; color:var(--accent); font-size:0.9rem; }
+.wiz-nav { display:flex; justify-content:space-between; gap:10px; margin-top:22px; }
+.wiz-btn {
+    font-family:inherit; font-size:0.95rem; font-weight:600; border:none; cursor:pointer;
+    border-radius:10px; padding:11px 20px; background:var(--bg); color:var(--text);
+    border:1px solid var(--border);
+}
+.wiz-btn.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+.wiz-btn:disabled { opacity:0.4; cursor:not-allowed; }
+.wiz-row { display:flex; gap:8px; align-items:center; margin:6px 0; }
+.wiz-check { display:flex; align-items:center; gap:8px; font-size:0.9rem; color:var(--text); margin:8px 0; }
+.wiz-kb-block { border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin:12px 0; }
+.wiz-kb-block h3 { margin:0 0 8px; font-size:0.95rem; color:var(--accent); }
+.wiz-reg-table { width:100%; border-collapse:collapse; font-size:0.8rem; }
+.wiz-reg-table th { text-align:left; color:var(--dim); font-weight:500; padding:2px 4px; }
+.wiz-reg-table td { padding:2px 4px; }
+.wiz-reg-table input[type=text], .wiz-reg-table input[type=number] {
+    width:100%; box-sizing:border-box; background:var(--bg); color:var(--text);
+    border:1px solid var(--border); border-radius:6px; padding:5px 6px; font-family:inherit; font-size:0.8rem;
+}
+.wiz-notelbl { font-family:'JetBrains Mono',monospace; color:var(--dim); font-size:0.7rem; }
+.wiz-mini-btn { background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:4px 10px; cursor:pointer; font-size:0.8rem; }
+.wiz-del { color:var(--recording); cursor:pointer; font-weight:700; border:none; background:none; font-size:1rem; }
+.wiz-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.startup-card h2 { color:var(--accent); font-family:'JetBrains Mono',monospace; margin:0 0 8px; }
+.startup-card p { color:var(--dim); font-size:0.9rem; margin:0 0 18px; }
+.startup-btns { display:flex; flex-direction:column; gap:10px; }
+</style>
+
+<!-- Startup choice overlay -->
+<div class="startup-overlay" id="startupOverlay">
+    <div class="startup-card">
+        <h2>JM-Rec</h2>
+        <p id="startupText">Welkom</p>
+        <div class="startup-btns">
+            <button class="wiz-btn primary" id="startupContinueBtn" style="display:none;" onclick="startupContinue()">Doorgaan met dit orgel</button>
+            <button class="wiz-btn" onclick="wizStartNew()">Nieuw orgel instellen</button>
+        </div>
+    </div>
+</div>
+
+<!-- Setup wizard overlay -->
+<div class="wiz-overlay" id="wizOverlay">
+    <div class="wiz-card">
+        <div class="wiz-head">
+            <div class="wiz-title">Orgel instellen</div>
+            <div class="wiz-steplabel" id="wizStepLabel">Stap 1 / 10</div>
+        </div>
+        <div class="wiz-progress-bg"><div class="wiz-progress" id="wizProgress" style="width:10%;"></div></div>
+
+        <div class="wiz-step" id="wizStep1">
+            <h2>1. Opslaglocatie</h2>
+            <p class="hint">Map waarin alle opnames worden bewaard.</p>
+            <label class="wiz-label">Opslagmap</label>
+            <div class="wiz-row">
+                <input class="wiz-input" id="wizOutputDir" placeholder="bijv. D:\Opnames" style="flex:1;">
+                <button class="wiz-mini-btn" onclick="wizPickFolder()">Bladeren…</button>
+            </div>
+        </div>
+
+        <div class="wiz-step" id="wizStep2">
+            <h2>2. Microfoon(s)</h2>
+            <p class="hint">Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).</p>
+            <label class="wiz-label">Bron</label>
+            <select class="wiz-select" id="wizMicMode" onchange="wizToggleMicMode()">
+                <option value="mic">Microfoon(s)</option>
+                <option value="loopback">Wat je hoort (loopback)</option>
+            </select>
+            <div id="wizMicList" style="margin-top:10px;"></div>
+            <div id="wizLoopbackList" style="margin-top:10px; display:none;"></div>
+        </div>
+
+        <div class="wiz-step" id="wizStep3">
+            <h2>3. Plaatsnaam</h2>
+            <p class="hint">Plaats waar het orgel staat.</p>
+            <input class="wiz-input" id="wizPlaats" oninput="wizUpdateFolder()" placeholder="bijv. Puttershoek">
+            <p class="hint" style="margin-top:12px;">Mapcode wordt: <span class="wiz-foot" id="wizFolderPrev1">—</span></p>
+        </div>
+
+        <div class="wiz-step" id="wizStep4">
+            <h2>4. Kerknaam</h2>
+            <p class="hint">Naam van de kerk/gebouw (wordt als info bewaard).</p>
+            <input class="wiz-input" id="wizKerk" placeholder="bijv. Hervormde Kerk">
+        </div>
+
+        <div class="wiz-step" id="wizStep5">
+            <h2>5. Orgelbouwer</h2>
+            <p class="hint">De bouwer van het orgel.</p>
+            <input class="wiz-input" id="wizBouwer" oninput="wizUpdateFolder()" placeholder="bijv. Muller">
+            <label class="wiz-label">Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)</label>
+            <input class="wiz-input wiz-foot" id="wizFolder" oninput="wizData.folder_edited=true">
+        </div>
+
+        <div class="wiz-step" id="wizStep6">
+            <h2>6. Klavieren en pedaal</h2>
+            <p class="hint">Hoeveel klavieren (manualen) heeft het orgel?</p>
+            <label class="wiz-label">Aantal klavieren</label>
+            <input class="wiz-input" id="wizNkb" type="number" min="1" max="6" value="2">
+            <label class="wiz-check"><input type="checkbox" id="wizHasPedal" checked> Pedaal aanwezig</label>
+        </div>
+
+        <div class="wiz-step" id="wizStep7">
+            <h2>7. Naam per klavier</h2>
+            <p class="hint">Geef elk klavier een naam.</p>
+            <div id="wizKbNames"></div>
+        </div>
+
+        <div class="wiz-step" id="wizStep8">
+            <h2>8. Tremulant en zwelkast</h2>
+            <p class="hint">Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).</p>
+            <label class="wiz-label">Tremulant</label>
+            <select class="wiz-select" id="wizTremScope" onchange="wizBuildTrem()">
+                <option value="none">Geen tremulant</option>
+                <option value="organ">Heel het orgel</option>
+                <option value="keyboard">Per klavier</option>
+            </select>
+            <div id="wizTremPerKb" style="margin-top:10px;"></div>
+            <label class="wiz-label" style="margin-top:14px;">Zwelkast (zwelwerk) per klavier</label>
+            <div id="wizZwelkast"></div>
+        </div>
+
+        <div class="wiz-step" id="wizStep9">
+            <h2>9. Registers per klavier</h2>
+            <p class="hint">Per register: naam, voetmaat (8' of 4st), begin- en eindnoot, en bas/disc-splitsing. Geheugensteun: <b>C-groot = MIDI 36</b>.</p>
+            <div id="wizRegisters"></div>
+        </div>
+
+        <div class="wiz-step" id="wizStep10">
+            <h2>10. Opname-instellingen en koppels</h2>
+            <div class="wiz-grid2">
+                <div><label class="wiz-label">Samplerate</label>
+                    <select class="wiz-select" id="wizSampleRate"><option>44100</option><option selected>48000</option><option>96000</option></select></div>
+                <div><label class="wiz-label">Bitdiepte</label>
+                    <select class="wiz-select" id="wizBitDepth"><option value="16" selected>16-bit</option><option value="24">24-bit</option></select></div>
+                <div><label class="wiz-label">Kanalen</label>
+                    <select class="wiz-select" id="wizChannels"><option value="1" selected>Mono</option><option value="2">Stereo</option></select></div>
+                <div><label class="wiz-label">Formaat</label>
+                    <select class="wiz-select" id="wizFormat"><option value="mp3" selected>MP3</option><option value="wav">WAV</option><option value="flac">FLAC</option></select></div>
+                <div><label class="wiz-label">Aftellen (sec)</label>
+                    <input class="wiz-input" id="wizCountdown" type="number" min="1" max="30" value="5"></div>
+                <div><label class="wiz-label">Opnameduur (sec)</label>
+                    <input class="wiz-input" id="wizRecDur" type="number" min="1" max="60" value="5"></div>
+                <div><label class="wiz-label">Splitstoets bas/disc (MIDI)</label>
+                    <input class="wiz-input" id="wizSplitNote" type="number" min="0" max="127" value="60" oninput="document.getElementById('wizSplitLbl').textContent=dMidiToName(parseInt(this.value)||0)"></div>
+                <div><label class="wiz-label">&nbsp;</label><div class="wiz-notelbl" id="wizSplitLbl" style="padding-top:10px;">C4</div></div>
+            </div>
+            <label class="wiz-label" style="margin-top:14px;">Koppels</label>
+            <div class="wiz-row">
+                <select class="wiz-select" id="wizCouplerSrc"></select>
+                <span>→</span>
+                <select class="wiz-select" id="wizCouplerTgt"></select>
+                <button class="wiz-mini-btn" onclick="wizAddCoupler()">+ Koppel</button>
+            </div>
+            <div id="wizCouplerList" style="font-size:0.85rem; color:var(--dim);"></div>
+        </div>
+
+        <div class="wiz-nav">
+            <button class="wiz-btn" id="wizPrev" onclick="wizBack()">← Vorige</button>
+            <button class="wiz-btn primary" id="wizNext" onclick="wizForward()">Volgende →</button>
+        </div>
+    </div>
+</div>
+
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.2</span></div>
+    <div class="logo">JM-Rec <span>v3.5</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
         </div>
         <button class="header-btn" onclick="openModal('qrModal')">QR Remote</button>
+        <button class="header-btn" onclick="openModal('regModal')">Registers</button>
         <button class="header-btn" onclick="openModal('reviewModal')">Controle</button>
         <button class="header-btn" onclick="openModal('readmeModal')">? Info</button>
+        <button class="header-btn" onclick="wizStartNew()">Nieuw orgel</button>
         <button class="header-btn" onclick="toggleDrawer()">Instellingen</button>
+        <span id="langSel" style="margin-left:8px;"></span>
     </div>
 </div>
 
 <div class="main">
     <div class="state-badge" id="stateBadge">IDLE</div>
-    
+
+    <div class="error-banner" id="errorBanner"></div>
+
     <div class="note-display">
         <div class="note-name" id="noteName">—</div>
         <div class="note-filename" id="noteFilename">—</div>
@@ -2059,6 +3620,39 @@ body {
             <div class="progress-bar" id="progressBar"></div>
         </div>
         <div class="progress-text" id="progressText">0 / 0</div>
+    </div>
+
+    <style>
+    .main-controls { display:flex; gap:12px; justify-content:center; margin-top:24px; flex-wrap:wrap; }
+    .mc-btn { font-family:inherit; font-size:1rem; font-weight:600; cursor:pointer; border-radius:12px;
+        padding:14px 28px; background:var(--surface); color:var(--text); border:1px solid var(--border); }
+    .mc-btn.mc-rec { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .mc-btn.mc-stop { color:var(--recording); border-color:var(--recording); }
+    .mc-btn:disabled { opacity:0.4; cursor:not-allowed; }
+    .main-registers { margin-top:18px; max-width:680px; width:100%; }
+    .mc-kbrow { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:10px; }
+    .mc-tab { font-family:'JetBrains Mono',monospace; font-size:0.8rem; cursor:pointer; padding:6px 14px;
+        border-radius:8px; background:var(--surface); color:var(--dim); border:1px solid var(--border); }
+    .mc-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+    .mc-reglist { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+    .mc-reg { font-size:0.85rem; cursor:pointer; padding:8px 14px; border-radius:10px;
+        background:var(--surface); color:var(--text); border:1px solid var(--border); }
+    .mc-reg.active { border-color:var(--accent); background:rgba(125,125,255,0.10); }
+    </style>
+    <div class="main-controls">
+        <button class="mc-btn mc-rec" id="mRecBtn" onclick="dApi('/api/record')">&#9654; Opnemen</button>
+        <button class="mc-btn" onclick="dApi('/api/pause')">&#9208; Pauze</button>
+        <button class="mc-btn mc-stop" onclick="dApi('/api/stop')">&#9632; Stop</button>
+    </div>
+    <div class="main-registers">
+        <div style="font-size:0.7rem;color:var(--dim);margin-bottom:8px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-right:4px;"></span>nog op te nemen</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>niet compleet</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#a855f7;margin-right:4px;"></span>nog controleren</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>goed</span>
+        </div>
+        <div class="mc-kbrow" id="mKbSelector"></div>
+        <div class="mc-reglist" id="mRegList"></div>
     </div>
 </div>
 
@@ -2265,12 +3859,65 @@ body {
     <div class="modal qr-modal">
         <button class="modal-close" onclick="closeModal('qrModal')">&times;</button>
         <div class="modal-title">Remote Control</div>
-        <p style="color:var(--dim);font-size:0.85rem;">Scan de QR-code met je telefoon<br>om de afstandsbediening te openen</p>
+        <p style="color:var(--dim);font-size:0.85rem;">Scan de QR-code met je telefoon of tablet<br>om de afstandsbediening te openen</p>
         <div class="qr-img">
             <img id="qrImage" src="/api/qr.svg" alt="QR Code" style="width:100%;height:100%;">
         </div>
         <div class="qr-url" id="qrUrl">Laden...</div>
-        <div class="qr-hint">Zorg dat je telefoon op hetzelfde netwerk zit als deze PC</div>
+        <div class="qr-ip-row" id="qrIpRow" style="display:none;">
+            <label for="qrIpSelect">Kies het netwerk waarmee je telefoon verbonden is:</label>
+            <select id="qrIpSelect" onchange="selectQrIp(this.value)"></select>
+        </div>
+        <div class="qr-hint">Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.</div>
+
+        <div class="qr-direct">
+            <div class="qr-direct-title">Directe verbinding (geen WiFi nodig)</div>
+            <p class="qr-direct-intro">Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.</p>
+            <ol class="qr-direct-steps">
+                <li>Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.</li>
+                <li>Noteer de netwerknaam en het wachtwoord die Windows toont.</li>
+                <li>Verbind je iPad/iPhone of Android met dat netwerk.</li>
+                <li>Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).</li>
+            </ol>
+            <button class="qr-direct-btn" onclick="openHotspotSettings()">Open hotspot-instellingen</button>
+            <p class="qr-direct-foot">Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Register manager Modal -->
+<div class="modal-overlay" id="regModal" onclick="if(event.target===this)closeModal('regModal')">
+    <div class="modal" style="max-width:680px;max-height:85vh;overflow-y:auto;">
+        <button class="modal-close" onclick="closeModal('regModal')">&times;</button>
+        <div class="modal-title">Registerbeheer</div>
+        <p style="color:var(--dim);font-size:0.8rem;">Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.</p>
+        <label class="d-form-label">Klavier</label>
+        <select class="d-form-input" id="regKbSel" onchange="regRender()"></select>
+        <div id="regList" style="margin:10px 0;"></div>
+        <div style="border-top:1px solid var(--border);padding-top:10px;">
+            <div class="d-form-label">Nieuw register</div>
+            <div style="display:grid;grid-template-columns:1fr 60px 70px 70px auto;gap:6px;align-items:center;">
+                <input class="d-form-input" id="regNewName" placeholder="naam (bijv. Prestant)">
+                <input class="d-form-input" id="regNewFoot" placeholder="8">
+                <input class="d-form-input" id="regNewBegin" type="number" value="36" title="beginnoot">
+                <input class="d-form-input" id="regNewEnd" type="number" value="96" title="eindnoot">
+                <label class="d-form-label" style="margin:0;"><input type="checkbox" id="regNewBass"> bas/disc</label>
+            </div>
+            <button class="d-btn d-btn-primary" style="margin-top:8px;" onclick="regAdd()">+ Register toevoegen</button>
+        </div>
+    </div>
+</div>
+
+<!-- Controle-prompt Modal (verschijnt automatisch na voltooien register) -->
+<div class="modal-overlay" id="checkModal">
+    <div class="modal" style="max-width:480px;text-align:center;">
+        <div class="modal-title">Register compleet 🎉</div>
+        <p id="checkMsg" style="color:var(--text);font-size:0.95rem;margin:10px 0 18px;">—</p>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <button class="d-btn d-btn-primary" onclick="checkDoReview()">🔍 Nu controleren</button>
+            <button class="d-btn" style="border-color:#22c55e;color:#22c55e;" onclick="checkApprove()">✓ Goedgekeurd</button>
+            <button class="d-btn" onclick="checkLater()">Later</button>
+        </div>
     </div>
 </div>
 
@@ -2320,25 +3967,37 @@ body {
 <div class="modal-overlay" id="readmeModal" onclick="if(event.target===this)closeModal('readmeModal')">
     <div class="modal readme-modal">
         <button class="modal-close" onclick="closeModal('readmeModal')">&times;</button>
+        <div id="readmeBody">
         <div class="modal-title">JM-Rec — Handleiding</div>
 
         <h2>Snelstart</h2>
         <ul>
-            <li>Open de <strong>Remote</strong> op je telefoon (scan de QR-code via de knop hierboven)</li>
-            <li>Ga naar het <strong>Project</strong>-tabblad en vul projectnaam + registernaam in</li>
-            <li>Stel in het <strong>Instellingen</strong>-tabblad de microfoon en het nootbereik in</li>
-            <li>Druk op <strong>Opnemen</strong> — de rest gaat automatisch!</li>
+            <li>Doorloop bij het opstarten de <strong>wizard</strong> (10 stappen) om het orgel + de registers vast te leggen — of kies <strong>Doorgaan</strong> met het laatste orgel.</li>
+            <li>Op het <strong>hoofdscherm</strong>: kies een register en druk op <strong>Opnemen</strong>.</li>
+            <li>Scan de <strong>QR-code</strong> (QR Remote) om met je telefoon te bedienen.</li>
+            <li>Achteraf bewerken: knop <strong>Registers</strong> (toevoegen/verwijderen, gecontroleerd-markering) of <strong>Nieuw orgel</strong>.</li>
         </ul>
 
         <h2>Bediening</h2>
         <table>
             <tr><th>Knop</th><th>Functie</th></tr>
-            <tr><td><code>Opnemen</code></td><td>Start automatische opnamecyclus (alle noten)</td></tr>
-            <tr><td><code>Enkele opname</code></td><td>Neemt alleen de huidige noot op</td></tr>
+            <tr><td><code>Opnemen</code></td><td>Start automatische opnamecyclus van het gekozen register</td></tr>
+            <tr><td><code>Pauze</code></td><td>Pauzeert na de huidige noot</td></tr>
             <tr><td><code>Stop</code></td><td>Stopt direct</td></tr>
-            <tr><td><code>Vorige / Volgende</code></td><td>Spring naar andere noot</td></tr>
+            <tr><td><code>Vorige noot / Volgende noot</code></td><td>Spring naar een andere noot</td></tr>
             <tr><td><code>Opnieuw</code></td><td>Neem de huidige noot opnieuw op</td></tr>
         </table>
+
+        <h2>Kleurcodes per register</h2>
+        <table>
+            <tr><th>Kleur</th><th>Betekenis</th></tr>
+            <tr><td>🔴 rood</td><td>nog op te nemen (0 noten)</td></tr>
+            <tr><td>🟠 oranje</td><td>begonnen, nog niet compleet</td></tr>
+            <tr><td>🟣 paars</td><td>volledig opgenomen, nog te controleren</td></tr>
+            <tr><td>🟢 groen</td><td>gecontroleerd en goedgekeurd</td></tr>
+        </table>
+        <p>Markeer een register als <strong>gecontroleerd</strong> (paars → groen) via de knop <strong>Registers</strong>.</p>
+        <p>Zodra een register volledig is opgenomen verschijnt automatisch de vraag <strong>Nu controleren / Goedgekeurd / Later</strong> — op de PC én de afstandsbediening.</p>
 
         <h2>Opnamecyclus</h2>
         <p>Per noot: <strong>Aftellen</strong> (standaard 5s) &rarr; <strong>Opnemen</strong> (standaard 5s) &rarr; <strong>Volgende noot</strong>. Dit herhaalt zich automatisch tot de laatste noot.</p>
@@ -2392,7 +4051,8 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.2</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>
+        </div>
     </div>
 </div>
 
@@ -2401,6 +4061,7 @@ body {
 function openModal(id) {
     document.getElementById(id).classList.add('active');
     if (id === 'qrModal') loadQrUrl();
+    if (id === 'regModal') regOpen();
 }
 function closeModal(id) {
     document.getElementById(id).classList.remove('active');
@@ -2410,12 +4071,38 @@ document.addEventListener('keydown', function(e) {
         document.querySelectorAll('.modal-overlay.active').forEach(m => m.classList.remove('active'));
     }
 });
+let _qrPort = '5555';
 async function loadQrUrl() {
     try {
-        const res = await fetch('/api/remote-url');
+        const res = await fetch('/api/network-info');
         const data = await res.json();
-        document.getElementById('qrUrl').textContent = data.url;
+        _qrPort = data.port || '5555';
+        const sel = document.getElementById('qrIpSelect');
+        const row = document.getElementById('qrIpRow');
+        sel.innerHTML = '';
+        (data.ips || []).forEach(ip => {
+            const opt = document.createElement('option');
+            opt.value = ip;
+            opt.textContent = (ip === data.hotspot_ip) ? (ip + ' (hotspot)') : ip;
+            sel.appendChild(opt);
+        });
+        const chosen = data.hotspot_ip || (data.ips && data.ips[0]) || '';
+        if (chosen) sel.value = chosen;
+        row.style.display = (data.ips && data.ips.length > 1) ? 'block' : 'none';
+        selectQrIp(chosen);
     } catch(e) {}
+}
+function selectQrIp(ip) {
+    if (!ip) return;
+    document.getElementById('qrImage').src = '/api/qr.svg?ip=' + encodeURIComponent(ip);
+    document.getElementById('qrUrl').textContent = 'http://' + ip + ':' + _qrPort;
+}
+async function openHotspotSettings() {
+    try {
+        const res = await fetch('/api/open-hotspot-settings', { method: 'POST' });
+        const data = await res.json();
+        if (!data.success) alert('Kon hotspot-instellingen niet openen: ' + (data.error || ''));
+    } catch(e) { alert('Kon hotspot-instellingen niet openen.'); }
 }
 
 // Drawer functions
@@ -2654,12 +4341,63 @@ function syncDrawer(state) {
 
 dLoadDevices();
 
+let dViewKb = null;
+let _dRegSig = '';
+const D_STATUS_COLORS = { todo:'#ef4444', partial:'#f59e0b', review:'#a855f7', done:'#22c55e' };
+function dSelectKbView(n){ dViewKb = n; _dRegSig=''; if (window._lastState) dRenderPlan(window._lastState); }
+async function dSelectReg(kb, reg, variant){ await dApi('/api/select-register', { keyboard:kb, register:reg, variant:variant }); }
+function dRenderPlan(state){
+    const plan = state.plan || [];
+    const ksel = document.getElementById('mKbSelector');
+    if (!ksel) return;
+    if (!dViewKb || !plan.find(k=>k.name===dViewKb))
+        dViewKb = (state.active && state.active.keyboard) || (plan[0] && plan[0].name) || null;
+    const sig = JSON.stringify({ v:dViewKb, a:state.active,
+        p: plan.map(k=>[k.name, k.registers.map(r=>r.series.map(s=>s.recorded+'/'+s.expected+'/'+s.status))]) });
+    if (sig === _dRegSig) return;
+    _dRegSig = sig;
+    ksel.innerHTML = plan.map(k=>'<button class="mc-tab'+(k.name===dViewKb?' active':'')+'" onclick="dSelectKbView(\''+k.name+'\')">'+k.name+'</button>').join('');
+    const kb = plan.find(k=>k.name===dViewKb);
+    const list = document.getElementById('mRegList');
+    if (!list) return;
+    if (!kb || !kb.registers.length){ list.innerHTML = '<span style="color:var(--dim);font-size:0.85rem;">'+tr('Geen registers')+'</span>'; return; }
+    const act = state.active || {};
+    list.innerHTML = kb.registers.map(r=>r.series.map(s=>{
+        const isAct = act.keyboard===kb.name && act.register===r.name && act.variant===s.variant;
+        const col = D_STATUS_COLORS[s.status] || 'var(--dim)';
+        return '<span class="mc-reg'+(isAct?' active':'')+'" style="border-color:'+col+';" onclick="dSelectReg(\''+kb.name+'\',\''+r.name+'\',\''+s.variant+'\')">'+
+            '<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+col+';margin-right:6px;"></span>'+
+            r.display+(s.variant==='trem'?' (trem)':'')+' <b style="color:'+col+';">'+s.recorded+'/'+s.expected+'</b></span>';
+    }).join('')).join('');
+}
+
 function updateUI(state) {
     // State badge
     const badge = document.getElementById('stateBadge');
-    badge.textContent = state.state.toUpperCase();
+    const _stMap = {idle:'GEREED', countdown:'AFTELLEN', recording:'OPNAME', paused:'GEPAUZEERD'};
+    badge.textContent = tr(_stMap[state.state] || state.state.toUpperCase());
     badge.className = 'state-badge ' + (state.state === 'recording' ? 'recording' : state.state === 'countdown' ? 'countdown' : '');
-    
+
+    // Main register selector + gate record button
+    dRenderPlan(state);
+    handleCheckPrompt(state);
+    const mRec = document.getElementById('mRecBtn');
+    if (mRec) {
+        const hasActive = !!(state.active && state.active.register);
+        mRec.disabled = !hasActive;
+    }
+
+    // Error banner
+    const errBanner = document.getElementById('errorBanner');
+    if (errBanner) {
+        if (state.last_error) {
+            errBanner.textContent = '⚠ ' + state.last_error;
+            errBanner.classList.add('show');
+        } else {
+            errBanner.classList.remove('show');
+        }
+    }
+
     // Note
     const noteName = document.getElementById('noteName');
     noteName.textContent = state.note.current_name;
@@ -2794,6 +4532,7 @@ setInterval(async () => {
     try {
         const res = await fetch('/api/state');
         const state = await res.json();
+        window._lastState = state;
         updateUI(state);
         syncDrawer(state);
         dUpdateReview(state.review);
@@ -2807,10 +4546,383 @@ setInterval(() => { fetch('/api/heartbeat', {method:'POST'}).catch(()=>{}); }, 5
 window.addEventListener('beforeunload', function() {
     navigator.sendBeacon('/api/shutdown', '{}');
 });
+
+// ============ Startup + Setup Wizard ============
+const WIZ_TOTAL = 10;
+let wizStepN = 1;
+let wizData = {};
+let wizDevices = [];
+function wizVal(id){ const e=document.getElementById(id); return e?e.value:''; }
+function wizEsc(s){ return (s||'').toString().replace(/"/g,'&quot;'); }
+
+function wizResetData(){
+    wizData = {
+        output_dir:'', plaats:'', kerk:'', bouwer:'', folder_edited:false,
+        n_keyboards:2, has_pedal:true, keyboards:[], pedal_registers:[],
+        tremulant_scope:'none', split_note:60, couplers:[],
+        settings:{ sample_rate:48000, bit_depth:16, channels:1, output_format:'mp3',
+            mp3_bitrate:192, countdown_seconds:5, record_seconds:5, record_gain:1.0,
+            device_indices:[], device_names:{}, input_mode:'mic', loopback_device_id:null }
+    };
+}
+
+async function wizBootstrap(){
+    try {
+        const s = await (await fetch('/api/state')).json();
+        if (s.has_manifest) return;  // already set up this session
+    } catch(e){}
+    try {
+        const lp = await (await fetch('/api/last-project')).json();
+        if (lp && lp.exists){
+            document.getElementById('startupText').textContent =
+                'Laatste orgel: ' + (lp.plaats || lp.organ || '') + (lp.kerk ? ' – ' + lp.kerk : '');
+            document.getElementById('startupContinueBtn').style.display = '';
+            document.getElementById('startupOverlay').style.display = 'flex';
+            return;
+        }
+    } catch(e){}
+    wizStartNew();
+}
+
+async function startupContinue(){
+    try {
+        const r = await (await fetch('/api/load-project', {method:'POST', headers:{'Content-Type':'application/json'}, body:'{}'})).json();
+        if (!r.success){ alert('Kon orgel niet laden: ' + (r.error || 'onbekende fout')); return; }
+    } catch(e){ alert('Kon orgel niet laden: ' + e); return; }
+    document.getElementById('startupOverlay').style.display = 'none';
+}
+
+async function wizStartNew(){
+    wizResetData();
+    try { const s = await (await fetch('/api/state')).json(); wizData.output_dir = s.output_dir || ''; } catch(e){}
+    document.getElementById('startupOverlay').style.display = 'none';
+    document.getElementById('wizOverlay').style.display = 'flex';
+    wizStepN = 1; wizShow();
+}
+
+function wizShow(){
+    document.getElementById('wizStepLabel').textContent = tr('Stap') + ' ' + wizStepN + ' / ' + WIZ_TOTAL;
+    document.getElementById('wizProgress').style.width = (wizStepN/WIZ_TOTAL*100) + '%';
+    for (let i=1;i<=WIZ_TOTAL;i++){ const el=document.getElementById('wizStep'+i); if(el) el.style.display='none'; }
+    const cur = document.getElementById('wizStep'+wizStepN); if (cur) cur.style.display='block';
+    if (wizStepN===1) document.getElementById('wizOutputDir').value = wizData.output_dir;
+    if (wizStepN===2) wizBuildMics();
+    if (wizStepN===3){ document.getElementById('wizPlaats').value = wizData.plaats; wizUpdateFolder(); }
+    if (wizStepN===4) document.getElementById('wizKerk').value = wizData.kerk;
+    if (wizStepN===5){ document.getElementById('wizBouwer').value = wizData.bouwer; wizUpdateFolder(); }
+    if (wizStepN===6){ document.getElementById('wizNkb').value = wizData.n_keyboards; document.getElementById('wizHasPedal').checked = wizData.has_pedal; }
+    if (wizStepN===7) wizBuildKbNames();
+    if (wizStepN===8){ document.getElementById('wizTremScope').value = wizData.tremulant_scope; wizBuildTrem(); }
+    if (wizStepN===9) wizBuildRegisters();
+    if (wizStepN===10) wizBuildSettings();
+    document.getElementById('wizPrev').style.visibility = wizStepN>1 ? 'visible' : 'hidden';
+    document.getElementById('wizNext').textContent = tr(wizStepN===WIZ_TOTAL ? 'Opslaan & starten' : 'Volgende →');
+}
+
+async function wizPickFolder(){
+    try {
+        const r = await (await fetch('/api/pick-folder',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).json();
+        if (r.success && r.path){ document.getElementById('wizOutputDir').value = r.path; wizData.output_dir = r.path; }
+        else if (r.error){ alert('Mapkiezer fout: '+r.error); }
+    } catch(e){ alert('Kon mapkiezer niet openen: '+e); }
+}
+function wizForward(){ wizCollectStep(wizStepN); if (wizStepN===WIZ_TOTAL){ wizCommit(); return; } wizStepN++; wizShow(); }
+function wizBack(){ wizCollectStep(wizStepN); if (wizStepN>1){ wizStepN--; wizShow(); } }
+
+function wizCollectStep(n){
+    if (n===1) wizData.output_dir = wizVal('wizOutputDir');
+    else if (n===2) wizCollectMics();
+    else if (n===3){ wizData.plaats = wizVal('wizPlaats'); wizUpdateFolder(); }
+    else if (n===4) wizData.kerk = wizVal('wizKerk');
+    else if (n===5){ wizData.bouwer = wizVal('wizBouwer'); wizUpdateFolder(); }
+    else if (n===6){ wizData.n_keyboards = Math.max(1, parseInt(wizVal('wizNkb'))||1);
+        wizData.has_pedal = document.getElementById('wizHasPedal').checked; wizEnsureKeyboards(); }
+    else if (n===10) wizCollectSettings();
+}
+
+function wizUpdateFolder(){
+    const p = (document.getElementById('wizPlaats') ? document.getElementById('wizPlaats').value : wizData.plaats) || '';
+    const b = (document.getElementById('wizBouwer') ? document.getElementById('wizBouwer').value : wizData.bouwer) || '';
+    const code = (p.replace(/\s+/g,'').slice(0,4) + b.replace(/\s+/g,'').slice(0,4)) || 'Orgel';
+    const p1 = document.getElementById('wizFolderPrev1'); if (p1) p1.textContent = code;
+    if (!wizData.folder_edited){ const f = document.getElementById('wizFolder'); if (f) f.value = code; }
+}
+
+// ---- Step 2: microphones ----
+function wizToggleMicMode(){
+    const mode = document.getElementById('wizMicMode').value;
+    document.getElementById('wizMicList').style.display = mode==='mic' ? '' : 'none';
+    document.getElementById('wizLoopbackList').style.display = mode==='loopback' ? '' : 'none';
+}
+async function wizBuildMics(){
+    document.getElementById('wizMicMode').value = wizData.settings.input_mode || 'mic';
+    wizToggleMicMode();
+    const cont = document.getElementById('wizMicList');
+    try {
+        const devs = await (await fetch('/api/devices')).json();
+        wizDevices = devs;
+        if (!devs.length){ cont.innerHTML = '<p class="hint">Geen microfoons gevonden.</p>'; }
+        else cont.innerHTML = devs.map(d => {
+            const checked = wizData.settings.device_indices.indexOf(d.index)>=0 ? 'checked' : '';
+            const pos = (wizData.settings.device_names && wizData.settings.device_names[d.index]) || '';
+            return '<div class="wiz-row"><label class="wiz-check" style="flex:1;"><input type="checkbox" class="wizMicChk" data-idx="'+d.index+'" '+checked+'> '+d.name+'</label>'+
+                   '<input type="text" class="wizMicPos" data-idx="'+d.index+'" placeholder="positie" value="'+wizEsc(pos)+'" style="max-width:150px;"></div>';
+        }).join('');
+    } catch(e){ cont.innerHTML = '<p class="hint">Kon apparaten niet laden.</p>'; }
+    const lb = document.getElementById('wizLoopbackList');
+    try {
+        const sp = await (await fetch('/api/loopback-devices')).json();
+        if (sp && sp.length){
+            lb.innerHTML = '<label class="wiz-label">Speaker (loopback)</label><select class="wiz-select" id="wizLoopbackSel">' +
+                sp.map(s=>'<option value="'+wizEsc(s.id)+'" '+(s.id===wizData.settings.loopback_device_id?'selected':'')+'>'+s.name+'</option>').join('') + '</select>';
+        } else lb.innerHTML = '<p class="hint">Geen loopback-apparaten.</p>';
+    } catch(e){ lb.innerHTML=''; }
+}
+function wizCollectMics(){
+    const mode = document.getElementById('wizMicMode').value;
+    wizData.settings.input_mode = mode;
+    const idxs=[], names={};
+    document.querySelectorAll('.wizMicChk').forEach(c=>{ if (c.checked) idxs.push(parseInt(c.dataset.idx)); });
+    document.querySelectorAll('.wizMicPos').forEach(p=>{ if (p.value.trim()) names[p.dataset.idx]=p.value.trim(); });
+    wizData.settings.device_indices = idxs;
+    wizData.settings.device_names = names;
+    const sel = document.getElementById('wizLoopbackSel');
+    if (mode==='loopback' && sel) wizData.settings.loopback_device_id = sel.value;
+}
+
+// ---- Step 6/7: keyboards ----
+function wizEnsureKeyboards(){
+    const n = wizData.n_keyboards;
+    const defaults = ['Hoofdwerk','Zwelwerk','Borstwerk','Rugwerk','Bovenwerk','Solo'];
+    while (wizData.keyboards.length < n)
+        wizData.keyboards.push({ name: defaults[wizData.keyboards.length] || ('Klavier'+(wizData.keyboards.length+1)),
+                                 zwelwerk:false, tremulant:false, registers:[] });
+    wizData.keyboards.length = n;
+}
+function wizBuildKbNames(){
+    wizEnsureKeyboards();
+    document.getElementById('wizKbNames').innerHTML = wizData.keyboards.map((kb,i)=>
+        '<label class="wiz-label">'+tr('Klavier')+' '+(i+1)+'</label>'+
+        '<input class="wiz-input" value="'+wizEsc(kb.name)+'" oninput="wizData.keyboards['+i+'].name=this.value">').join('');
+}
+
+// ---- Step 8: tremulant + swell ----
+function wizBuildTrem(){
+    const scope = document.getElementById('wizTremScope').value;
+    wizData.tremulant_scope = scope;
+    const per = document.getElementById('wizTremPerKb');
+    if (scope==='keyboard'){
+        per.innerHTML = wizData.keyboards.map((kb,i)=>
+            '<label class="wiz-check"><input type="checkbox" '+(kb.tremulant?'checked':'')+
+            ' onchange="wizData.keyboards['+i+'].tremulant=this.checked"> '+tr('Tremulant op')+' '+wizEsc(kb.name)+'</label>').join('');
+    } else {
+        per.innerHTML = '';
+        const on = (scope==='organ');
+        wizData.keyboards.forEach(kb=>kb.tremulant=on);
+    }
+    document.getElementById('wizZwelkast').innerHTML = wizData.keyboards.map((kb,i)=>
+        '<label class="wiz-check"><input type="checkbox" '+(kb.zwelwerk?'checked':'')+
+        ' onchange="wizData.keyboards['+i+'].zwelwerk=this.checked"> '+tr('Zwelkast op')+' '+wizEsc(kb.name)+'</label>').join('');
+}
+
+// ---- Step 9: registers ----
+function wizRegArray(kbKey){ return kbKey==='P' ? wizData.pedal_registers : wizData.keyboards[parseInt(kbKey)].registers; }
+function wizSetReg(kbKey,i,field,val){
+    const arr = wizRegArray(kbKey);
+    if (field==='begin_note' || field==='end_note'){
+        val = parseInt(val)||0; arr[i][field]=val;
+        const lbl = document.getElementById('wiz'+(field==='begin_note'?'Begin':'End')+'Lbl_'+kbKey+'_'+i);
+        if (lbl) lbl.textContent = dMidiToName(val);
+    } else arr[i][field] = val;
+}
+function wizRegRow(kbKey,i,r){
+    return '<tr>'+
+      '<td><input type="text" value="'+wizEsc(r.display)+'" oninput="wizSetReg(\''+kbKey+'\','+i+',\'display\',this.value)" placeholder="Prestant"></td>'+
+      '<td style="width:55px;"><input type="text" value="'+wizEsc(r.foot)+'" oninput="wizSetReg(\''+kbKey+'\','+i+',\'foot\',this.value)" placeholder="8"></td>'+
+      '<td style="width:64px;"><input type="number" value="'+r.begin_note+'" oninput="wizSetReg(\''+kbKey+'\','+i+',\'begin_note\',this.value)"></td>'+
+      '<td><span class="wiz-notelbl" id="wizBeginLbl_'+kbKey+'_'+i+'">'+dMidiToName(r.begin_note)+'</span></td>'+
+      '<td style="width:64px;"><input type="number" value="'+r.end_note+'" oninput="wizSetReg(\''+kbKey+'\','+i+',\'end_note\',this.value)"></td>'+
+      '<td><span class="wiz-notelbl" id="wizEndLbl_'+kbKey+'_'+i+'">'+dMidiToName(r.end_note)+'</span></td>'+
+      '<td style="text-align:center;"><input type="checkbox" '+(r.bass_treble?'checked':'')+' onchange="wizSetReg(\''+kbKey+'\','+i+',\'bass_treble\',this.checked)"></td>'+
+      '<td><button class="wiz-del" onclick="wizDelRegister(\''+kbKey+'\','+i+')">×</button></td></tr>';
+}
+function wizRegBlock(kbKey,name,regs){
+    const rows = regs.map((r,i)=>wizRegRow(kbKey,i,r)).join('');
+    return '<div class="wiz-kb-block"><h3>'+wizEsc(name)+'</h3>'+
+      '<table class="wiz-reg-table"><tr><th>'+tr('Naam')+'</th><th>'+tr('Voet')+'</th><th>'+tr('Begin')+'</th><th></th><th>'+tr('Eind')+'</th><th></th><th>'+tr('Bas/disc')+'</th><th></th></tr>'+rows+'</table>'+
+      '<button class="wiz-mini-btn" style="margin-top:8px;" onclick="wizAddRegister(\''+kbKey+'\')">'+tr('+ Register')+'</button></div>';
+}
+function wizBuildRegisters(){
+    let html = '';
+    wizData.keyboards.forEach((kb,i)=>{ html += wizRegBlock(String(i), kb.name, kb.registers); });
+    if (wizData.has_pedal) html += wizRegBlock('P','Pedaal', wizData.pedal_registers);
+    document.getElementById('wizRegisters').innerHTML = html;
+}
+function wizAddRegister(kbKey){
+    wizRegArray(kbKey).push({ display:'', foot:'', begin_note:36, end_note:96, bass_treble:false });
+    wizBuildRegisters();
+}
+function wizDelRegister(kbKey,i){ wizRegArray(kbKey).splice(i,1); wizBuildRegisters(); }
+
+// ---- Step 10: settings + couplers ----
+function wizBuildSettings(){
+    const s = wizData.settings;
+    document.getElementById('wizSampleRate').value = s.sample_rate;
+    document.getElementById('wizBitDepth').value = s.bit_depth;
+    document.getElementById('wizChannels').value = s.channels;
+    document.getElementById('wizFormat').value = s.output_format;
+    document.getElementById('wizCountdown').value = s.countdown_seconds;
+    document.getElementById('wizRecDur').value = s.record_seconds;
+    document.getElementById('wizSplitNote').value = wizData.split_note;
+    document.getElementById('wizSplitLbl').textContent = dMidiToName(wizData.split_note);
+    const opts = wizData.keyboards.map(k=>'<option>'+wizEsc(k.name)+'</option>').join('') + (wizData.has_pedal?'<option>Pedaal</option>':'');
+    document.getElementById('wizCouplerSrc').innerHTML = opts;
+    document.getElementById('wizCouplerTgt').innerHTML = opts;
+    wizRenderCouplers();
+}
+function wizCollectSettings(){
+    const s = wizData.settings;
+    s.sample_rate = parseInt(wizVal('wizSampleRate'));
+    s.bit_depth = parseInt(wizVal('wizBitDepth'));
+    s.channels = parseInt(wizVal('wizChannels'));
+    s.output_format = wizVal('wizFormat');
+    s.countdown_seconds = parseInt(wizVal('wizCountdown'))||5;
+    s.record_seconds = parseInt(wizVal('wizRecDur'))||5;
+    wizData.split_note = parseInt(wizVal('wizSplitNote'))||60;
+}
+function wizAddCoupler(){
+    const src = wizVal('wizCouplerSrc'), tgt = wizVal('wizCouplerTgt');
+    if (src && tgt && src!==tgt){ wizData.couplers.push({source:src, target:tgt}); wizRenderCouplers(); }
+}
+function wizDelCoupler(i){ wizData.couplers.splice(i,1); wizRenderCouplers(); }
+function wizRenderCouplers(){
+    document.getElementById('wizCouplerList').innerHTML = wizData.couplers.map((c,i)=>
+        '<div class="wiz-row">'+wizEsc(c.source)+' → '+wizEsc(c.target)+' <button class="wiz-del" onclick="wizDelCoupler('+i+')">×</button></div>').join('');
+}
+
+async function wizCommit(){
+    wizCollectSettings();
+    const payload = {
+        output_dir: wizData.output_dir,
+        folder_name: (document.getElementById('wizFolder').value || '').trim(),
+        plaats: wizData.plaats, kerk: wizData.kerk, bouwer: wizData.bouwer,
+        tremulant_scope: wizData.tremulant_scope, has_pedal: wizData.has_pedal,
+        split_note: wizData.split_note, split_record_bas:true, split_record_disc:true,
+        keyboards: wizData.keyboards.map(k=>({ name:k.name, zwelwerk:k.zwelwerk, tremulant:k.tremulant,
+            registers:k.registers.filter(r=>(r.display||'').trim()).map(r=>({
+                display:r.display, foot:r.foot, begin_note:r.begin_note, end_note:r.end_note, bass_treble:r.bass_treble })) })),
+        pedal_registers: wizData.has_pedal ? wizData.pedal_registers.filter(r=>(r.display||'').trim()).map(r=>({
+            display:r.display, foot:r.foot, begin_note:r.begin_note, end_note:r.end_note, bass_treble:r.bass_treble })) : [],
+        couplers: wizData.couplers, settings: wizData.settings
+    };
+    try {
+        const r = await (await fetch('/api/commit-organ',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})).json();
+        if (r.success){ document.getElementById('wizOverlay').style.display='none'; }
+        else alert('Kon orgel niet opslaan: '+(r.error||''));
+    } catch(e){ alert('Fout bij opslaan: '+e); }
+}
+
+// ============ Register manager modal ============
+function regOpen(){
+    const st = window._lastState;
+    const sel = document.getElementById('regKbSel');
+    const plan = (st && st.plan) || [];
+    sel.innerHTML = plan.map(k=>'<option>'+k.name+'</option>').join('');
+    if (st && st.active && st.active.keyboard) sel.value = st.active.keyboard;
+    regRender();
+}
+const REG_STATUS_COLORS = { todo:'#ef4444', partial:'#f59e0b', review:'#a855f7', done:'#22c55e' };
+const REG_STATUS_LBL = { todo:'nog op te nemen', partial:'niet compleet', review:'nog controleren', done:'goed' };
+function regRender(){
+    const st = window._lastState;
+    const kbName = document.getElementById('regKbSel').value;
+    const plan = (st && st.plan) || [];
+    const kb = plan.find(k=>k.name===kbName);
+    const list = document.getElementById('regList');
+    const legend = '<div style="font-size:0.7rem;color:var(--dim);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;">'+
+        Object.keys(REG_STATUS_LBL).map(k=>'<span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+REG_STATUS_COLORS[k]+';margin-right:4px;"></span>'+tr(REG_STATUS_LBL[k])+'</span>').join('')+'</div>';
+    if (!kb || !kb.registers.length){ list.innerHTML = legend + '<p style="color:var(--dim);font-size:0.85rem;">'+tr('Nog geen registers.')+'</p>'; return; }
+    list.innerHTML = legend + kb.registers.map(r=>{
+        const series = r.series.map(s=>{
+            const col = REG_STATUS_COLORS[s.status]||'var(--dim)';
+            const full = s.recorded>=s.expected && s.expected>0;
+            const chk = '<label style="font-size:0.7rem;color:var(--dim);'+(full?'':'opacity:0.4;')+'"><input type="checkbox" '+(s.checked?'checked':'')+' '+(full?'':'disabled')+' onchange="regMark(\''+kbName+'\',\''+r.name+'\',\''+s.variant+'\',this.checked)"> '+tr('gecontroleerd')+'</label>';
+            return '<div style="display:flex;align-items:center;gap:8px;margin-top:3px;">'+
+                '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+col+';"></span>'+
+                '<span style="font-size:0.75rem;">'+tr(s.variant==='trem'?'tremulant':'normaal')+': <b style="color:'+col+';">'+s.recorded+'/'+s.expected+'</b></span>'+chk+'</div>';
+        }).join('');
+        return '<div class="d-checkbox-row" style="flex-direction:column;align-items:stretch;border-bottom:1px solid var(--border);padding:6px 0;">'+
+            '<div style="display:flex;justify-content:space-between;"><span><b>'+r.display+'</b> '+(r.foot||'')+' ['+r.begin_note+'–'+r.end_note+'] '+(r.bass_treble?'(bas/disc)':'')+'</span>'+
+            '<button class="wiz-del" onclick="regDel(\''+kbName+'\',\''+r.name+'\')">×</button></div>'+series+'</div>';
+    }).join('');
+}
+async function regMark(kbName, regName, variant, checked){
+    await dApi('/api/mark-register', { keyboard:kbName, register:regName, variant:variant, checked:checked });
+    setTimeout(regOpen, 150);
+}
+
+// ============ Controle-prompt (na voltooien register) ============
+let _checkKey = null;
+function handleCheckPrompt(state){
+    const cp = state.check_prompt;
+    const modal = document.getElementById('checkModal');
+    if (!modal) return;
+    if (cp){
+        const key = cp.keyboard+'|'+cp.register+'|'+cp.variant;
+        if (key !== _checkKey){
+            _checkKey = key;
+            window._checkPrompt = cp;
+            document.getElementById('checkMsg').innerHTML =
+                tr('Register')+' <b>'+cp.display+'</b>'+(cp.variant==='trem'?' (trem)':'')+' '+tr('op')+' <b>'+cp.keyboard+'</b> '+tr('is volledig opgenomen')+' ('+cp.recorded+'/'+cp.expected+').<br>'+tr('Wil je het nu controleren?');
+            modal.classList.add('active');
+        }
+    } else {
+        _checkKey = null;
+    }
+}
+async function checkLater(){ document.getElementById('checkModal').classList.remove('active'); await dApi('/api/dismiss-check'); }
+async function checkApprove(){
+    const cp = window._checkPrompt;
+    document.getElementById('checkModal').classList.remove('active');
+    if (cp) await dApi('/api/mark-register', { keyboard:cp.keyboard, register:cp.register, variant:cp.variant, checked:true });
+    await dApi('/api/dismiss-check');
+}
+async function checkDoReview(){
+    document.getElementById('checkModal').classList.remove('active');
+    await dApi('/api/dismiss-check');
+    _dRevScope = 'register';
+    openModal('reviewModal');
+    await dStartReview();
+}
+async function regAdd(){
+    const kbName = document.getElementById('regKbSel').value;
+    const name = document.getElementById('regNewName').value.trim();
+    if (!name){ alert('Geef een registernaam'); return; }
+    await dApi('/api/add-register', { keyboard:kbName, name:name,
+        foot:document.getElementById('regNewFoot').value,
+        begin_note:parseInt(document.getElementById('regNewBegin').value)||36,
+        end_note:parseInt(document.getElementById('regNewEnd').value)||96,
+        bass_treble:document.getElementById('regNewBass').checked });
+    document.getElementById('regNewName').value='';
+    setTimeout(regOpen, 150);
+}
+async function regDel(kbName, regName){
+    if (!confirm('Register "'+regName+'" uit het plan verwijderen? (opnames blijven op schijf)')) return;
+    await dApi('/api/remove-register', { keyboard:kbName, register:regName });
+    setTimeout(regOpen, 150);
+}
+
+// ---- i18n init ----
+jmInitLang();
+(function(){ const ql=new URLSearchParams(location.search).get('lang'); if(ql && window.jmLangs.indexOf(ql)>=0){ try{localStorage.setItem('jmLang',ql);}catch(e){} jmInitLang(); } })();
+try { document.getElementById('langSel').innerHTML = jmLangSelectorHtml(); } catch(e){}
+translateTree(document.body);
+try { applyHandleiding(); } catch(e){}
+
+wizBootstrap();
 </script>
 </body>
-</html>
-"""
+</html>"""
 
 
 REMOTE_HTML = r"""
@@ -2820,6 +4932,7 @@ REMOTE_HTML = r"""
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>JM-Rec Remote</title>
+<script src="/i18n.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -2870,6 +4983,22 @@ body {
     background: var(--success);
 }
 .connection-dot.offline { background: var(--recording); }
+
+/* Error banner */
+.error-banner {
+    display: none;
+    text-align: center;
+    font-size: 0.9rem;
+    margin: 10px 0 4px;
+    padding: 9px 14px;
+    border-radius: 10px;
+    background: rgba(255, 59, 92, 0.12);
+    border: 1px solid var(--recording);
+    color: var(--recording);
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+.error-banner.show { display: block; }
 
 /* Sections */
 .section {
@@ -3107,13 +5236,14 @@ body {
 
 <div class="header">
     <div class="logo">JM-Rec <span>Remote</span></div>
-    <div class="connection-dot" id="connectionDot"></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+        <span id="langSel"></span>
+        <div class="connection-dot" id="connectionDot"></div>
+    </div>
 </div>
 
 <div class="tabs">
     <div class="tab active" onclick="switchTab('control')">Bediening</div>
-    <div class="tab" onclick="switchTab('setup')">Project</div>
-    <div class="tab" onclick="switchTab('settings')">Instellingen</div>
     <div class="tab" onclick="switchTab('review')">Controle</div>
 </div>
 
@@ -3122,6 +5252,7 @@ body {
     <div class="section">
         <div class="status-card">
             <div class="state-label" id="rStateLabel">IDLE</div>
+            <div class="error-banner" id="rErrorBanner"></div>
             <div class="current-note" id="rNoteName">—</div>
             <div class="filename-label" id="rFilename">—</div>
             <div class="countdown-big" id="rCountdown"></div>
@@ -3138,21 +5269,44 @@ body {
             </div>
         </div>
     </div>
-    
+
+    <div class="section" id="rCheckBanner" style="display:none;">
+        <div style="background:rgba(34,197,94,0.12);border:1px solid #22c55e;border-radius:10px;padding:12px;text-align:center;">
+            <div id="rCheckMsg" style="font-size:0.9rem;margin-bottom:10px;">—</div>
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="btn" onclick="rCheckReview()">🔍 Controleren</button>
+                <button class="btn" style="border-color:#22c55e;color:#22c55e;" onclick="rCheckApprove()">✓ Goedgekeurd</button>
+                <button class="btn" onclick="rCheckLater()">Later</button>
+            </div>
+        </div>
+    </div>
+
     <div class="section">
         <div class="section-title">Opname</div>
         <div class="controls">
             <div class="controls-main">
-                <button class="btn btn-primary" onclick="apiCall('/api/record')">▶ Opnemen</button>
+                <button class="btn btn-primary" id="rRecBtn" onclick="apiCall('/api/record')">▶ Opnemen</button>
+                <button class="btn" onclick="apiCall('/api/pause')">⏸ Pauze</button>
                 <button class="btn btn-danger" onclick="apiCall('/api/stop')">■ Stop</button>
             </div>
             <div class="controls-row">
-                <button class="btn" onclick="apiCall('/api/prev')">◀ Vorige</button>
+                <button class="btn" onclick="apiCall('/api/prev')">◀ Vorige noot</button>
                 <button class="btn" onclick="apiCall('/api/redo')">↻ Opnieuw</button>
-                <button class="btn" onclick="apiCall('/api/next')">Volgende ▶</button>
+                <button class="btn" onclick="apiCall('/api/next')">Volgende noot ▶</button>
             </div>
-            <button class="btn btn-sm" onclick="apiCall('/api/record-single')">⏺ Enkele opname (zonder auto-advance)</button>
         </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Register kiezen</div>
+        <div style="font-size:0.68rem;color:var(--dim);margin-bottom:8px;display:flex;gap:10px;flex-wrap:wrap;">
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#ef4444;margin-right:4px;"></span>nog op te nemen</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>niet compleet</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#a855f7;margin-right:4px;"></span>controleren</span>
+            <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>goed</span>
+        </div>
+        <div id="rKbSelector" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;"></div>
+        <div id="rRegList"></div>
     </div>
 </div>
 
@@ -3610,9 +5764,20 @@ function updateRemote(state) {
     
     // State label
     const label = document.getElementById('rStateLabel');
-    label.textContent = {idle:'GEREED', countdown:'AFTELLEN', recording:'OPNAME', paused:'GEPAUZEERD'}[state.state] || state.state.toUpperCase();
+    label.textContent = tr({idle:'GEREED', countdown:'AFTELLEN', recording:'OPNAME', paused:'GEPAUZEERD'}[state.state] || state.state.toUpperCase());
     label.className = 'state-label ' + (state.state === 'recording' ? 'recording' : state.state === 'countdown' ? 'countdown' : '');
-    
+
+    // Error banner
+    const rErr = document.getElementById('rErrorBanner');
+    if (rErr) {
+        if (state.last_error) {
+            rErr.textContent = '⚠ ' + state.last_error;
+            rErr.classList.add('show');
+        } else {
+            rErr.classList.remove('show');
+        }
+    }
+
     // Note
     const note = document.getElementById('rNoteName');
     note.textContent = state.note.current_name;
@@ -3637,51 +5802,77 @@ function updateRemote(state) {
     document.getElementById('rProgress').style.width = (state.progress * 100) + '%';
     document.getElementById('rProgressLabel').textContent = state.note.done + '/' + state.note.total;
 
-    // Keyboard selector
-    fBuildKbSelector(state.keyboards || [], state.has_pedal || false, state.current_keyboard || '');
-    fRenderCouplers(state.couplers || [], state.keyboards || []);
+    // Controle-prompt banner (na voltooien register)
+    const cp = state.check_prompt;
+    const cb = document.getElementById('rCheckBanner');
+    if (cb) {
+        if (cp) {
+            window._rCheckPrompt = cp;
+            document.getElementById('rCheckMsg').innerHTML = tr('Register')+' <b>'+cp.display+'</b>'+(cp.variant==='trem'?' (trem)':'')+' '+tr('is compleet')+' ('+cp.recorded+'/'+cp.expected+'). '+tr('Controleren?');
+            cb.style.display = '';
+        } else cb.style.display = 'none';
+    }
 
-    // Sync settings to form (initial load)
-    if (!window._settingsSynced && state.project) {
-        document.getElementById('fOrganName').value = state.project;
-        document.getElementById('fOutputDir').value = state.output_dir;
-        const s = state.settings;
-        document.getElementById('fSampleRate').value = s.sample_rate;
-        document.getElementById('fBitDepth').value = s.bit_depth;
-        document.getElementById('fChannels').value = s.channels;
-        document.getElementById('fFormat').value = s.output_format || 'mp3';
-        document.getElementById('fBitrateGroup').style.display = (s.output_format || 'mp3') === 'mp3' ? '' : 'none';
-        document.getElementById('fBitrate').value = s.mp3_bitrate;
-        document.getElementById('fGain').value = Math.round((s.record_gain || 1.0) * 100);
-        document.getElementById('fGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
-        document.getElementById('fCountdown').value = s.countdown_seconds;
-        document.getElementById('fRecordDur').value = s.record_seconds;
-        document.getElementById('fStartNote').value = s.start_note;
-        document.getElementById('fStartNoteLabel').textContent = midiToName(s.start_note);
-        document.getElementById('fEndNote').value = s.end_note;
-        document.getElementById('fEndNoteLabel').textContent = midiToName(s.end_note);
-        document.getElementById('fBasDiscant').checked = s.bass_treble_split || false;
-        document.getElementById('fSplitGroup').style.display = s.bass_treble_split ? '' : 'none';
-        document.getElementById('fSplitNote').value = s.split_note || 60;
-        document.getElementById('fSplitNoteLabel').textContent = midiToName(s.split_note || 60);
-        document.getElementById('fSplitBas').checked = s.split_record_bas !== false;
-        document.getElementById('fSplitDisc').checked = s.split_record_disc !== false;
-        window._settingsSynced = true;
+    // Register-series selector + progress (restricted remote)
+    rRenderRegisters(state);
+
+    // Gate record button: a register series must be selected first
+    const recBtn = document.getElementById('rRecBtn');
+    if (recBtn) {
+        const hasActive = !!(state.active && state.active.register);
+        recBtn.disabled = !hasActive;
+        recBtn.style.opacity = hasActive ? '1' : '0.5';
     }
-    // Input mode & device list sync
-    const s2 = state.settings;
-    if (s2.input_mode && s2.input_mode !== _fInputMode) {
-        _fInputMode = s2.input_mode;
-        document.getElementById('fInputMode').value = s2.input_mode;
-        document.getElementById('fMicSection').style.display = s2.input_mode === 'mic' ? '' : 'none';
-        document.getElementById('fLoopbackSection').style.display = s2.input_mode === 'loopback' ? '' : 'none';
+}
+
+// ---- Restricted remote: register-series selection ----
+let rViewKb = null;
+let _rLastState = null;
+let _rRegSig = '';
+const STATUS_COLORS = { todo:'#ef4444', partial:'#f59e0b', review:'#a855f7', done:'#22c55e' };
+function rSelectKb(name){ rViewKb = name; _rRegSig=''; if (_rLastState) rRenderRegisters(_rLastState); }
+async function rSelectReg(kb, reg, variant){
+    await apiCall('/api/select-register', { keyboard: kb, register: reg, variant: variant });
+}
+async function rCheckApprove(){
+    const cp = window._rCheckPrompt;
+    if (cp) await apiCall('/api/mark-register', { keyboard:cp.keyboard, register:cp.register, variant:cp.variant, checked:true });
+    await apiCall('/api/dismiss-check');
+}
+async function rCheckLater(){ await apiCall('/api/dismiss-check'); }
+function rCheckReview(){ switchTab('review'); }
+function rRenderRegisters(state){
+    _rLastState = state;
+    const plan = state.plan || [];
+    if (!rViewKb || !plan.find(k => k.name === rViewKb))
+        rViewKb = (state.active && state.active.keyboard) || (plan[0] && plan[0].name) || null;
+    // Only rebuild the DOM when something actually changed, so taps aren't
+    // eaten by a constant innerHTML rebuild on every poll.
+    const sig = JSON.stringify({ v:rViewKb, a:state.active,
+        p: plan.map(k=>[k.name, k.registers.map(r=>r.series.map(s=>s.recorded+'/'+s.expected+'/'+s.status))]) });
+    if (sig === _rRegSig) return;
+    _rRegSig = sig;
+    const ksel = document.getElementById('rKbSelector');
+    if (ksel) ksel.innerHTML = plan.map(k =>
+        '<button class="btn ' + (k.name === rViewKb ? 'btn-primary' : '') + '" style="padding:6px 12px;" onclick="rSelectKb(\'' + k.name + '\')">' + k.name + '</button>').join('');
+    const list = document.getElementById('rRegList');
+    if (!list) return;
+    const kb = plan.find(k => k.name === rViewKb);
+    if (!kb || !kb.registers.length){
+        list.innerHTML = '<p style="color:var(--dim);font-size:0.85rem;">'+tr('Geen registers gedefinieerd. Stel het orgel in op de master-PC.')+'</p>';
+        return;
     }
-    if (_rDeviceList.length) {
-        fRenderMicList(s2.device_indices || [], s2.device_names || {});
-    }
-    if (_rLoopbackList.length) {
-        fRenderLoopbackList(s2.loopback_device_id);
-    }
+    const act = state.active || {};
+    list.innerHTML = kb.registers.map(r => r.series.map(s => {
+        const isAct = act.keyboard === kb.name && act.register === r.name && act.variant === s.variant;
+        const col = STATUS_COLORS[s.status] || 'var(--dim)';
+        return '<div onclick="rSelectReg(\'' + kb.name + '\',\'' + r.name + '\',\'' + s.variant + '\')" ' +
+            'style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;margin-bottom:6px;' +
+            'border:2px solid ' + col + ';border-radius:10px;cursor:pointer;' + (isAct ? 'background:rgba(125,125,255,0.14);' : '') + '">' +
+            '<span><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + col + ';margin-right:8px;"></span>' +
+            r.display + (s.variant === 'trem' ? ' <span style="color:var(--dim)">(trem)</span>' : '') + (r.foot ? ' ' + r.foot : '') + '</span>' +
+            '<span style="font-family:monospace;font-size:0.8rem;color:' + col + ';">' + s.recorded + '/' + s.expected + '</span></div>';
+    }).join('')).join('');
 }
 
 // ── Project export ──
@@ -3869,6 +6060,11 @@ setInterval(async () => {
 
 // Heartbeat to keep server alive
 setInterval(() => { fetch('/api/heartbeat', {method:'POST'}).catch(()=>{}); }, 5000);
+
+// ---- i18n init ----
+jmInitLang();
+try { document.getElementById('langSel').innerHTML = jmLangSelectorHtml(); } catch(e){}
+translateTree(document.body);
 
 // Init
 loadDevices();

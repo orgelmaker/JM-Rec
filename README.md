@@ -1,34 +1,28 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.2-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.5-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
-  <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
+  <img src="https://img.shields.io/badge/output-GrandOrgue%20%7C%20Hauptwerk-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.2 — Organ Sample Recorder
+# JM-Rec v3.5 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
-JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert audiobestanden met gestandaardiseerde naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met GrandOrgue/Hauptwerk-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
 
-### Nieuw in v3.2
-- **Sample controle** — analyseer opnames op stilte, clipping, ruis en ontbrekende noten
-- **Automatisch trimmen** — knipt stilte aan begin/eind van samples
-- **Her-opname workflow** — foutlijst met directe her-opname per noot
-- **Zwelwerk per klavier** — markeer klavieren als zwelwerk
-- **Koppels definiëren** — leg koppels vast zoals aanwezig op het orgel
-- **Project export** — exporteer projectgegevens als `.jm-rec.json` voor JM-Orgue
+### Nieuw in v3.5
+- **Opstart-wizard** — je definieert het hele orgel vooraf in 10 stappen (locatie → microfoon → plaats/kerk/orgelbouwer → klavieren/pedaal → namen → tremulant/zwelkast → **registers met begin/eind-noot + voetmaat + bas/disc** → opname-instellingen + koppels). Bij opstart kies je: doorgaan met het laatste orgel óf een nieuw orgel.
+- **Mapkiezer** — bij stap 1 opent de **Bladeren…**-knop de Windows-verkenner om de opslagmap te kiezen.
+- **Registers vooraf gedefinieerd** — elk register heeft een eigen begin/eind-noot, voetmaat en bas/disc-instelling, bewaard in een projectbestand. Op een trem-klavier wordt elk register 2× opgenomen (normaal + `_trem`).
+- **Vergrendelde afstandsbediening** — op de telefoon/tablet kies je alleen een register en bedien je opnemen/pauze/stop + noot vooruit/achteruit. Instellen gebeurt alleen op de master-PC.
+- **Kleurcodes per register** — 🔴 nog op te nemen · 🟠 niet compleet · 🟣 nog te controleren · 🟢 goed (gecontroleerd). Zichtbaar op de PC én de afstandsbediening.
+- **Directe verbinding (hotspot)** — geen WiFi nodig: laat de PC zelf een netwerk uitzenden en verbind telefoon/tablet rechtstreeks (via de QR-modal).
 
-### Nieuw in v3.1
-- **Uitvoerformaat keuze** — sla samples op als MP3, WAV of FLAC
-- **Kleinere installer** — LAME MP3-encoder (~1MB) vervangt ffmpeg (~95MB)
-- **Geen console-vensters** — geen flitsende schermen meer tijdens opname
-- **Automatische afsluiting** — server stopt als alle browsers gesloten zijn
-- **Enkele instantie** — voorkomt dat twee exemplaren tegelijk draaien
-
-### Nieuw in v3.0
-- **"Wat je hoort" opnamemodus** — neem systeemaudio op in plaats van (of naast) een microfoon
+### Eerder toegevoegd (v3.x)
+- **"Wat je hoort" opnamemodus** — neem systeemaudio op via WASAPI loopback in plaats van (of naast) een microfoon.
+- **Automatische samplerate** — als een microfoon 44100 Hz weigert, schakelt JM-Rec automatisch naar de native rate (bv. 48000) zodat opnemen niet stil faalt.
 
 ---
 
@@ -37,14 +31,14 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 - **Orgelstructuur** — stel klavieren, pedaal en registers in per orgel
 - **Registernaam-automatisering** — "Holpijp 8 voet" wordt automatisch `Holpijp_8`, "Mixtuur 4 sterk" wordt `Mixtuur_4st`
 - **Tremulant** — registermappen krijgen automatisch `_trem` suffix
-- **"Wat je hoort"** — neem systeemaudio op vanuit software op dezelfde PC
+- **"Wat je hoort"** — neem systeemaudio op via WASAPI loopback, direct vanuit Hauptwerk/GrandOrgue op dezelfde PC
 - **Multi-microfoon** — neem gelijktijdig op met meerdere microfoons (front, midden, rear) in aparte submappen
 - **Automatische noot-doorloop** — telt af, neemt op, gaat door naar de volgende noot
 - **Draadloze afstandsbediening** — bedien de opname vanaf je telefoon, tablet of tweede PC
 - **Display-modus** — groot leesbaar scherm bij het orgel met noot, VU-meter en voortgang
 - **QR-code** — scan om direct de remote te openen, geen URL overtypen
 - **PC-instellingen** — alle parameters ook instelbaar via het display-scherm
-- **Gestandaardiseerde naamgeving** — `036-c.mp3`, `037-c#.mp3`, etc.
+- **GrandOrgue/Hauptwerk-naamgeving** — `036-c.mp3`, `037-c#.mp3`, etc.
 - **Repareer & verwijder** — professionele installer met repair en uninstall
 - **Geen terminal** — draait onzichtbaar op de achtergrond, browser sluiten = afsluiten
 
@@ -71,11 +65,13 @@ python jm_rec.py --port 5555
 ## Snel starten
 
 1. **Start JM-Rec** via de snelkoppeling op het bureaublad
-2. De browser opent automatisch het **display-scherm**
-3. **Scan de QR-code** met je telefoon om de afstandsbediening te openen
-4. Stel het **orgel** in — geef een naam, kies het aantal klavieren en of er een pedaal is
-5. **Selecteer een klavier** en voer een **registernaam** in (wordt automatisch geformatteerd)
-6. Druk op **Opnemen** — de rest gaat automatisch
+2. De browser opent het **display-scherm**. Bij een nieuw orgel start de **wizard**; als je eerder een orgel hebt opgenomen kies je **Doorgaan** of **Nieuw orgel**.
+3. **Doorloop de wizard** (10 stappen). Gebruik bij stap 1 eventueel **Bladeren…** om de opslagmap te kiezen, en voer bij stap 9 per klavier de registers in (naam, voetmaat, begin/eind-noot, bas/disc).
+4. Klik op **Opslaan & starten** — het orgel staat klaar.
+5. Op het **hoofdscherm** kies je een register en druk je op **Opnemen** — de rest gaat automatisch.
+6. **Scan de QR-code** ("QR Remote") met je telefoon om op afstand te bedienen.
+
+> Achteraf bewerken doe je op de master-PC: knop **Registers** (toevoegen/verwijderen + gecontroleerd-markering) of **Nieuw orgel** (wizard opnieuw).
 
 ---
 
@@ -95,15 +91,32 @@ Toont:
 
 ## Afstandsbediening (Android / iOS / Windows)
 
-Scan de QR-code op het display of open `http://<PC-IP>:5555` op een ander apparaat.
+Scan de QR-code op het display of open `http://<PC-IP>:5555` op een ander apparaat. Werkt op elk apparaat met een browser — telefoon, tablet of tweede PC.
 
-Werkt op elk apparaat met een browser — telefoon, tablet of tweede PC.
+De afstandsbediening is bewust **vergrendeld**: je kunt alleen opnemen en registers kiezen, niet het orgel of de instellingen wijzigen (dat gebeurt op de master-PC).
 
 | Tabblad | Functie |
 |---------|---------|
-| **Bediening** | Opnemen, Stop, Vorige, Opnieuw, Volgende |
-| **Project** | Orgel instellen, klavier selecteren, register starten (met tremulant) |
-| **Instellingen** | Invoermodus, microfoons (multi-mic), samplerate, bitdiepte, opnameduur, nootbereik, bas/discant split |
+| **Bediening** | **Opnemen / Pauze / Stop**, **Vorige noot / Opnieuw / Volgende noot**, en de **registerkiezer** (kies klavier → register-reeks om op te nemen) |
+| **Controle** | Samples terugluisteren / controleren |
+
+### Register kiezen op afstand
+Onder **Register kiezen** tik je eerst op een klavier en daarna op het register(reeks) dat je wilt opnemen. De gekozen reeks licht op en pas dan is **Opnemen** actief. Elke reeks toont de voortgang (`opgenomen/totaal`) en een **kleurcode**.
+
+### Kleurcodes
+| Kleur | Betekenis |
+|-------|-----------|
+| 🔴 rood | nog op te nemen (0 noten) |
+| 🟠 oranje | begonnen, nog niet compleet |
+| 🟣 paars | volledig opgenomen, nog te controleren |
+| 🟢 groen | gecontroleerd en goedgekeurd |
+
+Je markeert een reeks als **gecontroleerd** (paars → groen) op de master-PC via de knop **Registers**.
+
+> **Automatische controle-vraag:** zodra een register volledig is opgenomen, verschijnt automatisch een venster: **Nu controleren** (opent de analyse), **Goedgekeurd** (zet direct op groen) of **Later**. Dit werkt op de PC én op de afstandsbediening.
+
+### Directe verbinding zonder WiFi (hotspot)
+Geen netwerk op locatie? Open op de PC **QR Remote** → sectie **Directe verbinding** → **Open hotspot-instellingen**, zet de Windows mobiele hotspot aan en verbind je telefoon/tablet met dat netwerk. Kies in de QR-modal het hotspot-netwerk en scan de code. Internet is niet nodig.
 
 ---
 
@@ -141,7 +154,7 @@ Bij **multi-microfoon** opnames worden submappen per positie aangemaakt:
 │   │   └── ...
 ```
 
-Naamgeving: `{MIDI-nummer}-{nootnaam}.{formaat}` — compatibel met JM-Orgue en andere sample-players
+Naamgeving volgt de **GrandOrgue/Hauptwerk**-conventie: `{MIDI-nummer}-{nootnaam}.mp3`
 
 ---
 
@@ -164,24 +177,11 @@ Naamgeving: `{MIDI-nummer}-{nootnaam}.{formaat}` — compatibel met JM-Orgue en 
 | Samplerate | 44100 Hz | 44100 / 48000 / 96000 |
 | Bitdiepte | 16-bit | 16 / 24 |
 | Kanalen | Mono | Mono / Stereo |
-| Formaat | MP3 | MP3 / WAV / FLAC |
 | MP3 Bitrate | 192 kbps | 128 / 192 / 256 / 320 |
 | Afteltijd | 5 sec | 1–30 |
 | Opnameduur | 5 sec | 1–60 |
 | Startnoot | MIDI 36 (C2) | 0–127 |
 | Eindnoot | MIDI 96 (C7) | 0–127 |
-
-### Formaatvergelijking
-
-| | MP3 | WAV | FLAC |
-|---|---|---|---|
-| **Bestandsgrootte** | Klein (~1 MB/min) | Groot (~10 MB/min) | Gemiddeld (~5 MB/min) |
-| **Kwaliteit** | Lossy (goed) | Lossless (maximaal) | Lossless (maximaal) |
-| **JM-Orgue** | Ja | Ja (aanbevolen) | Ja |
-| **Andere players** | Ja | Ja | Afhankelijk |
-| **Geschikt voor** | Snel samplen, preview | Definitieve opnames | Archivering |
-
-> **Tip:** Gebruik **WAV** of **FLAC** voor de hoogste kwaliteit. MP3 is handig voor snelle previews of als schijfruimte beperkt is. Let op: WAV-bestanden zijn ~10× groter dan MP3 en vragen meer opslagruimte.
 
 ---
 
@@ -193,7 +193,7 @@ Naamgeving: `{MIDI-nummer}-{nootnaam}.{formaat}` — compatibel met JM-Orgue en 
 - Zet de opnameduur lang genoeg voor langzaam sprekende pijpen (10+ sec voor 16')
 - Zorg dat PC en telefoon op **hetzelfde netwerk** zitten (WiFi of hotspot)
 - Bij multi-mic: geef elke microfoon een duidelijke **positienaam** (Front, Midden, Rear)
-- Converteer MP3 naar WAV voor sample-players:
+- Converteer MP3 naar WAV voor GrandOrgue:
   ```bash
   for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"
   ```
@@ -221,7 +221,7 @@ JM-Rec.exe [opties]
 | **Windows** | 10/11 (64-bit) | 10/11 (64-bit) |
 | **Python** | Niet nodig | 3.10+ |
 | **MP3-encoder** | Ingebouwd | LAME of FFmpeg |
-| **soundcard** | Ingebouwd | `pip install soundcard` (optioneel) |
+| **soundcard** | Ingebouwd | `pip install soundcard` (optioneel, voor "Wat je hoort") |
 | **Netwerk** | WiFi voor remote | WiFi voor remote |
 
 ---
