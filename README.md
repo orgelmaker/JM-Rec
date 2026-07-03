@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.5-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.6-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-GrandOrgue%20%7C%20Hauptwerk-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.5 — Organ Sample Recorder
+# JM-Rec v3.6 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met GrandOrgue/Hauptwerk-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.6
+- **Intelligent opnemen (assisterend)** — nieuwe **Opnamemodus** naast de vaste duur (alleen microfooningang). De recorder meet de ruisvloer, wacht op de toon en luistert of de klank **stabiel en loopbaar** is. Zodra dat zo is verschijnt een groen sein **"Genoeg — laat los"**; je laat de toets los, de **uitklank** wordt automatisch meegenomen tot stilte en hij gaat door naar de volgende noot. Bij een tremulant-reeks wacht hij op een stabiele tremulant-modulatie. Instelbaar: min. stabiele toon, max. duur (veiligheidsgrens) en gevoeligheid. Zichtbaar op zowel het display als de afstandsbediening.
 
 ### Nieuw in v3.5
 - **Opstart-wizard** — je definieert het hele orgel vooraf in 10 stappen (locatie → microfoon → plaats/kerk/orgelbouwer → klavieren/pedaal → namen → tremulant/zwelkast → **registers met begin/eind-noot + voetmaat + bas/disc** → opname-instellingen + koppels). Bij opstart kies je: doorgaan met het laatste orgel óf een nieuw orgel.

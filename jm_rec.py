@@ -134,7 +134,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.5"
+JM_REC_VERSION = "3.6"
 
 
 # ─────────────────────────────────────────────
@@ -170,6 +170,8 @@ I18N_JS = r'''
     "9. Registers per klavier":"9. Registers per manual","Naam":"Name","Voet":"Foot","Begin":"Begin","Eind":"End","Bas/disc":"Bass/Treble","+ Register":"+ Register","Prestant":"Principal",
     // step 10
     "10. Opname-instellingen en koppels":"10. Recording settings and couplers","Samplerate":"Sample rate","Bitdiepte":"Bit depth","Kanalen":"Channels","Formaat":"Format","Aftellen (sec)":"Countdown (sec)","Opnameduur (sec)":"Record duration (sec)","Splitstoets bas/disc (MIDI)":"Bass/treble split note (MIDI)","Koppels":"Couplers","+ Koppel":"+ Coupler","Mono":"Mono","Stereo":"Stereo",
+    // intelligent (assistive) recording
+    "Opnamemodus":"Recording mode","Vaste duur":"Fixed duration","Intelligent (assisterend)":"Intelligent (assistive)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Records automatically until there is enough stable, loopable tone, then signals that you can release. Microphone input only.","Min. stabiele toon (sec)":"Min. stable tone (sec)","Max. duur (sec)":"Max. duration (sec)","Gevoeligheid":"Sensitivity","Gevoeligheid (0.3 streng – 3 los)":"Sensitivity (0.3 strict – 3 loose)","Wachten op toon…":"Waiting for tone…","Stabiliseren…":"Stabilizing…","Genoeg — laat los":"Enough — release","Uitklank opnemen…":"Capturing release tail…",
     // main controls + legend
     "Opnemen":"Record","Pauze":"Pause","Stop":"Stop","Vorige noot":"Previous note","Opnieuw":"Redo","Volgende noot":"Next note","Opname":"Recording","Enkele opname (zonder auto-advance)":"Single recording (no auto-advance)",
     "nog op te nemen":"to be recorded","niet compleet":"incomplete","nog te controleren":"to be reviewed","nog controleren":"to review","goed":"approved","controleren":"review",
@@ -205,6 +207,7 @@ I18N_JS = r'''
     "8. Tremulant en zwelkast":"8. Tremulant und Schwellkasten","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Bei einem Tremulant wird jedes Register zweimal aufgenommen (normal und _trem).","Tremulant":"Tremulant","Geen tremulant":"Kein Tremulant","Heel het orgel":"Ganze Orgel","Per klavier":"Pro Manual","Zwelkast (zwelwerk) per klavier":"Schwellkasten pro Manual","Tremulant op":"Tremulant für","Zwelkast op":"Schwellkasten für",
     "9. Registers per klavier":"9. Register pro Manual","Naam":"Name","Voet":"Fuß","Begin":"Anfang","Eind":"Ende","Bas/disc":"Bass/Diskant","+ Register":"+ Register","Prestant":"Prinzipal",
     "10. Opname-instellingen en koppels":"10. Aufnahme-Einstellungen und Koppeln","Samplerate":"Abtastrate","Bitdiepte":"Bittiefe","Kanalen":"Kanäle","Formaat":"Format","Aftellen (sec)":"Countdown (Sek.)","Opnameduur (sec)":"Aufnahmedauer (Sek.)","Splitstoets bas/disc (MIDI)":"Trennton Bass/Diskant (MIDI)","Koppels":"Koppeln","+ Koppel":"+ Koppel","Mono":"Mono","Stereo":"Stereo",
+    "Opnamemodus":"Aufnahmemodus","Vaste duur":"Feste Dauer","Intelligent (assisterend)":"Intelligent (assistierend)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Nimmt automatisch auf, bis genug stabiler, loop-fähiger Ton vorhanden ist, und signalisiert dann, dass Sie loslassen können. Nur Mikrofoneingang.","Min. stabiele toon (sec)":"Min. stabiler Ton (Sek.)","Max. duur (sec)":"Max. Dauer (Sek.)","Gevoeligheid":"Empfindlichkeit","Gevoeligheid (0.3 streng – 3 los)":"Empfindlichkeit (0.3 streng – 3 locker)","Wachten op toon…":"Warte auf Ton…","Stabiliseren…":"Stabilisiert…","Genoeg — laat los":"Genug — loslassen","Uitklank opnemen…":"Ausklang aufnehmen…",
     "Opnemen":"Aufnehmen","Pauze":"Pause","Stop":"Stopp","Vorige noot":"Vorherige Note","Opnieuw":"Wiederholen","Volgende noot":"Nächste Note","Opname":"Aufnahme","Enkele opname (zonder auto-advance)":"Einzelaufnahme (ohne Auto-Vorlauf)",
     "nog op te nemen":"noch aufzunehmen","niet compleet":"unvollständig","nog te controleren":"noch zu prüfen","nog controleren":"prüfen","goed":"freigegeben","controleren":"prüfen",
     "Register kiezen":"Register wählen","Geen registers":"Keine Register","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Keine Register definiert. Richten Sie die Orgel am Master-PC ein.","Geen registers gedefinieerd op de master-PC.":"Keine Register am Master-PC definiert.",
@@ -232,6 +235,7 @@ I18N_JS = r'''
     "8. Tremulant en zwelkast":"8. Tremblant et boîte expressive","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Avec un tremblant, chaque jeu est enregistré deux fois (normal et _trem).","Tremulant":"Tremblant","Geen tremulant":"Pas de tremblant","Heel het orgel":"Tout l'orgue","Per klavier":"Par clavier","Zwelkast (zwelwerk) per klavier":"Boîte expressive par clavier","Tremulant op":"Tremblant sur","Zwelkast op":"Boîte expressive sur",
     "9. Registers per klavier":"9. Jeux par clavier","Naam":"Nom","Voet":"Pieds","Begin":"Début","Eind":"Fin","Bas/disc":"Basse/Dessus","+ Register":"+ Jeu","Prestant":"Montre",
     "10. Opname-instellingen en koppels":"10. Réglages d'enregistrement et accouplements","Samplerate":"Fréquence","Bitdiepte":"Profondeur","Kanalen":"Canaux","Formaat":"Format","Aftellen (sec)":"Compte à rebours (s)","Opnameduur (sec)":"Durée d'enregistrement (s)","Splitstoets bas/disc (MIDI)":"Note de coupure basse/dessus (MIDI)","Koppels":"Accouplements","+ Koppel":"+ Accouplement","Mono":"Mono","Stereo":"Stéréo",
+    "Opnamemodus":"Mode d'enregistrement","Vaste duur":"Durée fixe","Intelligent (assisterend)":"Intelligent (assisté)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Enregistre automatiquement jusqu'à obtenir un son stable et bouclable, puis signale que vous pouvez relâcher. Entrée microphone uniquement.","Min. stabiele toon (sec)":"Son stable min. (s)","Max. duur (sec)":"Durée max. (s)","Gevoeligheid":"Sensibilité","Gevoeligheid (0.3 streng – 3 los)":"Sensibilité (0.3 strict – 3 souple)","Wachten op toon…":"En attente du son…","Stabiliseren…":"Stabilisation…","Genoeg — laat los":"Assez — relâchez","Uitklank opnemen…":"Capture de la résonance…",
     "Opnemen":"Enregistrer","Pauze":"Pause","Stop":"Arrêt","Vorige noot":"Note précédente","Opnieuw":"Refaire","Volgende noot":"Note suivante","Opname":"Enregistrement","Enkele opname (zonder auto-advance)":"Enregistrement simple (sans avance auto)",
     "nog op te nemen":"à enregistrer","niet compleet":"incomplet","nog te controleren":"à contrôler","nog controleren":"à contrôler","goed":"validé","controleren":"contrôler",
     "Register kiezen":"Choisir un jeu","Geen registers":"Aucun jeu","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Aucun jeu défini. Configurez l'orgue sur le PC maître.","Geen registers gedefinieerd op de master-PC.":"Aucun jeu défini sur le PC maître.",
@@ -276,6 +280,8 @@ I18N_JS = r'''
 <p>As soon as a register is fully recorded, the question <strong>Review now / Approved / Later</strong> appears automatically — on the PC and the remote.</p>
 <h2>Recording cycle</h2>
 <p>Per note: <strong>Countdown</strong> (default 5s) → <strong>Record</strong> (default 5s) → <strong>Next note</strong>. This repeats automatically until the last note.</p>
+<h2>Intelligent recording (assistive)</h2>
+<p>Set <strong>Recording mode</strong> to <em>Intelligent (assistive)</em> in the settings (microphone input only). The recorder measures the noise floor, waits for the tone and listens whether the sound is <strong>stable and loopable</strong>. Once there is enough good tone, a green cue <strong>&ldquo;Enough — release&rdquo;</strong> appears. Release the key: the <strong>release tail</strong> is captured down to silence and the recorder moves on. For a <em>tremulant</em> series it waits for a stable tremulant modulation instead of a flat tone. <em>Min. stable tone</em> sets how much good tone is required, <em>Max. duration</em> is a safety cap, and <em>Sensitivity</em> controls how sensitive detection is (higher = approves faster, lower = stricter). You can always use <strong>Next</strong>/<strong>Stop</strong> manually.</p>
 <h2>File names</h2>
 <p>File naming:</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-number}-{note-name}.mp3</code></div>
@@ -307,7 +313,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -337,6 +343,8 @@ I18N_JS = r'''
 <p>Sobald ein Register vollständig aufgenommen ist, erscheint automatisch die Frage <strong>Jetzt prüfen / Freigegeben / Später</strong> — am PC und an der Fernsteuerung.</p>
 <h2>Aufnahmezyklus</h2>
 <p>Pro Note: <strong>Countdown</strong> (Standard 5s) → <strong>Aufnehmen</strong> (Standard 5s) → <strong>Nächste Note</strong>. Dies wiederholt sich automatisch bis zur letzten Note.</p>
+<h2>Intelligente Aufnahme (assistierend)</h2>
+<p>Stellen Sie in den Einstellungen den <strong>Aufnahmemodus</strong> auf <em>Intelligent (assistierend)</em> (nur Mikrofoneingang). Der Recorder misst den Geräuschpegel, wartet auf den Ton und prüft, ob der Klang <strong>stabil und loop-fähig</strong> ist. Sobald genug guter Ton vorhanden ist, erscheint ein grünes Signal <strong>&ldquo;Genug — loslassen&rdquo;</strong>. Lassen Sie die Taste los: der <strong>Ausklang</strong> wird bis zur Stille aufgenommen und der Recorder geht weiter. Bei einer <em>Tremulant</em>-Reihe wartet er auf eine stabile Tremulant-Modulation statt auf einen gleichmäßigen Ton. <em>Min. stabiler Ton</em> legt fest, wie viel guter Ton nötig ist, <em>Max. Dauer</em> ist eine Sicherheitsgrenze und <em>Empfindlichkeit</em> steuert, wie empfindlich die Erkennung ist (höher = schnellere Freigabe, niedriger = strenger). <strong>Nächste</strong>/<strong>Stopp</strong> geht jederzeit manuell.</p>
 <h2>Dateinamen</h2>
 <p>Dateibenennung:</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-Nummer}-{Notenname}.mp3</code></div>
@@ -368,7 +376,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -398,6 +406,8 @@ I18N_JS = r'''
 <p>Dès qu'un jeu est entièrement enregistré, la question <strong>Contrôler maintenant / Validé / Plus tard</strong> apparaît automatiquement — sur le PC et la télécommande.</p>
 <h2>Cycle d'enregistrement</h2>
 <p>Par note : <strong>Compte à rebours</strong> (5s par défaut) → <strong>Enregistrer</strong> (5s par défaut) → <strong>Note suivante</strong>. Cela se répète automatiquement jusqu'à la dernière note.</p>
+<h2>Enregistrement intelligent (assisté)</h2>
+<p>Réglez le <strong>Mode d'enregistrement</strong> sur <em>Intelligent (assisté)</em> dans les réglages (entrée microphone uniquement). L'enregistreur mesure le bruit de fond, attend le son et vérifie s'il est <strong>stable et bouclable</strong>. Dès qu'il y a assez de bon son, un signal vert <strong>&ldquo;Assez — relâchez&rdquo;</strong> apparaît. Relâchez la touche : la <strong>résonance</strong> est capturée jusqu'au silence et l'enregistreur passe à la note suivante. Pour une série <em>tremblant</em>, il attend une modulation de tremblant stable au lieu d'un son plat. <em>Son stable min.</em> définit la quantité de bon son requise, <em>Durée max.</em> est une limite de sécurité et <em>Sensibilité</em> règle la sensibilité de la détection (plus haut = validation plus rapide, plus bas = plus strict). <strong>Suivante</strong>/<strong>Stop</strong> restent disponibles manuellement.</p>
 <h2>Noms de fichiers</h2>
 <p>Nommage des fichiers :</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format : <code>{numéro-MIDI}-{nom-de-note}.mp3</code></div>
@@ -429,7 +439,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -609,6 +619,18 @@ class RecorderEngine:
         # Recording workflow settings
         self.countdown_seconds = 5
         self.record_seconds = 5
+
+        # Intelligent (assistive) auto-record mode
+        self.record_mode = "fixed"        # "fixed" | "auto"
+        self.min_stable_seconds = 2.0     # required stable/loopable sustain before the "release" cue
+        self.max_record_seconds = 20.0    # safety cap (from onset) so a non-stabilizing pipe can't hang the cycle
+        self.auto_sensitivity = 1.0       # 0.3 (streng/traag) .. 3.0 (los/gevoelig) — deelt onset-drempel, schaalt CoV-tolerantie
+        self.noise_floor_rms = 0.0        # measured from pre-onset audio each note
+        self.auto_phase = "idle"          # idle | waiting | stabilizing | hold | release
+        self.hold_release_cue = False     # True → UI shows the green "genoeg — laat los" cue
+        self.stable_progress = 0.0        # 0..1 progress toward min_stable_seconds
+        self._abort_take = False          # set by next/prev/set_note to abort the running take unsaved
+        self.pause_requested = False      # deferred pause: finish + save the current take first
 
         # Register range (MIDI numbers)
         self.start_note = 36   # C2
@@ -879,6 +901,8 @@ class RecorderEngine:
             self.is_running = True
             self.last_error = ""
             self.check_prompt = None
+            self._abort_take = False
+            self.pause_requested = False
         thread = threading.Thread(target=self._recording_cycle, daemon=True)
         thread.start()
 
@@ -916,6 +940,16 @@ class RecorderEngine:
     def _recording_cycle(self):
         """Main recording cycle: countdown → record → (auto)advance."""
         while self.is_running and self.current_note <= self.end_note:
+            # Deferred pause aangevraagd in de gap tussen twee noten: honoreer
+            # hem hier, anders wordt eerst nog een volledige noot opgenomen.
+            if self.pause_requested:
+                self.pause_requested = False
+                self.is_running = False
+                self.state = "paused"
+                self._check_completion_prompt()
+                self._notify()
+                return
+
             # Skip notes not in selected split range
             if self._should_skip_note():
                 if self.auto_advance and self.current_note < self.end_note:
@@ -928,31 +962,60 @@ class RecorderEngine:
                     self._notify()
                     return
 
-            # Countdown phase
+            # Countdown phase. In auto mode the countdown runs inside
+            # _do_record_auto (streams open) so the noise floor is measured
+            # from genuinely pre-tone audio.
+            auto = self.record_mode == "auto" and self.input_mode == "mic"
             self.state = "countdown"
             self._notify()
-            
-            for i in range(self.countdown_seconds, 0, -1):
+
+            if not auto:
+                for i in range(self.countdown_seconds, 0, -1):
+                    if not self.is_running:
+                        return
+                    self.countdown_value = i
+                    self._notify()
+                    time.sleep(1)
+                # Stop tijdens de laatste aftelseconde niet overschrijven.
                 if not self.is_running:
                     return
-                self.countdown_value = i
+                self.countdown_value = 0
                 self._notify()
-                time.sleep(1)
-            
-            self.countdown_value = 0
-            self._notify()
-            
+
             # Recording phase
-            self.state = "recording"
-            self._notify()
-            
-            self._do_record()
-            
+            self._abort_take = False
+            if auto:
+                # Assistive intelligent mode: adaptive capture (mic input only).
+                # Loopback stays on fixed duration in this version.
+                self._do_record_auto()
+            else:
+                self.state = "recording"
+                self._notify()
+                self._do_record()
+
             if not self.is_running:
                 return
-            
-            # Auto-advance or wait
-            if self.auto_advance and self.current_note < self.end_note:
+
+            # Deferred pause: the current take was finished and saved first.
+            if self.pause_requested:
+                self.pause_requested = False
+                self.is_running = False
+                self.state = "paused"
+                self._check_completion_prompt()
+                self._notify()
+                return
+
+            # Auto-advance or wait. When the user jumped to another note via
+            # Volgende/Vorige during the take, that take was aborted (unsaved)
+            # and the cycle continues at the user-chosen note without advancing.
+            # Read-and-clear onder de lock: een next_note die precies tussen de
+            # read en de clear valt zou anders verloren gaan (dubbele advance).
+            with self.lock:
+                aborted = self._abort_take
+                self._abort_take = False
+            if aborted:
+                time.sleep(0.2)
+            elif self.auto_advance and self.current_note < self.end_note:
                 self.current_note += 1
                 # Brief pause between notes
                 time.sleep(0.5)
@@ -1041,7 +1104,7 @@ class RecorderEngine:
 
             start_time = time.time()
             while time.time() - start_time < self.record_seconds:
-                if not self.is_running:
+                if not self.is_running or self._abort_take:
                     sd.stop()
                     return
                 elapsed = time.time() - start_time
@@ -1092,7 +1155,7 @@ class RecorderEngine:
             with speaker.recorder(samplerate=self.sample_rate, channels=channels) as recorder:
                 start_time = time.time()
                 while time.time() - start_time < self.record_seconds:
-                    if not self.is_running:
+                    if not self.is_running or self._abort_take:
                         return
 
                     data = recorder.record(numframes=chunk_size)
@@ -1146,6 +1209,7 @@ class RecorderEngine:
                 self.current_levels[dev_idx] = min(1.0, rms * 3)
             return callback
 
+        failed = []
         try:
             # Open streams
             for dev_idx in self.device_indices:
@@ -1160,12 +1224,18 @@ class RecorderEngine:
                     streams[dev_idx] = stream
                 except Exception as e:
                     print(f"Warning: Could not open device {dev_idx}: {e}")
+                    failed.append(self.device_names.get(dev_idx, f"Mic_{dev_idx}"))
 
             if not streams:
                 print("No devices could be opened for multi-mic recording")
                 self.last_error = "Opname mislukt: geen van de microfoons kon worden geopend"
                 self._notify()
                 return
+            if failed:
+                # Zichtbaar maken welke mic ontbreekt — anders mist een hele
+                # positie stilletjes in de sampleset.
+                self.last_error = "Let op: microfoon niet geopend: " + ", ".join(failed)
+                self._notify()
 
             # Start all streams
             for stream in streams.values():
@@ -1174,7 +1244,7 @@ class RecorderEngine:
             # Wait for recording duration
             start_time = time.time()
             while time.time() - start_time < self.record_seconds:
-                if not self.is_running:
+                if not self.is_running or self._abort_take:
                     break
                 # Primary level = first active device
                 primary = next(iter(streams))
@@ -1190,7 +1260,7 @@ class RecorderEngine:
                 except:
                     pass
 
-            if not self.is_running:
+            if not self.is_running or self._abort_take:
                 return
 
             # Save per device
@@ -1212,7 +1282,8 @@ class RecorderEngine:
 
             self.current_level = 0.0
             self.current_levels.clear()
-            self.last_error = ""
+            if not failed:
+                self.last_error = ""
 
         except Exception as e:
             print(f"Multi-recording error: {e}")
@@ -1226,6 +1297,374 @@ class RecorderEngine:
                 except:
                     pass
     
+    # ─── Assistive intelligent recording (auto mode) ──────────
+
+    def _to_mono_f(self, block):
+        """Normalized float mono view of a raw audio block (for analysis)."""
+        b = block.astype(np.float64)
+        if self.bit_depth != 24:          # int16 samples
+            b = b / 32768.0
+        if b.ndim > 1:
+            b = b.mean(axis=1)
+        return b
+
+    def _dominant_freq(self, mono, sr):
+        """Dominant frequency (Hz) of a mono float window, ignoring sub-20 Hz."""
+        n = len(mono)
+        if n < 512:
+            return 0.0
+        w = mono * np.hanning(n)
+        spec = np.abs(np.fft.rfft(w))
+        freqs = np.fft.rfftfreq(n, 1.0 / sr)
+        lo = int(np.searchsorted(freqs, 20.0))
+        if lo >= len(spec):
+            return 0.0
+        i = lo + int(np.argmax(spec[lo:]))
+        # Parabolische interpolatie over de piek-bins: zonder deze stap is het
+        # ~11 Hz-binrooster (0.09 s venster) grover dan 100 cents onder ~90 Hz,
+        # waardoor lage noten (o.a. MIDI 40/E2) de stemtoets nooit kunnen halen.
+        if 0 < i < len(spec) - 1:
+            a, b, c = float(spec[i - 1]), float(spec[i]), float(spec[i + 1])
+            denom = a - 2.0 * b + c
+            if abs(denom) > 1e-12:
+                i = i + float(np.clip(0.5 * (a - c) / denom, -0.5, 0.5))
+        return float(i * sr / n)
+
+    def _trem_periodic(self, mono, sr):
+        """Detect tremulant-style amplitude modulation (~4.5–8.5 Hz) in a mono window.
+        Returns (is_periodic, depth) via a fine RMS envelope + autocorrelation."""
+        frame = max(1, int(sr * 0.01))          # 10 ms envelope frames → ~100 Hz env rate
+        n = (len(mono) // frame) * frame
+        if n < frame * 20:
+            return False, 0.0
+        env = np.sqrt(np.mean(mono[:n].reshape(-1, frame) ** 2, axis=1))
+        env_sr = sr / frame
+        mean = float(np.mean(env))
+        if mean <= 1e-9:
+            return False, 0.0
+        depth = float(np.std(env) / mean)
+        e = env - np.mean(env)
+        ac = np.correlate(e, e, mode='full')[len(e) - 1:]
+        if ac[0] <= 0:
+            return False, depth
+        ac = ac / ac[0]
+        lo, hi = int(env_sr / 8.5), int(env_sr / 4.5)
+        if hi <= lo or hi >= len(ac):
+            return False, depth
+        peak = float(np.max(ac[lo:hi]))
+        return (peak > 0.35 and 0.04 < depth < 0.8), depth
+
+    def _do_record_auto(self):
+        """Assistive intelligent capture for one note.
+
+        Flow: run the countdown while sampling the room noise floor (streams
+        already open, so the floor is genuinely pre-tone) → wait for the pipe to
+        speak (onset) → wait until a stable, loopable sustain is captured (flat RMS +
+        locked pitch, or a stable tremulant modulation) → raise the 'laat los' cue →
+        capture the release tail down to silence → save. A max-duration cap (counted
+        from onset) stops a non-stabilizing pipe, a waiting-timeout stops a silent
+        take; Stop/Pauze/Volgende always override.
+        """
+        devs = list(self.device_indices) if self.device_indices else [self.device_index]
+        primary = devs[0]
+
+        sr, ch = self._resolve_record_params(primary)
+        if sr != self.sample_rate or ch != self.channels:
+            self.sample_rate, self.channels = sr, ch
+            self._notify()
+        sr, channels = self.sample_rate, self.channels
+        dtype = 'float32' if self.bit_depth == 24 else 'int16'
+        sens = max(0.3, min(3.0, self.auto_sensitivity))
+        is_trem = bool(self.tremulant)
+
+        # Expected sounding pitch: an N-foot register sounds a factor 8/N vs the
+        # key (16' = octave down, 4' = octave up, mutations like "2 2/3" a quint).
+        # Unparseable foot (mixtures like "4st") → amplitude-only stability check.
+        f0 = 440.0 * (2.0 ** ((self.current_note - 69) / 12.0))
+        pitch_check = True
+        reg = self._find_register(self._find_keyboard(self.active_keyboard), self.active_register)
+        ft = str(reg.get("foot", "")).strip().replace(",", ".") if reg else ""
+        if ft:
+            try:
+                parts = ft.split()
+                val = float(parts[0])
+                if len(parts) > 1 and "/" in parts[1]:
+                    num, den = parts[1].split("/")
+                    val += float(num) / float(den)
+                f0 *= 8.0 / val
+            except (ValueError, ZeroDivisionError):
+                pitch_check = False
+
+        buffers = {d: [] for d in devs}
+        dropped = {d: 0 for d in devs}     # pre-onset samples discarded per device
+        self.current_levels.clear()
+
+        def make_cb(d):
+            def cb(indata, frames, time_info, status):
+                buffers[d].append(indata.copy())
+            return cb
+
+        streams = {}
+        failed = []
+        try:
+            for d in devs:
+                try:
+                    streams[d] = sd.InputStream(device=d, samplerate=sr, channels=channels,
+                                                dtype=dtype, callback=make_cb(d))
+                except Exception as e:
+                    print(f"Auto: could not open device {d}: {e}", flush=True)
+                    failed.append(self.device_names.get(d, f"Mic_{d}"))
+            if not streams:
+                # Pauzeer de cyclus: anders marcheert hij foutend door alle noten.
+                self.last_error = "Opname mislukt: geen microfoon kon worden geopend"
+                self.state = "paused"
+                self.is_running = False
+                self._notify()
+                return
+            if failed:
+                self.last_error = "Let op: microfoon niet geopend: " + ", ".join(failed)
+                self._notify()
+            if primary not in streams:
+                primary = next(iter(streams))
+            for s in streams.values():
+                s.start()
+
+            def primary_tail(seconds):
+                """Recent normalized mono float window of `seconds` from the primary buffer."""
+                if not buffers[primary]:
+                    return np.zeros(0)
+                want = int(sr * seconds)
+                chunks, got = [], 0
+                for arr in reversed(buffers[primary]):
+                    chunks.append(arr)
+                    got += len(arr)
+                    if got >= want:
+                        break
+                block = np.concatenate(list(reversed(chunks)), axis=0)[-want:]
+                return self._to_mono_f(block)
+
+            def trim_pre_roll():
+                """Pre-onset: keep only ~2 s per device so waiting can't grow RAM."""
+                keep = int(sr * 2.0)
+                for d in devs:
+                    buf = buffers[d]
+                    total = sum(len(a) for a in buf)
+                    while len(buf) > 1 and total - len(buf[0]) >= keep:
+                        total -= len(buf[0])
+                        dropped[d] += len(buf[0])
+                        buf.pop(0)
+
+            LOOP = 0.05
+            noise_rms = []
+
+            def sample_noise(r):
+                """Guarded floor sampling: once seeded, ignore tone-level frames so
+                an early-pressed key can't poison the median."""
+                if len(noise_rms) < 6 or r <= max(
+                        float(np.median(noise_rms)) * 4.0 / sens, 0.01):
+                    noise_rms.append(r)
+                    if len(noise_rms) > 40:
+                        noise_rms.pop(0)
+
+            # ── Countdown (streams open → genuine pre-tone noise floor) ──
+            for i in range(self.countdown_seconds, 0, -1):
+                if not self.is_running or self._abort_take:
+                    return
+                self.countdown_value = i
+                self._notify()
+                t_end = time.time() + 1.0
+                while time.time() < t_end:
+                    time.sleep(LOOP)
+                    w = primary_tail(0.093)
+                    sample_noise(float(np.sqrt(np.mean(w ** 2))) if w.size else 0.0)
+                    trim_pre_roll()
+            # Stop/Pauze tijdens de laatste aftelseconde mag de door stop()
+            # gezette state niet met "recording" overschrijven.
+            if not self.is_running or self._abort_take:
+                return
+            self.countdown_value = 0
+            self.state = "recording"
+
+            # ── Detector state ──
+            self.auto_phase = phase = "waiting"
+            self.hold_release_cue = False
+            self.stable_progress = 0.0
+            self.noise_floor_rms = 0.0
+            env = []
+            onset_hits = release_hits = silent_hits = 0
+            peak = stable_run = 0.0
+            onset_by_dev = {}
+            onset_time = None
+            capped = False
+            rel_thr = None
+            wait_deadline = time.time() + max(30.0, 2.0 * self.max_record_seconds)
+            # Continuous stable sustain required, scaled up for low notes (longer wavelength).
+            need = max(self.min_stable_seconds, (80.0 / f0) if f0 > 0 else self.min_stable_seconds)
+            self._notify()
+
+            while self.is_running and not self._abort_take:
+                time.sleep(LOOP)
+                win = primary_tail(0.093)
+                rms = float(np.sqrt(np.mean(win ** 2))) if win.size else 0.0
+                self.current_level = min(1.0, rms * 3)
+                over_cap = onset_time and (time.time() - onset_time) > self.max_record_seconds
+
+                if phase == "waiting":
+                    # A deferred pause may stop here directly: nothing was played yet.
+                    if self.pause_requested:
+                        self.pause_requested = False
+                        self.is_running = False
+                        self.state = "paused"
+                        return
+                    floor = float(np.median(noise_rms)) if len(noise_rms) >= 6 else 0.02
+                    self.noise_floor_rms = floor
+                    onset_thr = max(floor * 4.0 / sens, 0.01)
+                    sample_noise(rms)
+                    trim_pre_roll()
+                    if len(noise_rms) >= 6 and rms > onset_thr:
+                        onset_hits += 1
+                        if onset_hits >= 3:                      # ~150 ms sustained → spoken
+                            phase = self.auto_phase = "stabilizing"
+                            # Onset-index per device (eigen tijdlijn): streams
+                            # starten gestaffeld, dus één primary-teller zou de
+                            # attack van latere mics afknippen.
+                            onset_by_dev = {
+                                d: max(0, dropped[d] + sum(len(a) for a in buffers[d])
+                                       - int(sr * 0.20))
+                                for d in streams}
+                            onset_time = time.time()
+                            env, stable_run, peak = [], 0.0, 0.0
+                            self._notify()
+                    else:
+                        onset_hits = 0
+                        if time.time() > wait_deadline:
+                            self.last_error = ("Geen toon gedetecteerd — controleer de "
+                                               "microfoon of speel pas na het aftellen")
+                            self.state = "paused"
+                            self.is_running = False
+                            self._notify()
+                            return
+
+                elif phase == "stabilizing":
+                    env.append(rms)
+                    peak = max(peak, rms)
+                    if is_trem:
+                        stable, _ = self._trem_periodic(primary_tail(1.5), sr)
+                    else:
+                        stable = False
+                        if len(env) >= 8:
+                            w = np.array(env[-8:])
+                            m = float(np.mean(w))
+                            cov = float(np.std(w) / m) if m > 1e-9 else 1.0
+                            ok_pitch = True
+                            if pitch_check:
+                                dom = self._dominant_freq(primary_tail(0.09), sr)
+                                ok_pitch = False
+                                if dom > 0 and f0 > 0:
+                                    # Elke harmonische van de verwachte toon mag de
+                                    # dominante partiaal zijn (quintadeen, gedekt).
+                                    k = round(dom / f0)
+                                    if 1 <= k <= 8:
+                                        cents = abs(1200.0 * np.log2(dom / (k * f0)))
+                                        ok_pitch = cents <= 100.0
+                            stable = cov < (0.09 * sens) and ok_pitch
+                    stable_run = stable_run + LOOP if stable else 0.0
+                    self.stable_progress = max(0.0, min(1.0, stable_run / need))
+                    if over_cap:
+                        capped = True          # geen groene flits: direct afronden
+                        break
+                    if stable_run >= need:
+                        phase = self.auto_phase = "hold"
+                        self.hold_release_cue = True
+                        # Release-drempel verankerd tussen ruisvloer en sustain-
+                        # niveau, zodat ook zachte registers loslaten detecteren.
+                        sustain_ref = float(np.median(env[-8:])) if len(env) >= 8 else peak
+                        rel_thr = self.noise_floor_rms + 0.35 * max(
+                            sustain_ref - self.noise_floor_rms, 0.0)
+                        self._notify()
+
+                elif phase == "hold":
+                    peak = max(peak, rms)
+                    if rms < (rel_thr if rel_thr is not None else peak * 0.35):
+                        release_hits += 1
+                        if release_hits >= 3:
+                            phase = self.auto_phase = "release"
+                            self.hold_release_cue = False
+                            self._notify()
+                    else:
+                        release_hits = 0
+                    if over_cap:
+                        capped = True
+                        break
+
+                elif phase == "release":
+                    # Stilte-drempel relatief aan de toonpiek (gain-invariant),
+                    # met de ruisvloer als ondergrens zodat hij altijd termineert.
+                    if rms <= max(self.noise_floor_rms * 1.5, peak * 0.02, 0.0015):
+                        silent_hits += 1
+                        if silent_hits >= 6:                      # ~300 ms silence → tail done
+                            break
+                    else:
+                        silent_hits = 0
+                    if over_cap:
+                        capped = True
+                        break
+
+                self._notify()
+
+            # ── Stop & save ──
+            for s in streams.values():
+                try:
+                    s.stop(); s.close()
+                except Exception:
+                    pass
+
+            if not self.is_running or self._abort_take:
+                return
+
+            for d in streams:
+                try:
+                    if not buffers[d]:
+                        continue
+                    audio = np.concatenate(buffers[d], axis=0)
+                    trim = max(0, onset_by_dev.get(d, 0) - dropped[d])
+                    if trim and trim < len(audio):
+                        audio = audio[trim:]
+                    if len(devs) > 1:
+                        self._save_audio(audio, subdirectory=sanitize_path_component(
+                            self.device_names.get(d, f"Mic_{d}")))
+                    else:
+                        self._save_audio(audio)
+                except Exception as e:
+                    print(f"Auto save error (device {d}): {e}", flush=True)
+            if capped:
+                self.last_error = (f"Maximumduur bereikt ({int(self.max_record_seconds)}s): "
+                                   f"{midi_to_filename(self.current_note)} is zonder uitklank "
+                                   "opgeslagen — controleer deze opname")
+            elif not failed:
+                self.last_error = ""
+
+        except Exception as e:
+            print(f"Auto recording error: {e}", flush=True)
+            import traceback; traceback.print_exc()
+            self.last_error = f"Intelligente opname mislukt: {e}"
+            # Pauzeren: anders schuift de cyclus door en wordt deze noot
+            # stilletjes overgeslagen zonder opname.
+            self.state = "paused"
+            self.is_running = False
+        finally:
+            for s in streams.values():
+                try:
+                    s.stop(); s.close()
+                except Exception:
+                    pass
+            self.auto_phase = "idle"
+            self.hold_release_cue = False
+            self.stable_progress = 0.0
+            self.current_level = 0.0
+            self.current_levels.clear()
+            self._notify()
+
     def _save_audio(self, audio_data, subdirectory=None):
         """Save recorded audio in chosen format (mp3/wav/flac)."""
         path = self.get_current_register_path()
@@ -1420,6 +1859,11 @@ class RecorderEngine:
 
     def _check_short(self, data, sr):
         duration = len(data.flatten()) / sr
+        if self.record_mode == "auto":
+            # Auto-opnames hebben variabele duur; alleen echt te korte fragmenten melden.
+            if duration < self.min_stable_seconds:
+                return {"issue": "short", "detail": f"Te kort: {duration:.1f}s (minimaal {self.min_stable_seconds:.1f}s stabiel verwacht)", "severity": "warning"}
+            return None
         if duration < self.record_seconds * 0.5:
             return {"issue": "short", "detail": f"Te kort: {duration:.1f}s (verwacht {self.record_seconds}s)", "severity": "warning"}
         return None
@@ -1600,6 +2044,7 @@ class RecorderEngine:
     def stop(self):
         """Stop recording cycle."""
         self.is_running = False
+        self.pause_requested = False
         self.state = "idle"
         self.current_level = 0.0
         self.current_levels.clear()
@@ -1608,34 +2053,45 @@ class RecorderEngine:
         except:
             pass
         self._notify()
-    
+
     def pause(self):
-        """Pause after current recording."""
-        self.is_running = False
-        self.state = "paused"
+        """Pause after the current recording (a running take is finished and saved)."""
+        if self.state == "recording" and self.is_running:
+            self.pause_requested = True
+        else:
+            self.is_running = False
+            self.state = "paused"
+            self.current_level = 0.0
+            self.current_levels.clear()
         self._notify()
-    
+
     def next_note(self):
-        """Move to next note."""
+        """Move to next note (aborts a running take unsaved)."""
         if self.current_note < self.end_note:
-            self.current_note += 1
+            with self.lock:   # samen met de read-and-clear in _recording_cycle
+                self._abort_take = True
+                self.current_note += 1
             self._notify()
-    
+
     def prev_note(self):
-        """Move to previous note."""
+        """Move to previous note (aborts a running take unsaved)."""
         if self.current_note > self.start_note:
-            self.current_note -= 1
+            with self.lock:
+                self._abort_take = True
+                self.current_note -= 1
             self._notify()
-    
+
     def redo_note(self):
         """Re-record current note (don't advance)."""
         self.auto_advance = False
         self.start_recording_cycle()
-    
+
     def set_note(self, midi_num):
-        """Jump to specific note."""
+        """Jump to specific note (aborts a running take unsaved)."""
         if self.start_note <= midi_num <= self.end_note:
-            self.current_note = midi_num
+            with self.lock:
+                self._abort_take = True
+                self.current_note = midi_num
             self._notify()
     
     def _ensure_folders(self, keyboard, register_name, tremulant=False, bass_treble=False):
@@ -1750,6 +2206,10 @@ class RecorderEngine:
         if 'countdown_seconds' in s: self.countdown_seconds = int(s['countdown_seconds'])
         if 'record_seconds' in s: self.record_seconds = int(s['record_seconds'])
         if 'record_gain' in s: self.record_gain = max(0.0, min(2.0, float(s['record_gain'])))
+        if s.get('record_mode') in ('fixed', 'auto'): self.record_mode = s['record_mode']
+        if s.get('min_stable_seconds') is not None: self.min_stable_seconds = max(0.5, min(10.0, float(s['min_stable_seconds'])))
+        if s.get('max_record_seconds') is not None: self.max_record_seconds = max(3.0, min(60.0, float(s['max_record_seconds'])))
+        if s.get('auto_sensitivity') is not None: self.auto_sensitivity = max(0.3, min(3.0, float(s['auto_sensitivity'])))
         if 'device_indices' in s:
             self.device_indices = [int(i) for i in s['device_indices']] if s['device_indices'] else []
         if 'device_names' in s and isinstance(s['device_names'], dict):
@@ -1848,6 +2308,10 @@ class RecorderEngine:
                 "channels": self.channels, "output_format": self.output_format,
                 "mp3_bitrate": self.mp3_bitrate, "countdown_seconds": self.countdown_seconds,
                 "record_seconds": self.record_seconds, "record_gain": self.record_gain,
+                "record_mode": self.record_mode,
+                "min_stable_seconds": self.min_stable_seconds,
+                "max_record_seconds": self.max_record_seconds,
+                "auto_sensitivity": self.auto_sensitivity,
                 "device_indices": list(self.device_indices),
                 "device_names": {str(k): v for k, v in self.device_names.items()},
                 "input_mode": self.input_mode, "loopback_device_id": self.loopback_device_id,
@@ -2130,6 +2594,10 @@ class RecorderEngine:
                     'variant': self.active_variant,
                 },
                 'check_prompt': self.check_prompt,
+                'record_mode': self.record_mode,
+                'auto_phase': self.auto_phase,
+                'hold_release_cue': self.hold_release_cue,
+                'stable_progress': self.stable_progress,
                 'plan': self.get_plan_cached(),
                 'settings': {
                     'sample_rate': self.sample_rate,
@@ -2139,6 +2607,10 @@ class RecorderEngine:
                     'mp3_bitrate': self.mp3_bitrate,
                     'countdown_seconds': self.countdown_seconds,
                     'record_seconds': self.record_seconds,
+                    'record_mode': self.record_mode,
+                    'min_stable_seconds': self.min_stable_seconds,
+                    'max_record_seconds': self.max_record_seconds,
+                    'auto_sensitivity': self.auto_sensitivity,
                     'start_note': self.start_note,
                     'end_note': self.end_note,
                     'device_index': self.device_index,
@@ -2391,6 +2863,16 @@ def create_web_app(engine: RecorderEngine):
             engine.loopback_device_id = data['loopback_device_id']
         if 'record_gain' in data:
             engine.record_gain = max(0.0, min(2.0, float(data['record_gain'])))
+        if data.get('record_mode') in ('fixed', 'auto'):
+            engine.record_mode = data['record_mode']
+        # None-guard: een leeg number-veld levert JSON null op — dat mag de
+        # rest van de settings-apply + save_manifest niet laten sneuvelen.
+        if data.get('min_stable_seconds') is not None:
+            engine.min_stable_seconds = max(0.5, min(10.0, float(data['min_stable_seconds'])))
+        if data.get('max_record_seconds') is not None:
+            engine.max_record_seconds = max(3.0, min(60.0, float(data['max_record_seconds'])))
+        if data.get('auto_sensitivity') is not None:
+            engine.auto_sensitivity = max(0.3, min(3.0, float(data['auto_sensitivity'])))
         if 'bass_treble_split' in data:
             engine.bass_treble_split = bool(data['bass_treble_split'])
         if 'split_note' in data:
@@ -3564,6 +4046,22 @@ body {
                     <input class="wiz-input" id="wizSplitNote" type="number" min="0" max="127" value="60" oninput="document.getElementById('wizSplitLbl').textContent=dMidiToName(parseInt(this.value)||0)"></div>
                 <div><label class="wiz-label">&nbsp;</label><div class="wiz-notelbl" id="wizSplitLbl" style="padding-top:10px;">C4</div></div>
             </div>
+            <label class="wiz-label" style="margin-top:14px;">Opnamemodus</label>
+            <select class="wiz-select" id="wizRecordMode" onchange="document.getElementById('wizAutoGroup').style.display=this.value==='auto'?'':'none'">
+                <option value="fixed" selected>Vaste duur</option>
+                <option value="auto">Intelligent (assisterend)</option>
+            </select>
+            <div id="wizAutoGroup" style="display:none;margin-top:8px;">
+                <div style="font-size:0.8rem;color:var(--dim);margin-bottom:6px;">Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.</div>
+                <div class="wiz-grid2">
+                    <div><label class="wiz-label">Min. stabiele toon (sec)</label>
+                        <input class="wiz-input" id="wizMinStable" type="number" min="0.5" max="10" step="0.5" value="2"></div>
+                    <div><label class="wiz-label">Max. duur (sec)</label>
+                        <input class="wiz-input" id="wizMaxRec" type="number" min="3" max="60" value="20"></div>
+                    <div><label class="wiz-label">Gevoeligheid</label>
+                        <input class="wiz-input" id="wizSensitivity" type="number" min="0.3" max="3" step="0.1" value="1"></div>
+                </div>
+            </div>
             <label class="wiz-label" style="margin-top:14px;">Koppels</label>
             <div class="wiz-row">
                 <select class="wiz-select" id="wizCouplerSrc"></select>
@@ -3582,7 +4080,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.5</span></div>
+    <div class="logo">JM-Rec <span>v3.6</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -3608,7 +4106,22 @@ body {
     </div>
     
     <div class="countdown-display" id="countdownDisplay"></div>
-    
+
+    <div class="auto-status" id="autoStatus" style="display:none;"></div>
+    <style>
+    .auto-status { margin:6px auto 0; max-width:520px; text-align:center; font-weight:600;
+        font-size:1.05rem; padding:12px 18px; border-radius:14px; border:1px solid var(--border);
+        background:var(--surface); transition:all .15s; }
+    .auto-status.waiting { color:var(--dim); }
+    .auto-status.stabilizing { color:#f59e0b; border-color:#f59e0b; }
+    .auto-status.hold { color:#fff; background:#22c55e; border-color:#22c55e; font-size:1.5rem;
+        box-shadow:0 0 0 4px rgba(34,197,94,0.25); animation:autoPulse 1s ease-in-out infinite; }
+    .auto-status.release { color:var(--dim); }
+    .auto-status .as-bar { height:6px; border-radius:6px; background:rgba(245,158,11,0.25); margin-top:8px; overflow:hidden; }
+    .auto-status .as-bar > div { height:100%; background:#f59e0b; width:0; transition:width .15s; }
+    @keyframes autoPulse { 0%,100%{transform:scale(1);} 50%{transform:scale(1.03);} }
+    </style>
+
     <div class="vu-container">
         <div class="vu-bar-bg">
             <div class="vu-bar" id="vuBar"></div>
@@ -3810,6 +4323,34 @@ body {
                 </div>
             </div>
             <div class="d-form-row">
+                <div class="d-form-group" style="flex:1;">
+                    <label class="d-form-label">Opnamemodus</label>
+                    <select class="d-form-input" id="dRecordMode" onchange="document.getElementById('dAutoGroup').style.display=this.value==='auto'?'':'none'">
+                        <option value="fixed">Vaste duur</option>
+                        <option value="auto">Intelligent (assisterend)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="dAutoGroup" style="display:none;">
+                <div style="font-size:0.72rem;color:var(--dim);margin:2px 0 8px;">Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.</div>
+                <div class="d-form-row">
+                    <div class="d-form-group">
+                        <label class="d-form-label">Min. stabiele toon (sec)</label>
+                        <input class="d-form-input" type="number" id="dMinStable" value="2" min="0.5" max="10" step="0.5">
+                    </div>
+                    <div class="d-form-group">
+                        <label class="d-form-label">Max. duur (sec)</label>
+                        <input class="d-form-input" type="number" id="dMaxRec" value="20" min="3" max="60">
+                    </div>
+                </div>
+                <div class="d-form-row">
+                    <div class="d-form-group" style="flex:1;">
+                        <label class="d-form-label">Gevoeligheid (0.3 streng – 3 los)</label>
+                        <input class="d-form-input" type="number" id="dSensitivity" value="1" min="0.3" max="3" step="0.1">
+                    </div>
+                </div>
+            </div>
+            <div class="d-form-row">
                 <div class="d-form-group">
                     <label class="d-form-label">Startnoot (MIDI)</label>
                     <div style="display:flex;align-items:center;gap:8px;">
@@ -4002,6 +4543,9 @@ body {
         <h2>Opnamecyclus</h2>
         <p>Per noot: <strong>Aftellen</strong> (standaard 5s) &rarr; <strong>Opnemen</strong> (standaard 5s) &rarr; <strong>Volgende noot</strong>. Dit herhaalt zich automatisch tot de laatste noot.</p>
 
+        <h2>Intelligent opnemen (assisterend)</h2>
+        <p>Zet <strong>Opnamemodus</strong> in de instellingen op <em>Intelligent (assisterend)</em> (alleen microfooningang). De recorder meet eerst de ruisvloer, wacht op de toon en luistert of de klank <strong>stabiel en loopbaar</strong> is. Zodra er genoeg goede toon is verschijnt een groen sein <strong>&ldquo;Genoeg &mdash; laat los&rdquo;</strong>. Laat de toets dan los: de <strong>uitklank</strong> wordt automatisch meegenomen tot stilte en de recorder gaat door naar de volgende noot. Bij een <em>tremulant</em>-reeks wacht hij op een stabiele tremulant-modulatie i.p.v. een vlakke toon. <em>Min. stabiele toon</em> bepaalt hoeveel goede toon nodig is, <em>Max. duur</em> is een veiligheidsgrens, en <em>Gevoeligheid</em> regelt hoe gevoelig de detectie is (hoger = sneller goedkeuren, lager = strenger). Je kunt altijd handmatig <strong>Volgende</strong>/<strong>Stop</strong> gebruiken.</p>
+
         <h2>Bestandsnamen</h2>
         <p>Bestandsnaamgeving:</p>
         <div class="tip-box">
@@ -4024,6 +4568,10 @@ body {
             <tr><td>MP3 Bitrate</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
             <tr><td>Afteltijd</td><td>5 sec</td><td>1 &ndash; 30</td></tr>
             <tr><td>Opnameduur</td><td>5 sec</td><td>1 &ndash; 60</td></tr>
+            <tr><td>Opnamemodus</td><td>Vaste duur</td><td>Vaste duur / Intelligent</td></tr>
+            <tr><td>Min. stabiele toon</td><td>2 sec</td><td>0.5 &ndash; 10 (auto)</td></tr>
+            <tr><td>Max. duur (auto)</td><td>20 sec</td><td>3 &ndash; 60 (auto)</td></tr>
+            <tr><td>Gevoeligheid</td><td>1.0</td><td>0.3 &ndash; 3 (auto)</td></tr>
             <tr><td>Startnoot</td><td>MIDI 36 (C2)</td><td>0 &ndash; 127</td></tr>
             <tr><td>Eindnoot</td><td>MIDI 96 (C7)</td><td>0 &ndash; 127</td></tr>
         </table>
@@ -4051,7 +4599,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.5</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>
         </div>
     </div>
 </div>
@@ -4282,6 +4830,10 @@ async function dApplySettings() {
         record_gain: parseInt(document.getElementById('dGain').value) / 100,
         countdown_seconds: parseInt(document.getElementById('dCountdown').value),
         record_seconds: parseInt(document.getElementById('dRecordDur').value),
+        record_mode: document.getElementById('dRecordMode').value,
+        min_stable_seconds: parseFloat(document.getElementById('dMinStable').value) || 2,
+        max_record_seconds: parseFloat(document.getElementById('dMaxRec').value) || 20,
+        auto_sensitivity: parseFloat(document.getElementById('dSensitivity').value) || 1,
         start_note: parseInt(document.getElementById('dStartNote').value),
         end_note: parseInt(document.getElementById('dEndNote').value),
         bass_treble_split: document.getElementById('dBasDiscant').checked,
@@ -4316,6 +4868,11 @@ function syncDrawer(state) {
         document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
         document.getElementById('dCountdown').value = s.countdown_seconds;
         document.getElementById('dRecordDur').value = s.record_seconds;
+        document.getElementById('dRecordMode').value = s.record_mode || 'fixed';
+        document.getElementById('dAutoGroup').style.display = (s.record_mode === 'auto') ? '' : 'none';
+        document.getElementById('dMinStable').value = s.min_stable_seconds != null ? s.min_stable_seconds : 2;
+        document.getElementById('dMaxRec').value = s.max_record_seconds != null ? s.max_record_seconds : 20;
+        document.getElementById('dSensitivity').value = s.auto_sensitivity != null ? s.auto_sensitivity : 1;
         document.getElementById('dStartNote').value = s.start_note;
         document.getElementById('dStartNoteLabel').textContent = dMidiToName(s.start_note);
         document.getElementById('dEndNote').value = s.end_note;
@@ -4415,6 +4972,29 @@ function updateUI(state) {
         cd.style.opacity = '0';
     }
     
+    // Intelligent (assistive) auto-mode status + "laat los" cue
+    const as = document.getElementById('autoStatus');
+    if (as) {
+        const ph = state.auto_phase;
+        if (state.record_mode === 'auto' && state.state === 'recording' && ph && ph !== 'idle') {
+            as.style.display = '';
+            as.className = 'auto-status ' + ph;
+            if (ph === 'waiting') {
+                as.innerHTML = '◉ ' + tr('Wachten op toon…');
+            } else if (ph === 'stabilizing') {
+                const pct = Math.round((state.stable_progress || 0) * 100);
+                as.innerHTML = '◉ ' + tr('Stabiliseren…') + ' ' + pct + '%' +
+                    '<div class="as-bar"><div style="width:' + pct + '%"></div></div>';
+            } else if (ph === 'hold') {
+                as.innerHTML = '✓ ' + tr('Genoeg — laat los');
+            } else if (ph === 'release') {
+                as.innerHTML = tr('Uitklank opnemen…');
+            }
+        } else {
+            as.style.display = 'none';
+        }
+    }
+
     // VU meter (max across all mics)
     let vuLevel = state.level || 0;
     if (state.levels) {
@@ -4562,6 +5142,7 @@ function wizResetData(){
         tremulant_scope:'none', split_note:60, couplers:[],
         settings:{ sample_rate:48000, bit_depth:16, channels:1, output_format:'mp3',
             mp3_bitrate:192, countdown_seconds:5, record_seconds:5, record_gain:1.0,
+            record_mode:'fixed', min_stable_seconds:2, max_record_seconds:20, auto_sensitivity:1,
             device_indices:[], device_names:{}, input_mode:'mic', loopback_device_id:null }
     };
 }
@@ -4773,6 +5354,11 @@ function wizBuildSettings(){
     document.getElementById('wizFormat').value = s.output_format;
     document.getElementById('wizCountdown').value = s.countdown_seconds;
     document.getElementById('wizRecDur').value = s.record_seconds;
+    document.getElementById('wizRecordMode').value = s.record_mode || 'fixed';
+    document.getElementById('wizAutoGroup').style.display = (s.record_mode === 'auto') ? '' : 'none';
+    document.getElementById('wizMinStable').value = s.min_stable_seconds != null ? s.min_stable_seconds : 2;
+    document.getElementById('wizMaxRec').value = s.max_record_seconds != null ? s.max_record_seconds : 20;
+    document.getElementById('wizSensitivity').value = s.auto_sensitivity != null ? s.auto_sensitivity : 1;
     document.getElementById('wizSplitNote').value = wizData.split_note;
     document.getElementById('wizSplitLbl').textContent = dMidiToName(wizData.split_note);
     const opts = wizData.keyboards.map(k=>'<option>'+wizEsc(k.name)+'</option>').join('') + (wizData.has_pedal?'<option>Pedaal</option>':'');
@@ -4788,6 +5374,10 @@ function wizCollectSettings(){
     s.output_format = wizVal('wizFormat');
     s.countdown_seconds = parseInt(wizVal('wizCountdown'))||5;
     s.record_seconds = parseInt(wizVal('wizRecDur'))||5;
+    s.record_mode = wizVal('wizRecordMode') || 'fixed';
+    s.min_stable_seconds = parseFloat(wizVal('wizMinStable'))||2;
+    s.max_record_seconds = parseFloat(wizVal('wizMaxRec'))||20;
+    s.auto_sensitivity = parseFloat(wizVal('wizSensitivity'))||1;
     wizData.split_note = parseInt(wizVal('wizSplitNote'))||60;
 }
 function wizAddCoupler(){
@@ -5256,7 +5846,18 @@ body {
             <div class="current-note" id="rNoteName">—</div>
             <div class="filename-label" id="rFilename">—</div>
             <div class="countdown-big" id="rCountdown"></div>
-            
+
+            <div id="rAutoStatus" style="display:none;text-align:center;font-weight:600;margin:6px 0;padding:12px;border-radius:12px;border:1px solid var(--border);"></div>
+            <style>
+            #rAutoStatus.waiting { color:var(--dim); }
+            #rAutoStatus.stabilizing { color:#f59e0b; border-color:#f59e0b; }
+            #rAutoStatus.hold { color:#fff; background:#22c55e; border-color:#22c55e; font-size:1.35rem;
+                box-shadow:0 0 0 4px rgba(34,197,94,0.25); }
+            #rAutoStatus.release { color:var(--dim); }
+            #rAutoStatus .as-bar { height:6px; border-radius:6px; background:rgba(245,158,11,0.25); margin-top:8px; overflow:hidden; }
+            #rAutoStatus .as-bar > div { height:100%; background:#f59e0b; transition:width .15s; }
+            </style>
+
             <div class="vu-bar-bg">
                 <div class="vu-bar" id="rVuBar"></div>
             </div>
@@ -5789,7 +6390,30 @@ function updateRemote(state) {
     // Countdown
     const cd = document.getElementById('rCountdown');
     cd.textContent = state.state === 'countdown' && state.countdown > 0 ? state.countdown : '';
-    
+
+    // Intelligent (assistive) auto-mode status + "laat los" cue
+    const ras = document.getElementById('rAutoStatus');
+    if (ras) {
+        const ph = state.auto_phase;
+        if (state.record_mode === 'auto' && state.state === 'recording' && ph && ph !== 'idle') {
+            ras.style.display = '';
+            ras.className = ph;
+            if (ph === 'waiting') {
+                ras.innerHTML = '◉ ' + tr('Wachten op toon…');
+            } else if (ph === 'stabilizing') {
+                const pct = Math.round((state.stable_progress || 0) * 100);
+                ras.innerHTML = '◉ ' + tr('Stabiliseren…') + ' ' + pct + '%' +
+                    '<div class="as-bar"><div style="width:' + pct + '%"></div></div>';
+            } else if (ph === 'hold') {
+                ras.innerHTML = '✓ ' + tr('Genoeg — laat los');
+            } else if (ph === 'release') {
+                ras.innerHTML = tr('Uitklank opnemen…');
+            }
+        } else {
+            ras.style.display = 'none';
+        }
+    }
+
     // VU (max across all mics)
     let vuLevel = state.level || 0;
     if (state.levels) {
