@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.6-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.7-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
-  <img src="https://img.shields.io/badge/output-GrandOrgue%20%7C%20Hauptwerk-orange?style=flat-square" alt="Output">
+  <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.6 — Organ Sample Recorder
+# JM-Rec v3.7 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
-JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met GrandOrgue/Hauptwerk-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.7
+- **Exporteer .organ (JM-Orgue)** — via **Instellingen → Exporteren** maakt JM-Rec een compleet `.organ`-definitiebestand in de projectmap: klavieren, registers (met voetmaat), zwelkasten, tremulanten en koppels, met verwijzingen naar de opgenomen samples. JM-Orgue laadt dit bestand direct. Ontbrekende noten blijven stil en kun je later alsnog opnemen (daarna opnieuw exporteren). Daarnaast blijft de export van projectgegevens (`.jm-rec.json`) beschikbaar.
 
 ### Nieuw in v3.6
 - **Intelligent opnemen (assisterend)** — nieuwe **Opnamemodus** naast de vaste duur (alleen microfooningang). De recorder meet de ruisvloer, wacht op de toon en luistert of de klank **stabiel en loopbaar** is. Zodra dat zo is verschijnt een groen sein **"Genoeg — laat los"**; je laat de toets los, de **uitklank** wordt automatisch meegenomen tot stilte en hij gaat door naar de volgende noot. Bij een tremulant-reeks wacht hij op een stabiele tremulant-modulatie. Instelbaar: min. stabiele toon, max. duur (veiligheidsgrens) en gevoeligheid. Zichtbaar op zowel het display als de afstandsbediening.
@@ -34,14 +37,15 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 - **Orgelstructuur** — stel klavieren, pedaal en registers in per orgel
 - **Registernaam-automatisering** — "Holpijp 8 voet" wordt automatisch `Holpijp_8`, "Mixtuur 4 sterk" wordt `Mixtuur_4st`
 - **Tremulant** — registermappen krijgen automatisch `_trem` suffix
-- **"Wat je hoort"** — neem systeemaudio op via WASAPI loopback, direct vanuit Hauptwerk/GrandOrgue op dezelfde PC
+- **"Wat je hoort"** — neem systeemaudio op via WASAPI loopback, direct vanuit een virtueel orgel op dezelfde PC
 - **Multi-microfoon** — neem gelijktijdig op met meerdere microfoons (front, midden, rear) in aparte submappen
 - **Automatische noot-doorloop** — telt af, neemt op, gaat door naar de volgende noot
 - **Draadloze afstandsbediening** — bedien de opname vanaf je telefoon, tablet of tweede PC
 - **Display-modus** — groot leesbaar scherm bij het orgel met noot, VU-meter en voortgang
 - **QR-code** — scan om direct de remote te openen, geen URL overtypen
 - **PC-instellingen** — alle parameters ook instelbaar via het display-scherm
-- **GrandOrgue/Hauptwerk-naamgeving** — `036-c.mp3`, `037-c#.mp3`, etc.
+- **JM-Orgue-compatibele naamgeving** — `036-c.mp3`, `037-c#.mp3`, etc.
+- **.organ-export** — genereer een compleet orgeldefinitiebestand voor JM-Orgue, inclusief zwelkasten, tremulanten en koppels
 - **Repareer & verwijder** — professionele installer met repair en uninstall
 - **Geen terminal** — draait onzichtbaar op de achtergrond, browser sluiten = afsluiten
 
@@ -157,7 +161,7 @@ Bij **multi-microfoon** opnames worden submappen per positie aangemaakt:
 │   │   └── ...
 ```
 
-Naamgeving volgt de **GrandOrgue/Hauptwerk**-conventie: `{MIDI-nummer}-{nootnaam}.mp3`
+Naamgeving volgt de **JM-Orgue**-conventie: `{MIDI-nummer}-{nootnaam}.mp3`
 
 ---
 
@@ -196,7 +200,7 @@ Naamgeving volgt de **GrandOrgue/Hauptwerk**-conventie: `{MIDI-nummer}-{nootnaam
 - Zet de opnameduur lang genoeg voor langzaam sprekende pijpen (10+ sec voor 16')
 - Zorg dat PC en telefoon op **hetzelfde netwerk** zitten (WiFi of hotspot)
 - Bij multi-mic: geef elke microfoon een duidelijke **positienaam** (Front, Midden, Rear)
-- Converteer MP3 naar WAV voor GrandOrgue:
+- Converteer MP3 naar WAV indien gewenst:
   ```bash
   for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"
   ```

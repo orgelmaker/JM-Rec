@@ -134,7 +134,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.6"
+JM_REC_VERSION = "3.7"
 
 
 # ─────────────────────────────────────────────
@@ -184,6 +184,7 @@ I18N_JS = r'''
     "GEREED":"READY","AFTELLEN":"COUNTDOWN","OPNAME":"RECORDING","GEPAUZEERD":"PAUSED","IDLE":"IDLE",
     // drawer
     "Instellingen & Bediening":"Settings & Control","Audiobron":"Audio source","Verversen":"Refresh","Microfoon":"Microphone","Wat je hoort":"What you hear","Audio":"Audio","Volume":"Volume","Workflow":"Workflow","Startnoot (MIDI)":"Start note (MIDI)","Eindnoot (MIDI)":"End note (MIDI)","Bas/Discant splitsen":"Bass/treble split","Splitstoets (MIDI)":"Split note (MIDI)","Bas opnemen":"Record bass","Discant opnemen":"Record treble","Orgelnaam":"Organ name","Opslaglocatie":"Storage location","Pedaal":"Pedal","Toepassen":"Apply","Instellingen toepassen":"Apply settings",
+    "Exporteren":"Export","Exporteer .organ (JM-Orgue)":"Export .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Export project data (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Creates a .organ definition file in the project folder that JM-Orgue can load directly.",".organ opgeslagen:":".organ saved:","registers":"stops","samples":"samples","ontbrekend":"missing","Export mislukt:":"Export failed:","Project-JSON opgeslagen:":"Project JSON saved:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Note: JM-Orgue does not support FLAC; choose WAV or MP3 as format",
     // QR / hotspot
     "Remote Control":"Remote Control","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Make sure your phone is on the same network as this PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choose the network your phone is connected to:","Directe verbinding (geen WiFi nodig)":"Direct connection (no WiFi needed)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"No WiFi at this location? Let this PC broadcast its own network and connect your phone or tablet to it.","Open hotspot-instellingen":"Open hotspot settings",
     // review modal
@@ -215,6 +216,7 @@ I18N_JS = r'''
     "Registerbeheer":"Registerverwaltung","Klavier":"Manual","Nieuw register":"Neues Register","Nog geen registers.":"Noch keine Register.","normaal":"normal","tremulant":"Tremulant","gecontroleerd":"geprüft","beginnoot":"Anfangsnote","eindnoot":"Endnote","bas/disc":"Bass/Diskant","naam (bijv. Prestant)":"Name (z. B. Prinzipal)",
     "GEREED":"BEREIT","AFTELLEN":"COUNTDOWN","OPNAME":"AUFNAHME","GEPAUZEERD":"PAUSIERT","IDLE":"BEREIT",
     "Instellingen & Bediening":"Einstellungen & Steuerung","Audiobron":"Audioquelle","Verversen":"Aktualisieren","Microfoon":"Mikrofon","Wat je hoort":"Was du hörst","Audio":"Audio","Volume":"Lautstärke","Workflow":"Ablauf","Startnoot (MIDI)":"Startnote (MIDI)","Eindnoot (MIDI)":"Endnote (MIDI)","Bas/Discant splitsen":"Bass/Diskant trennen","Splitstoets (MIDI)":"Trennton (MIDI)","Bas opnemen":"Bass aufnehmen","Discant opnemen":"Diskant aufnehmen","Orgelnaam":"Orgelname","Opslaglocatie":"Speicherort","Pedaal":"Pedal","Toepassen":"Anwenden","Instellingen toepassen":"Einstellungen anwenden",
+    "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
     "Sample Controle":"Sample-Kontrolle","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
@@ -243,6 +245,7 @@ I18N_JS = r'''
     "Registerbeheer":"Gestion des jeux","Klavier":"Clavier","Nieuw register":"Nouveau jeu","Nog geen registers.":"Aucun jeu pour l'instant.","normaal":"normal","tremulant":"tremblant","gecontroleerd":"contrôlé","beginnoot":"note de début","eindnoot":"note de fin","bas/disc":"basse/dessus","naam (bijv. Prestant)":"nom (p. ex. Montre)",
     "GEREED":"PRÊT","AFTELLEN":"COMPTE À REBOURS","OPNAME":"ENREGISTREMENT","GEPAUZEERD":"EN PAUSE","IDLE":"PRÊT",
     "Instellingen & Bediening":"Réglages & Commande","Audiobron":"Source audio","Verversen":"Actualiser","Microfoon":"Microphone","Wat je hoort":"Ce que vous entendez","Audio":"Audio","Volume":"Volume","Workflow":"Déroulement","Startnoot (MIDI)":"Note de départ (MIDI)","Eindnoot (MIDI)":"Note de fin (MIDI)","Bas/Discant splitsen":"Séparer basse/dessus","Splitstoets (MIDI)":"Note de coupure (MIDI)","Bas opnemen":"Enregistrer la basse","Discant opnemen":"Enregistrer le dessus","Orgelnaam":"Nom de l'orgue","Opslaglocatie":"Emplacement de stockage","Pedaal":"Pédalier","Toepassen":"Appliquer","Instellingen toepassen":"Appliquer les réglages",
+    "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
     "Sample Controle":"Contrôle des samples","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
@@ -287,6 +290,8 @@ I18N_JS = r'''
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-number}-{note-name}.mp3</code></div>
 <h2>Folder structure</h2>
 <div class="tip-box"><code>Storage / Organ / Manual / Register / 036-c.mp3</code><br>With multi-mic: <code>... / Register / Position / 036-c.mp3</code></div>
+<h2>Export to JM-Orgue (.organ)</h2>
+<p>Via <strong>Settings &rarr; Export</strong> you create a <code>.organ</code> definition file in the project folder. It contains all manuals, stops (with footage), swell boxes, tremulants and couplers, with references to the recorded samples. JM-Orgue loads this file directly; missing notes stay silent and can be recorded later (then export again). With multi-mic the first configured microphone position is used.</p>
 <h2>Adjustable parameters</h2>
 <table>
 <tr><th>Parameter</th><th>Default</th><th>Options</th></tr>
@@ -313,7 +318,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -350,6 +355,8 @@ I18N_JS = r'''
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-Nummer}-{Notenname}.mp3</code></div>
 <h2>Ordnerstruktur</h2>
 <div class="tip-box"><code>Speicherort / Orgel / Manual / Register / 036-c.mp3</code><br>Bei Multi-Mikrofon: <code>... / Register / Position / 036-c.mp3</code></div>
+<h2>Export nach JM-Orgue (.organ)</h2>
+<p>Über <strong>Einstellungen &rarr; Exportieren</strong> erstellen Sie eine <code>.organ</code>-Definitionsdatei im Projektordner. Sie enthält alle Manuale, Register (mit Fußlage), Schwellkästen, Tremulanten und Koppeln, mit Verweisen auf die aufgenommenen Samples. JM-Orgue lädt diese Datei direkt; fehlende Töne bleiben stumm und können später aufgenommen werden (danach erneut exportieren). Bei Multi-Mikrofon wird die zuerst konfigurierte Position verwendet.</p>
 <h2>Einstellbare Parameter</h2>
 <table>
 <tr><th>Parameter</th><th>Standard</th><th>Optionen</th></tr>
@@ -376,7 +383,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -413,6 +420,8 @@ I18N_JS = r'''
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format : <code>{numéro-MIDI}-{nom-de-note}.mp3</code></div>
 <h2>Structure des dossiers</h2>
 <div class="tip-box"><code>Stockage / Orgue / Clavier / Jeu / 036-c.mp3</code><br>Avec multi-micro : <code>... / Jeu / Position / 036-c.mp3</code></div>
+<h2>Export vers JM-Orgue (.organ)</h2>
+<p>Via <strong>Réglages &rarr; Exporter</strong>, vous créez un fichier de définition <code>.organ</code> dans le dossier du projet. Il contient tous les claviers, jeux (avec hauteur en pieds), boîtes expressives, tremblants et accouplements, avec les références aux échantillons enregistrés. JM-Orgue charge ce fichier directement ; les notes manquantes restent muettes et peuvent être enregistrées plus tard (puis réexportez). En multi-micro, la première position configurée est utilisée.</p>
 <h2>Paramètres réglables</h2>
 <table>
 <tr><th>Paramètre</th><th>Défaut</th><th>Options</th></tr>
@@ -439,7 +448,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -1383,7 +1392,8 @@ class RecorderEngine:
         f0 = 440.0 * (2.0 ** ((self.current_note - 69) / 12.0))
         pitch_check = True
         reg = self._find_register(self._find_keyboard(self.active_keyboard), self.active_register)
-        ft = str(reg.get("foot", "")).strip().replace(",", ".") if reg else ""
+        ft = (str(reg.get("foot", "")).strip().replace(",", ".")
+              .replace("'", "").replace("’", "").replace("′", "").strip()) if reg else ""
         if ft:
             try:
                 parts = ft.split()
@@ -2318,6 +2328,277 @@ class RecorderEngine:
             },
         }
 
+    # ─── .organ (ODF) export voor JM-Orgue ─────────────────
+
+    @staticmethod
+    def _foot_to_harmonic(foot):
+        """GrandOrgue HarmonicNumber uit een voetmaat-string: 8'→8, 16'→4,
+        4'→16, "2 2/3"→24 (harmonic = 64/voet). Niet-parseerbaar (mixturen
+        zoals "4st", leeg) → 8 (unison)."""
+        # Voetteken-apostrofs strippen: de wizard-hint suggereert zelf "8'".
+        ft = (str(foot or "").strip().replace(",", ".")
+              .replace("'", "").replace("’", "").replace("′", "").strip())
+        if not ft:
+            return 8
+        try:
+            parts = ft.split()
+            val = float(parts[0])
+            if len(parts) > 1 and "/" in parts[1]:
+                num, den = parts[1].split("/")
+                val += float(num) / float(den)
+            if val <= 0:
+                return 8
+            return max(1, int(round(64.0 / val)))
+        except (ValueError, ZeroDivisionError):
+            return 8
+
+    def _index_register_samples(self, reg_dir):
+        """Map bestandsnaam → relatieve paden (t.o.v. reg_dir) van alle samples
+        in een registermap, incl. _bas/_dis-splitsen en multi-mic-submappen."""
+        found = {}
+        if not os.path.isdir(reg_dir):
+            return found
+        for root, _dirs, files in os.walk(reg_dir):
+            rel_root = os.path.relpath(root, reg_dir)
+            for fn in files:
+                if fn.lower().endswith(('.wav', '.flac', '.mp3')):
+                    rel = fn if rel_root == "." else os.path.join(rel_root, fn)
+                    found.setdefault(fn.lower(), []).append(rel)
+        return found
+
+    def _pick_pipe_sample(self, index, midi_num, mic_pref, split_on=False):
+        """Kies het beste sample-pad voor een noot uit de map-index.
+        Voorkeur: wav > flac > mp3; bij bas/discant-splitsing de juiste
+        _bas/_dis-map voor deze noot (verkeerde helft en verouderde
+        root-takes verliezen); kortste pad boven submappen; bij multi-mic
+        de eerst geconfigureerde positie (hoofdletterongevoelig)."""
+        base = midi_to_filename(midi_num).lower()
+        want = (("_dis" if midi_num >= self.split_note else "_bas")
+                if split_on else None)
+        for ext in ('.wav', '.flac', '.mp3'):
+            paths = index.get(base + ext)
+            if not paths:
+                continue
+
+            def score(rel):
+                parts = rel.replace('\\', '/').split('/')
+                depth = len(parts) - 1
+                dirs = [p.lower() for p in parts[:-1]]
+                in_split = any(d.endswith(('_bas', '_dis')) for d in dirs)
+                if want:    # juiste helft eerst, dan root, dan verkeerde helft
+                    split_rank = (0 if any(d.endswith(want) for d in dirs)
+                                  else (2 if in_split else 1))
+                else:       # geen splitsing actief: root wint van oude splitmappen
+                    split_rank = 1 if in_split else 0
+                parts_cf = [p.casefold() for p in parts]
+                mic_rank = len(mic_pref)
+                for i, m in enumerate(mic_pref):
+                    if m.casefold() in parts_cf:
+                        mic_rank = i
+                        break
+                return (split_rank, depth, mic_rank, rel.lower())
+            return sorted(paths, key=score)[0]
+        return None
+
+    def export_organ_odf(self):
+        """Schrijf een GrandOrgue-compatibel .organ-bestand (voor JM-Orgue) op
+        basis van het huidige plan + de samples op schijf.
+
+        Afgestemd op JM-Orgue's ODF-parser: Manual000 = pedaal, stops per
+        divisie genummerd (pedaal 001+, klavier i → i*100+1), pipe-mapping via
+        FirstAccessiblePipeLogicalKeyNumber, zwelkast via [Enclosure] +
+        windchest-Name = klaviernaam, tremulant via [Tremulant]-referentie op
+        het manual. Paden relatief t.o.v. het .organ-bestand (projectmap).
+        """
+        if not self.project_name:
+            raise ValueError("Geen project ingesteld")
+        base = os.path.join(self.output_dir, self.project_name)
+        if not os.path.isdir(base):
+            raise ValueError(f"Projectmap niet gevonden: {base}")
+
+        # Divisies in manual-volgorde: Pedaal = Manual000, klavieren 001..N.
+        divisions = []          # (manual_nr, naam, kb_dict)
+        if self.has_pedal:
+            divisions.append((0, "Pedaal", {"name": "Pedaal", "zwelwerk": False,
+                                            "tremulant": False,
+                                            "registers": list(self.pedal_registers)}))
+        for i, kb in enumerate(list(self.keyboards)):
+            divisions.append((i + 1, kb["name"], kb))
+
+        mic_pref = [sanitize_path_component(self.device_names.get(i, f"Mic_{i}"))
+                    for i in self.device_indices]
+
+        enclosures = []     # (id, divisie-naam)
+        tremulants = []     # (id, divisie-naam)
+        windchests = []     # (id, divisie-naam, enclosure_id|None, tremulant_id|None)
+        stops = []          # (id, naam, harmonic, wc_id, first_pipe_key, [(nr, relpad|None, verwacht_pad)])
+        manual_sections = []
+        pipes_found = pipes_missing = flac_pipes = 0
+        default_ext = {'wav': '.wav', 'flac': '.flac'}.get(self.output_format, '.mp3')
+
+        for div_idx, (m_nr, name, kb) in enumerate(divisions):
+            wc_id = div_idx + 1
+            enc_id = trem_id = None
+            if kb.get("zwelwerk"):
+                enc_id = len(enclosures) + 1
+                enclosures.append((enc_id, name))
+            if kb.get("tremulant"):
+                trem_id = len(tremulants) + 1
+                tremulants.append((trem_id, name))
+            windchests.append((wc_id, name, enc_id, trem_id))
+
+            # Momentopname van registers + nootranges: master-edits kunnen
+            # tegelijk binnenkomen (Flask threaded) en anders zouden man_first
+            # en de pipe-range uit verschillende versies kunnen komen.
+            regs = list(kb.get("registers", []))
+            ranges = [(int(r["begin_note"]), int(r["end_note"])) for r in regs]
+            firsts = [b for b, _e in ranges] or [self.start_note]
+            lasts = [e for _b, e in ranges] or [self.end_note]
+            man_first, man_last = min(firsts), max(lasts)
+
+            stop_ids = []
+            for r_idx, reg in enumerate(regs):
+                r_begin, r_end = ranges[r_idx]
+                stop_id = (m_nr * 100 if m_nr else 0) + r_idx + 1
+                reg_dir = os.path.join(base, name, reg["name"])
+                index = self._index_register_samples(reg_dir)
+                pipes = []
+                for note in range(r_begin, r_end + 1):
+                    rel = self._pick_pipe_sample(index, note, mic_pref,
+                                                 bool(reg.get("bass_treble")))
+                    if rel:
+                        pipes_found += 1
+                        if rel.lower().endswith('.flac'):
+                            flac_pipes += 1
+                        rel_full = os.path.join(name, reg["name"], rel)
+                    else:
+                        pipes_missing += 1
+                        rel_full = os.path.join(name, reg["name"],
+                                                midi_to_filename(note) + default_ext)
+                    pipes.append((note, rel is not None, rel_full))
+                stops.append((stop_id, reg.get("display", reg["name"]),
+                              self._foot_to_harmonic(reg.get("foot")), wc_id,
+                              r_begin - man_first + 1, pipes))
+                stop_ids.append(stop_id)
+
+            manual_sections.append((m_nr, name, man_first,
+                                    man_last - man_first + 1, stop_ids, trem_id))
+
+        # Koppels: {source S, target T} = "S aan T" → sectie onder manual van T,
+        # DestinationManual = manualnummer van S.
+        name_to_manual = {name: m_nr for m_nr, name, _kb in divisions}
+        couplers = []       # (id, naam, onder_manual, destination_manual)
+        for c in list(self.couplers):
+            # Vangnet voor oudere manifests met nog niet-gesaneerde namen.
+            src = sanitize_path_component(c.get("source") or "")
+            tgt = sanitize_path_component(c.get("target") or "")
+            if src in name_to_manual and tgt in name_to_manual and src != tgt:
+                couplers.append((len(couplers) + 1, f"{src} - {tgt}",
+                                 name_to_manual[tgt], name_to_manual[src]))
+
+        # ── ODF-tekst opbouwen ──
+        L = []
+        L.append(f"; {self.project_name}.organ — gegenereerd door JM-Rec v{JM_REC_VERSION}")
+        L.append("")
+        L.append("[Organ]")
+        L.append(f"ChurchName={self.kerk or self.project_name}")
+        L.append(f"ChurchAddress={self.plaats}")
+        L.append(f"OrganBuilder={self.bouwer}")
+        L.append(f"OrganComments=Opgenomen met JM-Rec v{JM_REC_VERSION}")
+        L.append(f"RecordingDetails={self.sample_rate} Hz, {self.bit_depth}-bit, "
+                 f"{self.output_format}")
+        L.append(f"NumberOfManuals={len(self.keyboards)}")
+        L.append(f"HasPedals={'Y' if self.has_pedal else 'N'}")
+        L.append(f"NumberOfEnclosures={len(enclosures)}")
+        L.append(f"NumberOfTremulants={len(tremulants)}")
+        L.append(f"NumberOfWindchestGroups={len(windchests)}")
+        L.append("")
+
+        for wc_id, wname, enc_id, trem_id in windchests:
+            L.append(f"[WindchestGroup{wc_id:03d}]")
+            L.append(f"Name={wname}")
+            L.append(f"NumberOfEnclosures={1 if enc_id else 0}")
+            if enc_id:
+                L.append(f"Enclosure001={enc_id:03d}")
+            L.append(f"NumberOfTremulants={1 if trem_id else 0}")
+            if trem_id:
+                L.append(f"Tremulant001={trem_id:03d}")
+            L.append("")
+
+        for enc_id, ename in enclosures:
+            L.append(f"[Enclosure{enc_id:03d}]")
+            L.append(f"Name=Zwelkast {ename}")
+            L.append("AmpMinimumLevel=20")
+            L.append(f"MIDIInputNumber={enc_id}")
+            L.append("")
+
+        for trem_id, tname in tremulants:
+            L.append(f"[Tremulant{trem_id:03d}]")
+            L.append(f"Name=Tremulant {tname}")
+            L.append("Period=160")
+            L.append("AmpModDepth=18")
+            L.append("StartRate=8")
+            L.append("StopRate=8")
+            L.append("")
+
+        for m_nr, mname, man_first, n_keys, stop_ids, trem_id in manual_sections:
+            L.append(f"[Manual{m_nr:03d}]")
+            L.append(f"Name={mname}")
+            L.append(f"MIDIInputNumber={m_nr + 1}")
+            L.append(f"NumberOfLogicalKeys={n_keys}")
+            L.append(f"NumberOfAccessibleKeys={n_keys}")
+            L.append(f"FirstAccessibleKeyMIDINoteNumber={man_first}")
+            L.append(f"NumberOfStops={len(stop_ids)}")
+            for i, sid in enumerate(stop_ids):
+                L.append(f"Stop{i + 1:03d}={sid:03d}")
+            m_couplers = [c for c in couplers if c[2] == m_nr]
+            L.append(f"NumberOfCouplers={len(m_couplers)}")
+            for i, c in enumerate(m_couplers):
+                L.append(f"Coupler{i + 1:03d}={c[0]:03d}")
+            L.append(f"NumberOfTremulants={1 if trem_id else 0}")
+            if trem_id:
+                L.append(f"Tremulant001={trem_id:03d}")
+            L.append("")
+
+        for stop_id, sname, harmonic, wc_id, first_key, pipes in stops:
+            L.append(f"[Stop{stop_id:03d}]")
+            L.append(f"Name={sname}")
+            L.append(f"HarmonicNumber={harmonic}")
+            L.append(f"WindchestGroup={wc_id}")
+            L.append(f"FirstAccessiblePipeLogicalKeyNumber={first_key}")
+            L.append(f"NumberOfLogicalPipes={len(pipes)}")
+            L.append(f"NumberOfAccessiblePipes={len(pipes)}")
+            L.append("AmplitudeLevel=100")
+            L.append("Percussive=N")
+            for i, (_note, _found, rel_path) in enumerate(pipes):
+                L.append("Pipe%03d=%s" % (i + 1, rel_path.replace('/', '\\')))
+            L.append("")
+
+        for c_id, c_name, _under, dest in couplers:
+            L.append(f"[Coupler{c_id:03d}]")
+            L.append(f"Name={c_name}")
+            L.append(f"DestinationManual={dest}")
+            L.append("DestinationKeyshift=0")
+            L.append("UnisonOff=N")
+            L.append("CouplerType=Normal")
+            L.append("")
+
+        odf_path = os.path.join(base, self.project_name + ".organ")
+        with open(odf_path, 'w', encoding='utf-8', newline='\r\n') as f:
+            f.write("\n".join(L))
+
+        return {
+            "path": odf_path,
+            "stops": len(stops),
+            "pipes_found": pipes_found,
+            "pipes_missing": pipes_missing,
+            "couplers": len(couplers),
+            "enclosures": len(enclosures),
+            "tremulants": len(tremulants),
+            # JM-Orgue kan (nog) geen FLAC decoderen — waarschuw de gebruiker.
+            "flac_warning": flac_pipes > 0,
+        }
+
     def _select_first_register(self):
         """Pick the first defined register as the active series (no auto-start)."""
         for name, kb in self._keyboard_entries():
@@ -2363,7 +2644,12 @@ class RecorderEngine:
             elif self.tremulant_scope == "none":
                 kb["tremulant"] = False
         self.pedal_registers = self._normalize_registers(plan.get("pedal_registers", []))
-        self.couplers = plan.get("couplers", []) or []
+        # Koppelnamen dezelfde sanitize geven als de klaviernamen hierboven,
+        # anders matcht een koppel zijn klavier niet meer (bv. bij een spatie).
+        self.couplers = [{"source": sanitize_path_component(c.get("source", "")),
+                          "target": sanitize_path_component(c.get("target", ""))}
+                         for c in (plan.get("couplers") or [])
+                         if c.get("source") and c.get("target")]
         self._apply_settings_dict(plan.get("settings") or {})
         self._build_folders()
         self._select_first_register()
@@ -3165,6 +3451,15 @@ def create_web_app(engine: RecorderEngine):
             json.dump(project, f, indent=2, ensure_ascii=False)
 
         return jsonify({'success': True, 'path': export_path, 'project': project})
+
+    @app.route('/api/export-organ', methods=['POST'])
+    def api_export_organ():
+        """Export a GrandOrgue-compatible .organ definition for JM-Orgue."""
+        try:
+            result = engine.export_organ_odf()
+            return jsonify({'success': True, **result})
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)})
 
     # ── Coupler endpoints ──
 
@@ -4080,7 +4375,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.6</span></div>
+    <div class="logo">JM-Rec <span>v3.7</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -4391,6 +4686,13 @@ body {
             <button class="d-btn d-btn-primary" onclick="dApplySettings()" style="margin-top:8px;">Instellingen toepassen</button>
         </div>
 
+        <div class="drawer-section">
+            <div class="drawer-section-title">Exporteren</div>
+            <div style="font-size:0.72rem;color:var(--dim);margin-bottom:8px;">Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.</div>
+            <button class="d-btn d-btn-primary" onclick="dExportOrgan()" style="width:100%;">Exporteer .organ (JM-Orgue)</button>
+            <button class="d-btn" onclick="dExportProject()" style="width:100%;margin-top:6px;">Exporteer projectgegevens (.json)</button>
+            <div id="dExportResult" style="font-size:0.75rem;color:var(--dim);margin-top:6px;word-break:break-all;"></div>
+        </div>
 
     </div>
 </div>
@@ -4559,6 +4861,9 @@ body {
             Bij multi-mic: <code>... / Register / Positie / 036-c.mp3</code>
         </div>
 
+        <h2>Exporteren naar JM-Orgue (.organ)</h2>
+        <p>Via <strong>Instellingen &rarr; Exporteren</strong> maak je een <code>.organ</code>-definitiebestand in de projectmap. Daarin staan alle klavieren, registers (met voetmaat), zwelkasten, tremulanten en koppels, met verwijzingen naar de opgenomen samples. JM-Orgue laadt dit bestand direct; ontbrekende noten blijven stil en kun je later alsnog opnemen (daarna opnieuw exporteren). Bij multi-mic wordt de eerst ingestelde microfoonpositie gebruikt.</p>
+
         <h2>Instelbare parameters</h2>
         <table>
             <tr><th>Parameter</th><th>Standaard</th><th>Opties</th></tr>
@@ -4599,7 +4904,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.6</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>
         </div>
     </div>
 </div>
@@ -4664,12 +4969,13 @@ function dMidiToName(midi) { return _dNoteNames[midi % 12] + (Math.floor(midi / 
 
 async function dApi(url, data) {
     try {
-        await fetch(url, {
+        const res = await fetch(url, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: data ? JSON.stringify(data) : '{}'
         });
-    } catch(e) { console.error(e); }
+        return await res.json();
+    } catch(e) { console.error(e); return null; }
 }
 
 // ── Keyboard inputs ──
@@ -4842,6 +5148,36 @@ async function dApplySettings() {
         split_record_disc: document.getElementById('dSplitDisc').checked
     };
     await dApi('/api/settings', data);
+}
+
+// ── Exporteren (.organ voor JM-Orgue + project-JSON) ──
+async function dExportOrgan() {
+    const el = document.getElementById('dExportResult');
+    el.textContent = '…';
+    const res = await dApi('/api/export-organ');
+    if (res && res.success) {
+        let msg = tr('.organ opgeslagen:') + ' ' + res.path +
+            ' — ' + res.stops + ' ' + tr('registers') + ', ' + res.pipes_found + ' ' + tr('samples');
+        if (res.pipes_missing > 0) msg += ', ' + res.pipes_missing + ' ' + tr('ontbrekend');
+        if (res.flac_warning) msg += ' — ' + tr('Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat');
+        el.textContent = msg;
+        el.style.color = (res.pipes_missing > 0 || res.flac_warning) ? '#f59e0b' : 'var(--accent)';
+    } else {
+        el.textContent = tr('Export mislukt:') + ' ' + ((res && res.error) || '?');
+        el.style.color = 'var(--recording)';
+    }
+}
+async function dExportProject() {
+    const el = document.getElementById('dExportResult');
+    el.textContent = '…';
+    const res = await dApi('/api/export-project');
+    if (res && res.success) {
+        el.textContent = tr('Project-JSON opgeslagen:') + ' ' + res.path;
+        el.style.color = 'var(--accent)';
+    } else {
+        el.textContent = tr('Export mislukt:') + ' ' + ((res && res.error) || '?');
+        el.style.color = 'var(--recording)';
+    }
 }
 
 // ── Sync drawer from state ──
