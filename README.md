@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.8-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.9-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.8 — Organ Sample Recorder
+# JM-Rec v3.9 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.9
+- **Feedback-knop** — via de knop **Feedback** in de header meld je een probleem of idee. Je tekst wordt als voor-ingevulde [GitHub-melding](https://github.com/orgelmaker/JM-Rec/issues) klaargezet, inclusief versie-info (gratis GitHub-account nodig om te versturen).
 
 ### Nieuw in v3.8
 - **Update-melding** — bij het opstarten controleert JM-Rec (op de achtergrond, faalt stil zonder internet) of er een nieuwere release op GitHub staat. Is die er, dan verschijnt een groene **⬆ Update**-knop in de header die direct naar de download linkt.

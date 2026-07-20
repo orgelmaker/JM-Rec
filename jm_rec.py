@@ -134,7 +134,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.8"
+JM_REC_VERSION = "3.9"
 GITHUB_REPO = "orgelmaker/JM-Rec"
 
 
@@ -238,7 +238,7 @@ I18N_JS = r'''
     "GEREED":"READY","AFTELLEN":"COUNTDOWN","OPNAME":"RECORDING","GEPAUZEERD":"PAUSED","IDLE":"IDLE",
     // drawer
     "Instellingen & Bediening":"Settings & Control","Audiobron":"Audio source","Verversen":"Refresh","Microfoon":"Microphone","Wat je hoort":"What you hear","Audio":"Audio","Volume":"Volume","Workflow":"Workflow","Startnoot (MIDI)":"Start note (MIDI)","Eindnoot (MIDI)":"End note (MIDI)","Bas/Discant splitsen":"Bass/treble split","Splitstoets (MIDI)":"Split note (MIDI)","Bas opnemen":"Record bass","Discant opnemen":"Record treble","Orgelnaam":"Organ name","Opslaglocatie":"Storage location","Pedaal":"Pedal","Toepassen":"Apply","Instellingen toepassen":"Apply settings",
-    "Exporteren":"Export","Exporteer .organ (JM-Orgue)":"Export .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Export project data (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Creates a .organ definition file in the project folder that JM-Orgue can load directly.",".organ opgeslagen:":".organ saved:","registers":"stops","samples":"samples","ontbrekend":"missing","Export mislukt:":"Export failed:","Update beschikbaar:":"Update available:","Project-JSON opgeslagen:":"Project JSON saved:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Note: JM-Orgue does not support FLAC; choose WAV or MP3 as format",
+    "Exporteren":"Export","Exporteer .organ (JM-Orgue)":"Export .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Export project data (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Creates a .organ definition file in the project folder that JM-Orgue can load directly.",".organ opgeslagen:":".organ saved:","registers":"stops","samples":"samples","ontbrekend":"missing","Export mislukt:":"Export failed:","Update beschikbaar:":"Update available:","Feedback":"Feedback","Feedback geven":"Give feedback","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Found a problem or have an idea for JM-Rec? Your text is prepared as a GitHub report.","Probleem melden":"Report a problem","Idee of verbetering":"Idea or improvement","Beschrijf je probleem of idee zo concreet mogelijk…":"Describe your problem or idea as concretely as possible…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"A GitHub page opens with your text pre-filled (including version info). A free GitHub account is needed to submit.","Openen op GitHub":"Open on GitHub","Project-JSON opgeslagen:":"Project JSON saved:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Note: JM-Orgue does not support FLAC; choose WAV or MP3 as format",
     // QR / hotspot
     "Remote Control":"Remote Control","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Make sure your phone is on the same network as this PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choose the network your phone is connected to:","Directe verbinding (geen WiFi nodig)":"Direct connection (no WiFi needed)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"No WiFi at this location? Let this PC broadcast its own network and connect your phone or tablet to it.","Open hotspot-instellingen":"Open hotspot settings",
     // review modal
@@ -270,7 +270,7 @@ I18N_JS = r'''
     "Registerbeheer":"Registerverwaltung","Klavier":"Manual","Nieuw register":"Neues Register","Nog geen registers.":"Noch keine Register.","normaal":"normal","tremulant":"Tremulant","gecontroleerd":"geprüft","beginnoot":"Anfangsnote","eindnoot":"Endnote","bas/disc":"Bass/Diskant","naam (bijv. Prestant)":"Name (z. B. Prinzipal)",
     "GEREED":"BEREIT","AFTELLEN":"COUNTDOWN","OPNAME":"AUFNAHME","GEPAUZEERD":"PAUSIERT","IDLE":"BEREIT",
     "Instellingen & Bediening":"Einstellungen & Steuerung","Audiobron":"Audioquelle","Verversen":"Aktualisieren","Microfoon":"Mikrofon","Wat je hoort":"Was du hörst","Audio":"Audio","Volume":"Lautstärke","Workflow":"Ablauf","Startnoot (MIDI)":"Startnote (MIDI)","Eindnoot (MIDI)":"Endnote (MIDI)","Bas/Discant splitsen":"Bass/Diskant trennen","Splitstoets (MIDI)":"Trennton (MIDI)","Bas opnemen":"Bass aufnehmen","Discant opnemen":"Diskant aufnehmen","Orgelnaam":"Orgelname","Opslaglocatie":"Speicherort","Pedaal":"Pedal","Toepassen":"Anwenden","Instellingen toepassen":"Einstellungen anwenden",
-    "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Update beschikbaar:":"Update verfügbar:","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
+    "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Update beschikbaar:":"Update verfügbar:","Feedback":"Feedback","Feedback geven":"Feedback geben","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Ein Problem gefunden oder eine Idee für JM-Rec? Ihr Text wird als GitHub-Meldung vorbereitet.","Probleem melden":"Problem melden","Idee of verbetering":"Idee oder Verbesserung","Beschrijf je probleem of idee zo concreet mogelijk…":"Beschreiben Sie Ihr Problem oder Ihre Idee so konkret wie möglich…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Es öffnet sich eine GitHub-Seite mit Ihrem Text (inkl. Versionsinfo). Zum Absenden ist ein kostenloses GitHub-Konto nötig.","Openen op GitHub":"Auf GitHub öffnen","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
     "Sample Controle":"Sample-Kontrolle","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
@@ -299,7 +299,7 @@ I18N_JS = r'''
     "Registerbeheer":"Gestion des jeux","Klavier":"Clavier","Nieuw register":"Nouveau jeu","Nog geen registers.":"Aucun jeu pour l'instant.","normaal":"normal","tremulant":"tremblant","gecontroleerd":"contrôlé","beginnoot":"note de début","eindnoot":"note de fin","bas/disc":"basse/dessus","naam (bijv. Prestant)":"nom (p. ex. Montre)",
     "GEREED":"PRÊT","AFTELLEN":"COMPTE À REBOURS","OPNAME":"ENREGISTREMENT","GEPAUZEERD":"EN PAUSE","IDLE":"PRÊT",
     "Instellingen & Bediening":"Réglages & Commande","Audiobron":"Source audio","Verversen":"Actualiser","Microfoon":"Microphone","Wat je hoort":"Ce que vous entendez","Audio":"Audio","Volume":"Volume","Workflow":"Déroulement","Startnoot (MIDI)":"Note de départ (MIDI)","Eindnoot (MIDI)":"Note de fin (MIDI)","Bas/Discant splitsen":"Séparer basse/dessus","Splitstoets (MIDI)":"Note de coupure (MIDI)","Bas opnemen":"Enregistrer la basse","Discant opnemen":"Enregistrer le dessus","Orgelnaam":"Nom de l'orgue","Opslaglocatie":"Emplacement de stockage","Pedaal":"Pédalier","Toepassen":"Appliquer","Instellingen toepassen":"Appliquer les réglages",
-    "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Update beschikbaar:":"Mise à jour disponible :","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
+    "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Update beschikbaar:":"Mise à jour disponible :","Feedback":"Retour","Feedback geven":"Donner un retour","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Un problème ou une idée pour JM-Rec ? Votre texte est préparé comme signalement GitHub.","Probleem melden":"Signaler un problème","Idee of verbetering":"Idée ou amélioration","Beschrijf je probleem of idee zo concreet mogelijk…":"Décrivez votre problème ou idée aussi concrètement que possible…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Une page GitHub s'ouvre avec votre texte prérempli (avec les infos de version). Un compte GitHub gratuit est requis pour envoyer.","Openen op GitHub":"Ouvrir sur GitHub","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
     "Sample Controle":"Contrôle des samples","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
@@ -372,7 +372,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -437,7 +437,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -502,7 +502,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -2938,6 +2938,7 @@ class RecorderEngine:
                 },
                 'check_prompt': self.check_prompt,
                 'update_info': self.update_info,
+                'version': JM_REC_VERSION,
                 'record_mode': self.record_mode,
                 'auto_phase': self.auto_phase,
                 'hold_release_cue': self.hold_release_cue,
@@ -4433,7 +4434,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.8</span></div>
+    <div class="logo">JM-Rec <span>v3.9</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -4444,6 +4445,7 @@ body {
         <button class="header-btn" onclick="openModal('regModal')">Registers</button>
         <button class="header-btn" onclick="openModal('reviewModal')">Controle</button>
         <button class="header-btn" onclick="openModal('readmeModal')">? Info</button>
+        <button class="header-btn" onclick="openModal('feedbackModal')">Feedback</button>
         <button class="header-btn" onclick="wizStartNew()">Nieuw orgel</button>
         <button class="header-btn" onclick="toggleDrawer()">Instellingen</button>
         <span id="langSel" style="margin-left:8px;"></span>
@@ -4757,6 +4759,25 @@ body {
     </div>
 </div>
 
+<!-- Feedback Modal -->
+<div class="modal-overlay" id="feedbackModal" onclick="if(event.target===this)closeModal('feedbackModal')">
+    <div class="modal" style="max-width:480px;">
+        <button class="modal-close" onclick="closeModal('feedbackModal')">&times;</button>
+        <div class="modal-title">Feedback geven</div>
+        <p style="color:var(--dim);font-size:0.85rem;margin-bottom:10px;">Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.</p>
+        <select class="d-form-input" id="fbType" style="width:100%;margin-bottom:8px;">
+            <option value="bug">Probleem melden</option>
+            <option value="idea">Idee of verbetering</option>
+        </select>
+        <textarea class="d-form-input" id="fbText" rows="6" style="width:100%;resize:vertical;font-family:inherit;" placeholder="Beschrijf je probleem of idee zo concreet mogelijk…"></textarea>
+        <p style="color:var(--dim);font-size:0.72rem;margin:8px 0;">Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+            <button class="d-btn" onclick="closeModal('feedbackModal')">Annuleren</button>
+            <button class="d-btn d-btn-primary" onclick="fbSend()">Openen op GitHub</button>
+        </div>
+    </div>
+</div>
+
 <!-- QR Code Modal -->
 <div class="modal-overlay" id="qrModal" onclick="if(event.target===this)closeModal('qrModal')">
     <div class="modal qr-modal">
@@ -4964,7 +4985,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>
         </div>
     </div>
 </div>
@@ -5208,6 +5229,25 @@ async function dApplySettings() {
         split_record_disc: document.getElementById('dSplitDisc').checked
     };
     await dApi('/api/settings', data);
+}
+
+// ── Feedback → voor-ingevulde GitHub-issue ──
+function fbSend() {
+    const type = document.getElementById('fbType').value;
+    const txt = document.getElementById('fbText').value.trim();
+    if (!txt) { document.getElementById('fbText').focus(); return; }
+    const prefix = type === 'bug' ? '[Bug] ' : '[Idee] ';
+    const title = prefix + txt.split('\n')[0].slice(0, 60);
+    const st = window._lastState || {};
+    const body = txt + '\n\n---\n' +
+        'JM-Rec v' + (st.version || '?') + ' · ' + navigator.userAgent;
+    const url = 'https://github.com/orgelmaker/JM-Rec/issues/new' +
+        '?title=' + encodeURIComponent(title) +
+        '&labels=' + (type === 'bug' ? 'bug' : 'enhancement') +
+        '&body=' + encodeURIComponent(body);
+    window.open(url, '_blank');
+    closeModal('feedbackModal');
+    document.getElementById('fbText').value = '';
 }
 
 // ── Exporteren (.organ voor JM-Orgue + project-JSON) ──
