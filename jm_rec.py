@@ -134,7 +134,61 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.7"
+JM_REC_VERSION = "3.8"
+GITHUB_REPO = "orgelmaker/JM-Rec"
+
+
+# ─────────────────────────────────────────────
+# Update-check — bij opstarten (achtergrondthread) wordt de nieuwste
+# GitHub-release opgehaald; is die nieuwer dan JM_REC_VERSION, dan toont
+# de display-header een downloadknop. Faalt stil (geen internet, privérepo,
+# rate-limit): de app werkt altijd gewoon door.
+# ─────────────────────────────────────────────
+
+def _version_tuple(v):
+    """'v3.10' / '3.10' → (3, 10); onparseerbaar deel telt als 0."""
+    parts = []
+    for p in str(v or "").lstrip("vV").split("."):
+        try:
+            parts.append(int(p))
+        except ValueError:
+            parts.append(0)
+    return tuple(parts) or (0,)
+
+
+def _parse_release_info(data, current_version=None):
+    """Maak {version, url} uit een GitHub /releases/latest-antwoord, of None
+    als de release niet nieuwer is dan current_version."""
+    cur = current_version or JM_REC_VERSION
+    tag = str(data.get("tag_name") or "").lstrip("vV")
+    if not tag or _version_tuple(tag) <= _version_tuple(cur):
+        return None
+    url = data.get("html_url") or f"https://github.com/{GITHUB_REPO}/releases/latest"
+    for asset in data.get("assets") or []:
+        n = str(asset.get("name") or "")
+        if "Setup" in n and n.lower().endswith(".exe") and asset.get("browser_download_url"):
+            url = asset["browser_download_url"]
+            break
+    return {"version": tag, "url": url}
+
+
+def check_for_update(engine):
+    """Haal de nieuwste release op en zet engine.update_info bij een nieuwere
+    versie. Draait in een daemon-thread; alle fouten worden stil genegeerd."""
+    try:
+        import urllib.request
+        req = urllib.request.Request(
+            f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest",
+            headers={"User-Agent": f"JM-Rec/{JM_REC_VERSION}",
+                     "Accept": "application/vnd.github+json"})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8", errors="replace"))
+        info = _parse_release_info(data)
+        if info:
+            engine.update_info = info
+            print(f"Update beschikbaar: v{info['version']}", flush=True)
+    except Exception:
+        pass
 
 
 # ─────────────────────────────────────────────
@@ -184,7 +238,7 @@ I18N_JS = r'''
     "GEREED":"READY","AFTELLEN":"COUNTDOWN","OPNAME":"RECORDING","GEPAUZEERD":"PAUSED","IDLE":"IDLE",
     // drawer
     "Instellingen & Bediening":"Settings & Control","Audiobron":"Audio source","Verversen":"Refresh","Microfoon":"Microphone","Wat je hoort":"What you hear","Audio":"Audio","Volume":"Volume","Workflow":"Workflow","Startnoot (MIDI)":"Start note (MIDI)","Eindnoot (MIDI)":"End note (MIDI)","Bas/Discant splitsen":"Bass/treble split","Splitstoets (MIDI)":"Split note (MIDI)","Bas opnemen":"Record bass","Discant opnemen":"Record treble","Orgelnaam":"Organ name","Opslaglocatie":"Storage location","Pedaal":"Pedal","Toepassen":"Apply","Instellingen toepassen":"Apply settings",
-    "Exporteren":"Export","Exporteer .organ (JM-Orgue)":"Export .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Export project data (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Creates a .organ definition file in the project folder that JM-Orgue can load directly.",".organ opgeslagen:":".organ saved:","registers":"stops","samples":"samples","ontbrekend":"missing","Export mislukt:":"Export failed:","Project-JSON opgeslagen:":"Project JSON saved:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Note: JM-Orgue does not support FLAC; choose WAV or MP3 as format",
+    "Exporteren":"Export","Exporteer .organ (JM-Orgue)":"Export .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Export project data (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Creates a .organ definition file in the project folder that JM-Orgue can load directly.",".organ opgeslagen:":".organ saved:","registers":"stops","samples":"samples","ontbrekend":"missing","Export mislukt:":"Export failed:","Update beschikbaar:":"Update available:","Project-JSON opgeslagen:":"Project JSON saved:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Note: JM-Orgue does not support FLAC; choose WAV or MP3 as format",
     // QR / hotspot
     "Remote Control":"Remote Control","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Make sure your phone is on the same network as this PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choose the network your phone is connected to:","Directe verbinding (geen WiFi nodig)":"Direct connection (no WiFi needed)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"No WiFi at this location? Let this PC broadcast its own network and connect your phone or tablet to it.","Open hotspot-instellingen":"Open hotspot settings",
     // review modal
@@ -216,7 +270,7 @@ I18N_JS = r'''
     "Registerbeheer":"Registerverwaltung","Klavier":"Manual","Nieuw register":"Neues Register","Nog geen registers.":"Noch keine Register.","normaal":"normal","tremulant":"Tremulant","gecontroleerd":"geprüft","beginnoot":"Anfangsnote","eindnoot":"Endnote","bas/disc":"Bass/Diskant","naam (bijv. Prestant)":"Name (z. B. Prinzipal)",
     "GEREED":"BEREIT","AFTELLEN":"COUNTDOWN","OPNAME":"AUFNAHME","GEPAUZEERD":"PAUSIERT","IDLE":"BEREIT",
     "Instellingen & Bediening":"Einstellungen & Steuerung","Audiobron":"Audioquelle","Verversen":"Aktualisieren","Microfoon":"Mikrofon","Wat je hoort":"Was du hörst","Audio":"Audio","Volume":"Lautstärke","Workflow":"Ablauf","Startnoot (MIDI)":"Startnote (MIDI)","Eindnoot (MIDI)":"Endnote (MIDI)","Bas/Discant splitsen":"Bass/Diskant trennen","Splitstoets (MIDI)":"Trennton (MIDI)","Bas opnemen":"Bass aufnehmen","Discant opnemen":"Diskant aufnehmen","Orgelnaam":"Orgelname","Opslaglocatie":"Speicherort","Pedaal":"Pedal","Toepassen":"Anwenden","Instellingen toepassen":"Einstellungen anwenden",
-    "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
+    "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Update beschikbaar:":"Update verfügbar:","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
     "Sample Controle":"Sample-Kontrolle","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
@@ -245,7 +299,7 @@ I18N_JS = r'''
     "Registerbeheer":"Gestion des jeux","Klavier":"Clavier","Nieuw register":"Nouveau jeu","Nog geen registers.":"Aucun jeu pour l'instant.","normaal":"normal","tremulant":"tremblant","gecontroleerd":"contrôlé","beginnoot":"note de début","eindnoot":"note de fin","bas/disc":"basse/dessus","naam (bijv. Prestant)":"nom (p. ex. Montre)",
     "GEREED":"PRÊT","AFTELLEN":"COMPTE À REBOURS","OPNAME":"ENREGISTREMENT","GEPAUZEERD":"EN PAUSE","IDLE":"PRÊT",
     "Instellingen & Bediening":"Réglages & Commande","Audiobron":"Source audio","Verversen":"Actualiser","Microfoon":"Microphone","Wat je hoort":"Ce que vous entendez","Audio":"Audio","Volume":"Volume","Workflow":"Déroulement","Startnoot (MIDI)":"Note de départ (MIDI)","Eindnoot (MIDI)":"Note de fin (MIDI)","Bas/Discant splitsen":"Séparer basse/dessus","Splitstoets (MIDI)":"Note de coupure (MIDI)","Bas opnemen":"Enregistrer la basse","Discant opnemen":"Enregistrer le dessus","Orgelnaam":"Nom de l'orgue","Opslaglocatie":"Emplacement de stockage","Pedaal":"Pédalier","Toepassen":"Appliquer","Instellingen toepassen":"Appliquer les réglages",
-    "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
+    "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Update beschikbaar:":"Mise à jour disponible :","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
     "Sample Controle":"Contrôle des samples","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
@@ -318,7 +372,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -383,7 +437,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -448,7 +502,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -640,6 +694,9 @@ class RecorderEngine:
         self.stable_progress = 0.0        # 0..1 progress toward min_stable_seconds
         self._abort_take = False          # set by next/prev/set_note to abort the running take unsaved
         self.pause_requested = False      # deferred pause: finish + save the current take first
+
+        # Gevuld door check_for_update() (achtergrondthread bij opstarten)
+        self.update_info = None           # None | {"version": "3.9", "url": "..."}
 
         # Register range (MIDI numbers)
         self.start_note = 36   # C2
@@ -2880,6 +2937,7 @@ class RecorderEngine:
                     'variant': self.active_variant,
                 },
                 'check_prompt': self.check_prompt,
+                'update_info': self.update_info,
                 'record_mode': self.record_mode,
                 'auto_phase': self.auto_phase,
                 'hold_release_cue': self.hold_release_cue,
@@ -4375,11 +4433,13 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.7</span></div>
+    <div class="logo">JM-Rec <span>v3.8</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
         </div>
+        <a class="header-btn" id="updateBtn" href="#" target="_blank" rel="noopener"
+           style="display:none;background:#22c55e;color:#fff;border-color:#22c55e;text-decoration:none;"></a>
         <button class="header-btn" onclick="openModal('qrModal')">QR Remote</button>
         <button class="header-btn" onclick="openModal('regModal')">Registers</button>
         <button class="header-btn" onclick="openModal('reviewModal')">Controle</button>
@@ -4904,7 +4964,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.7</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.8</p>
         </div>
     </div>
 </div>
@@ -5289,6 +5349,14 @@ function updateUI(state) {
         } else {
             errBanner.classList.remove('show');
         }
+    }
+
+    // Update-knop in de header (alleen als er een nieuwere release is)
+    const ub = document.getElementById('updateBtn');
+    if (ub && state.update_info && state.update_info.version) {
+        ub.textContent = '⬆ ' + tr('Update beschikbaar:') + ' v' + state.update_info.version;
+        ub.href = state.update_info.url;
+        ub.style.display = '';
     }
 
     // Note
@@ -7073,6 +7141,9 @@ def main():
 
     # Create engine
     engine = RecorderEngine()
+
+    # Update-check op de achtergrond (faalt stil zonder internet)
+    threading.Thread(target=check_for_update, args=(engine,), daemon=True).start()
 
     # Setup project if provided
     if args.project and args.register:

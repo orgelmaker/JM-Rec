@@ -1,18 +1,26 @@
 # -*- mode: python ; coding: utf-8 -*-
+import os
+import sys
 from PyInstaller.utils.hooks import collect_submodules
 
 hiddenimports = ['qrcode.image.svg']
 hiddenimports += collect_submodules('qrcode')
 hiddenimports += collect_submodules('soundcard')
-hiddenimports += ['comtypes', 'comtypes.stream']
 hiddenimports += ['audioop', 'audioop_lts']
 hiddenimports += collect_submodules('jaraco')
 hiddenimports += ['soundfile', '_soundfile_data']
+if sys.platform == 'win32':
+    hiddenimports += ['comtypes', 'comtypes.stream']
+
+# lame.exe alleen op Windows meebundelen (elders doet ffmpeg de MP3-conversie)
+_binaries = []
+if sys.platform == 'win32' and os.path.exists('lame.exe'):
+    _binaries.append(('lame.exe', '.'))
 
 a = Analysis(
     ['jm_rec.py'],
     pathex=[],
-    binaries=[('lame.exe', '.')],
+    binaries=_binaries,
     datas=[],
     hiddenimports=hiddenimports,
     hookspath=[],
@@ -46,7 +54,7 @@ exe = EXE(
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,
-    icon='jm_rec_icon.ico',
+    icon='jm_rec_icon.ico' if sys.platform == 'win32' else None,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

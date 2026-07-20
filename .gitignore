@@ -12,6 +12,7 @@ output/
 # Exe (except installer)
 *.exe
 !JM-Rec-Setup.exe
+!lame.exe
 
 # IDE / tools
 .claude/

@@ -1,0 +1,133 @@
+# JM-Rec release-workflow
+#
+# Triggeren kan op twee manieren:
+#   1. Een versietag pushen:  git tag v3.8 && git push origin v3.8
+#   2. Handmatig: GitHub → Actions → "Release" → Run workflow
+#      (bouwt van de huidige main en maakt zelf de tag v<JM_REC_VERSION>)
+#
+# Windows is het hoofdplatform (installer via Inno Setup + portable zip).
+# Linux en macOS zijn experimentele builds (portable archief): de app draait
+# daar, maar Windows-specifieke onderdelen (WASAPI-loopback "Wat je hoort",
+# mapkiezer, hotspot-koppeling) werken er niet of beperkt. Een falende
+# Linux/macOS-build blokkeert de release niet.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: get
+        name: Versie uit jm_rec.py lezen
+        run: |
+          V=$(grep -oP 'JM_REC_VERSION = "\K[0-9.]+' jm_rec.py)
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "JM-Rec versie: $V"
+      - name: Tag moet overeenkomen met JM_REC_VERSION
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          V=$(grep -oP 'JM_REC_VERSION = "\K[0-9.]+' jm_rec.py)
+          if [ "$TAG" != "$V" ]; then
+            echo "::error::Tag v$TAG komt niet overeen met JM_REC_VERSION $V in jm_rec.py"
+            exit 1
+          fi
+
+  windows:
+    needs: version
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Dependencies
+        run: pip install -r requirements.txt pyinstaller
+      - name: PyInstaller build
+        run: pyinstaller JM-Rec.spec --noconfirm
+      - name: Installer bouwen (Inno Setup)
+        run: '& "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" setup\jm_rec_setup.iss'
+      - name: Artefacten hernoemen en inpakken
+        run: |
+          $v = "${{ needs.version.outputs.version }}"
+          Rename-Item output\JM-Rec-Setup.exe "JM-Rec-Setup-$v.exe"
+          Compress-Archive -Path dist\JM-Rec\* -DestinationPath "output\JM-Rec-$v-windows-portable.zip"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: output/*
+
+  linux:
+    needs: version
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Systeembibliotheken (portaudio + pulse voor sounddevice/soundcard)
+        run: sudo apt-get update && sudo apt-get install -y libportaudio2 libpulse0
+      - name: Dependencies
+        run: pip install -r requirements.txt pyinstaller
+      - name: PyInstaller build
+        run: pyinstaller JM-Rec.spec --noconfirm
+      - name: Inpakken
+        run: |
+          mkdir -p output
+          tar czf "output/JM-Rec-${{ needs.version.outputs.version }}-linux-x64.tar.gz" -C dist JM-Rec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: output/*
+
+  macos:
+    needs: version
+    runs-on: macos-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Dependencies
+        run: pip install -r requirements.txt pyinstaller
+      - name: PyInstaller build
+        run: pyinstaller JM-Rec.spec --noconfirm
+      - name: Inpakken
+        run: |
+          mkdir -p output
+          cd dist && zip -qry "../output/JM-Rec-${{ needs.version.outputs.version }}-macos.zip" JM-Rec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: output/*
+
+  release:
+    needs: [version, windows, linux, macos]
+    # Windows is verplicht; Linux/macOS mogen falen zonder de release te blokkeren
+    if: always() && needs.windows.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Release publiceren
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.version.outputs.version }}
+          name: JM-Rec v${{ needs.version.outputs.version }}
+          files: artifacts/*
+          generate_release_notes: true

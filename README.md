@@ -1,16 +1,20 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.7-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.8-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.7 — Organ Sample Recorder
+# JM-Rec v3.8 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.8
+- **Update-melding** — bij het opstarten controleert JM-Rec (op de achtergrond, faalt stil zonder internet) of er een nieuwere release op GitHub staat. Is die er, dan verschijnt een groene **⬆ Update**-knop in de header die direct naar de download linkt.
+- **Automatische release-builds** — een GitHub Actions-workflow bouwt bij elke versietag (of handmatig via *Actions → Release → Run workflow*) de Windows-installer + portable zip, plus experimentele Linux- en macOS-archieven, en publiceert alles als GitHub-release.
 
 ### Nieuw in v3.7
 - **Exporteer .organ (JM-Orgue)** — via **Instellingen → Exporteren** maakt JM-Rec een compleet `.organ`-definitiebestand in de projectmap: klavieren, registers (met voetmaat), zwelkasten, tremulanten en koppels, met verwijzingen naar de opgenomen samples. JM-Orgue laadt dit bestand direct. Ontbrekende noten blijven stil en kun je later alsnog opnemen (daarna opnieuw exporteren). Daarnaast blijft de export van projectgegevens (`.jm-rec.json`) beschikbaar.
@@ -55,9 +59,10 @@ JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het
 
 ### Standalone (aanbevolen)
 
-Download **`JM-Rec-Setup.exe`** van deze link (https://github.com/orgelmaker/JM-Rec/blob/main/JM-Rec-Setup.exe) en voer de installer uit. Geen Python of andere software vereist.
+Download de nieuwste **`JM-Rec-Setup-x.x.exe`** van de [releases-pagina](https://github.com/orgelmaker/JM-Rec/releases/latest) en voer de installer uit. Geen Python of andere software vereist. (De laatste installer staat ook als `JM-Rec-Setup.exe` in de hoofdmap van deze repository.)
 
 > Bij opnieuw uitvoeren van de setup kun je kiezen tussen **Repareren** of **Verwijderen**.
+> Draai je JM-Rec al? Bij het opstarten verschijnt automatisch een **⬆ Update**-knop zodra er een nieuwere versie is.
 
 ### Vanuit broncode
 
@@ -245,3 +250,16 @@ pip install -r requirements.txt
 pip install pyinstaller
 setup\build.bat
 ```
+
+## Release maken (beheerder)
+
+Een nieuwe release bouwen en publiceren gaat automatisch via GitHub Actions:
+
+1. Zet het versienummer in `jm_rec.py` (`JM_REC_VERSION`), de HTML-literals en `setup/jm_rec_setup.iss`
+2. Commit en push naar `main`
+3. **Trigger de build** op één van twee manieren:
+   - Push een versietag: `git tag v3.8` gevolgd door `git push origin v3.8`, of
+   - Handmatig: GitHub → **Actions** → **Release** → **Run workflow** (maakt zelf de tag)
+4. De workflow bouwt de **Windows-installer** (Inno Setup) + **portable zip**, plus experimentele **Linux**- (tar.gz) en **macOS**-archieven (zip), en publiceert alles als GitHub-release met automatische release notes
+
+> De tag moet overeenkomen met `JM_REC_VERSION`, anders stopt de workflow met een foutmelding. Linux/macOS zijn experimenteel: de app draait er, maar Windows-specifieke functies ("Wat je hoort"-loopback, mapkiezer, hotspot-koppeling) werken er niet. Een falende Linux/macOS-build blokkeert de Windows-release niet.
