@@ -1,0 +1,57 @@
+JM-Rec — Licentie / License
+
+Copyright (c) 2026 Martijn van der Kolk (orgelmaker)
+Alle rechten voorbehouden / All rights reserved.
+
+── Nederlands ──────────────────────────────────────────────────────────
+
+Deze repository is openbaar zodat de broncode kan worden ingezien, maar
+de code is NIET vrij te gebruiken.
+
+Zonder voorafgaande schriftelijke toestemming van de auteur is het niet
+toegestaan om de broncode of delen daarvan te gebruiken, te kopiëren,
+te wijzigen, te verspreiden of op te nemen in andere software of
+producten — commercieel of niet-commercieel.
+
+Wel toegestaan:
+  - De broncode bekijken en bestuderen;
+  - De officiële, ongewijzigde releases (installers en archieven van de
+    releases-pagina) downloaden en als programma gebruiken voor het
+    opnemen van orgelsamples;
+  - Problemen en ideeën melden via GitHub-issues.
+
+Toestemming vragen kan via een GitHub-issue op
+https://github.com/orgelmaker/JM-Rec/issues.
+
+De opnames (samples) die je met JM-Rec maakt zijn en blijven van jou;
+JM-Rec zet alleen een verwijzing naar het programma in de
+bestandsmetadata.
+
+── English ─────────────────────────────────────────────────────────────
+
+This repository is public so the source code can be viewed, but the
+code is NOT free to use.
+
+Without prior written permission from the author, you may not use,
+copy, modify, distribute, or incorporate this source code or any part
+of it into other software or products — commercially or otherwise.
+
+You may:
+  - View and study the source code;
+  - Download the official, unmodified releases (installers and archives
+    from the releases page) and use them as an application for
+    recording organ samples;
+  - Report problems and ideas via GitHub issues.
+
+Permission can be requested via a GitHub issue at
+https://github.com/orgelmaker/JM-Rec/issues.
+
+Recordings (samples) you make with JM-Rec are and remain yours; JM-Rec
+only writes a reference to the program into the file metadata.
+
+── Geen garantie / No warranty ─────────────────────────────────────────
+
+DE SOFTWARE WORDT GELEVERD "AS IS", ZONDER ENIGE GARANTIE. / THE
+SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND. IN NO EVENT
+SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY
+ARISING FROM THE USE OF THE SOFTWARE.

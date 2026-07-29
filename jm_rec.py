@@ -7,6 +7,11 @@ Includes web-based remote control for Android, iOS or Windows.
 File naming convention: {MIDI_number}-{note_name}.mp3
 Example: 036-c.mp3, 037-c#.mp3, 038-d.mp3, ...
 
+Copyright (c) 2026 Martijn van der Kolk (orgelmaker) — alle rechten
+voorbehouden / all rights reserved. Deze broncode mag niet zonder
+voorafgaande schriftelijke toestemming worden gebruikt, gekopieerd,
+gewijzigd of verspreid. Zie het LICENSE-bestand.
+
 Author: Martijn
 """
 
@@ -134,8 +139,12 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.9"
+JM_REC_VERSION = "3.10"
 GITHUB_REPO = "orgelmaker/JM-Rec"
+# Copyright-tekst die in de metadata van elke opgeslagen sample wordt gezet
+# (WAV: LIST-INFO ICOP-chunk, FLAC: Vorbis-tag, MP3: ID3-commentaar).
+# Bewust ASCII-only: RIFF-INFO-velden zijn niet unicode-veilig.
+JM_REC_COPYRIGHT = "JM-Rec (github.com/orgelmaker/JM-Rec)"
 
 
 # ─────────────────────────────────────────────
@@ -372,7 +381,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -437,7 +446,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -502,7 +511,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -1760,7 +1769,7 @@ class RecorderEngine:
                 return
             flac_path = os.path.join(path, filename + ".flac")
             subtype = 'PCM_24' if self.bit_depth == 24 else 'PCM_16'
-            sf.write(flac_path, audio_data, self.sample_rate, subtype=subtype)
+            self._sf_write_tagged(flac_path, audio_data, self.sample_rate, subtype)
 
         else:  # mp3
             wav_path = os.path.join(path, filename + ".wav")
@@ -1773,7 +1782,9 @@ class RecorderEngine:
             try:
                 subprocess.run([
                     'lame', '-b', str(self.mp3_bitrate),
-                    '--quiet', wav_path, mp3_path
+                    '--quiet', '--id3v2-only',
+                    '--tc', f"{JM_REC_COPYRIGHT} - JM-Rec v{JM_REC_VERSION}",
+                    wav_path, mp3_path
                 ], check=True, creationflags=_cflags,
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 mp3_ok = True
@@ -1786,6 +1797,8 @@ class RecorderEngine:
                     subprocess.run([
                         'ffmpeg', '-y', '-i', wav_path,
                         '-b:a', f'{self.mp3_bitrate}k', '-q:a', '0',
+                        '-metadata', f'copyright={JM_REC_COPYRIGHT}',
+                        '-metadata', f'comment=JM-Rec v{JM_REC_VERSION}',
                         mp3_path
                     ], check=True, creationflags=_cflags,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -1798,8 +1811,44 @@ class RecorderEngine:
             else:
                 print("No MP3 encoder (lame/ffmpeg) found, keeping WAV")
 
+    @staticmethod
+    def _append_wav_info(wav_path):
+        """Voeg een LIST-INFO chunk (ICOP copyright + ISFT software) toe aan een
+        zojuist geschreven WAV en werk de RIFF-totaalgrootte bij. Een LIST-chunk
+        na 'data' is geldige RIFF; spelers/parsers die hem niet kennen slaan hem
+        over op chunkgrootte."""
+        def sub(cid, text):
+            data = text.encode('ascii', errors='replace') + b'\x00'
+            if len(data) % 2:
+                data += b'\x00'
+            return cid + struct.pack('<I', len(data)) + data
+        body = (b'INFO' + sub(b'ICOP', JM_REC_COPYRIGHT)
+                + sub(b'ISFT', f"JM-Rec v{JM_REC_VERSION}"))
+        chunk = b'LIST' + struct.pack('<I', len(body)) + body
+        with open(wav_path, 'r+b') as f:
+            f.seek(0, 2)
+            f.write(chunk)
+            total = f.tell() - 8
+            f.seek(4)
+            f.write(struct.pack('<I', total))
+
+    @staticmethod
+    def _sf_write_tagged(path, data, samplerate, subtype):
+        """soundfile-schrijfroutine die de JM-Rec copyright/software-tags meeschrijft
+        (FLAC: Vorbis-comment, WAV via libsndfile: LIST-INFO). Formaat volgt de
+        bestandsextensie."""
+        channels = data.shape[1] if getattr(data, 'ndim', 1) > 1 else 1
+        with sf.SoundFile(path, 'w', samplerate=samplerate, channels=channels,
+                          subtype=subtype) as f:
+            try:
+                f.copyright = JM_REC_COPYRIGHT
+                f.software = f"JM-Rec v{JM_REC_VERSION}"
+            except Exception:
+                pass  # tags zijn nice-to-have; de audio zelf mag nooit falen
+            f.write(data)
+
     def _write_wav(self, wav_path, audio_data):
-        """Write audio data to a WAV file."""
+        """Write audio data to a WAV file (incl. copyright-INFO-chunk)."""
         if self.bit_depth == 24:
             audio_int = (audio_data * 2147483647).astype(np.int32)
             with wave.open(wav_path, 'w') as wf:
@@ -1817,6 +1866,10 @@ class RecorderEngine:
                 wf.setsampwidth(2)
                 wf.setframerate(self.sample_rate)
                 wf.writeframes(audio_data.tobytes())
+        try:
+            self._append_wav_info(wav_path)
+        except OSError as e:
+            print(f"WAV-INFO-chunk overslaan: {e}", flush=True)
     
     # ─── Sample Review / Analysis ───────────────────────
 
@@ -1863,10 +1916,8 @@ class RecorderEngine:
         """Write float32 numpy array back to file in its original format."""
         ext = os.path.splitext(filepath)[1].lower()
         try:
-            if ext == '.flac' and HAS_SOUNDFILE:
-                sf.write(filepath, data, sr, subtype='PCM_16')
-            elif ext == '.wav' and HAS_SOUNDFILE:
-                sf.write(filepath, data, sr, subtype='PCM_16')
+            if ext in ('.flac', '.wav') and HAS_SOUNDFILE:
+                self._sf_write_tagged(filepath, data, sr, 'PCM_16')
             elif ext == '.wav':
                 audio_int = (data * 32767).astype(np.int16)
                 with wave.open(filepath, 'w') as wf:
@@ -1888,7 +1939,9 @@ class RecorderEngine:
                         wf.writeframes(audio_int.tobytes())
                 _cflags = subprocess.CREATE_NO_WINDOW if sys.platform == 'win32' else 0
                 subprocess.run(
-                    ['lame', '-b', str(self.mp3_bitrate), '--quiet', tmp_wav, filepath],
+                    ['lame', '-b', str(self.mp3_bitrate), '--quiet', '--id3v2-only',
+                     '--tc', f"{JM_REC_COPYRIGHT} - JM-Rec v{JM_REC_VERSION}",
+                     tmp_wav, filepath],
                     creationflags=_cflags, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
                 )
                 os.remove(tmp_wav)
@@ -4434,7 +4487,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.9</span></div>
+    <div class="logo">JM-Rec <span>v3.10</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -4985,7 +5038,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.9</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
         </div>
     </div>
 </div>

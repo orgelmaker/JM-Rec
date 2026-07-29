@@ -1,16 +1,20 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.9-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.10-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
-  <img src="https://img.shields.io/badge/license-MIT-lightgrey?style=flat-square" alt="License">
+  <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.9 — Organ Sample Recorder
+# JM-Rec v3.10 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.10
+- **Licentie** — de broncode is in te zien maar mag **niet zonder toestemming** worden gebruikt, gekopieerd of verspreid; zie [LICENSE](LICENSE). De officiële releases blijven gewoon vrij te downloaden en te gebruiken.
+- **Copyright-metadata in samples** — elke opgeslagen opname krijgt automatisch een JM-Rec-verwijzing in de bestandsmetadata: WAV (RIFF-INFO `ICOP`/`ISFT`), FLAC (Vorbis-tags) en MP3 (ID3). Je opnames blijven uiteraard van jou.
 
 ### Nieuw in v3.9
 - **Feedback-knop** — via de knop **Feedback** in de header meld je een probleem of idee. Je tekst wordt als voor-ingevulde [GitHub-melding](https://github.com/orgelmaker/JM-Rec/issues) klaargezet, inclusief versie-info (gratis GitHub-account nodig om te versturen).
@@ -67,7 +71,7 @@ Download de nieuwste **`JM-Rec-Setup-x.x.exe`** van de [releases-pagina](https:/
 > Bij opnieuw uitvoeren van de setup kun je kiezen tussen **Repareren** of **Verwijderen**.
 > Draai je JM-Rec al? Bij het opstarten verschijnt automatisch een **⬆ Update**-knop zodra er een nieuwere versie is.
 
-### Vanuit broncode
+### Vanuit broncode (alleen met toestemming — zie [Licentie](#licentie))
 
 ```bash
 # Vereisten: Python 3.10+, LAME of FFmpeg voor MP3-conversie
@@ -266,3 +270,9 @@ Een nieuwe release bouwen en publiceren gaat automatisch via GitHub Actions:
 4. De workflow bouwt de **Windows-installer** (Inno Setup) + **portable zip**, plus experimentele **Linux**- (tar.gz) en **macOS**-archieven (zip), en publiceert alles als GitHub-release met automatische release notes
 
 > De tag moet overeenkomen met `JM_REC_VERSION`, anders stopt de workflow met een foutmelding. Linux/macOS zijn experimenteel: de app draait er, maar Windows-specifieke functies ("Wat je hoort"-loopback, mapkiezer, hotspot-koppeling) werken er niet. Een falende Linux/macOS-build blokkeert de Windows-release niet.
+
+## Licentie
+
+De broncode van JM-Rec is openbaar in te zien, maar **alle rechten zijn voorbehouden**: gebruik, kopiëren, wijzigen of verspreiden van de code mag alleen met voorafgaande schriftelijke toestemming van de auteur. De officiële releases (installer en archieven) zijn vrij te downloaden en als programma te gebruiken. Toestemming vragen of vragen stellen kan via een [GitHub-issue](https://github.com/orgelmaker/JM-Rec/issues). Zie [LICENSE](LICENSE) voor de volledige voorwaarden.
+
+De opnames die je met JM-Rec maakt zijn en blijven van jou.
