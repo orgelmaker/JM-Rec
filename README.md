@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.10-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.11-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.10 — Organ Sample Recorder
+# JM-Rec v3.11 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.11
+- **Opnamevolume tot 600%** — de volumeschuif (Instellingen → Audio) gaat nu tot 600% in plaats van 200%, voor zachte microfoons of registers die anders te stil binnenkomen. Boven 200% kleurt de waarde oranje: let dan op oversturing (de sample-controle waarschuwt bij clipping).
 
 ### Nieuw in v3.10
 - **Licentie** — de broncode is in te zien maar mag **niet zonder toestemming** worden gebruikt, gekopieerd of verspreid; zie [LICENSE](LICENSE). De officiële releases blijven gewoon vrij te downloaden en te gebruiken.

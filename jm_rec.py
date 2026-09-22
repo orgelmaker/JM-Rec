@@ -139,7 +139,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.10"
+JM_REC_VERSION = "3.11"
 GITHUB_REPO = "orgelmaker/JM-Rec"
 # Copyright-tekst die in de metadata van elke opgeslagen sample wordt gezet
 # (WAV: LIST-INFO ICOP-chunk, FLAC: Vorbis-tag, MP3: ID3-commentaar).
@@ -381,7 +381,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -446,7 +446,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -511,7 +511,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -727,7 +727,7 @@ class RecorderEngine:
         self.last_error = ""   # last recording error, surfaced in UI
 
         # Volume / gain
-        self.record_gain = 1.0     # 0.0 – 2.0, applied before save
+        self.record_gain = 1.0     # 0.0 – 6.0 (tot 600%), applied before save
 
         # VU meter
         self.current_level = 0.0
@@ -2325,7 +2325,7 @@ class RecorderEngine:
         if 'mp3_bitrate' in s: self.mp3_bitrate = int(s['mp3_bitrate'])
         if 'countdown_seconds' in s: self.countdown_seconds = int(s['countdown_seconds'])
         if 'record_seconds' in s: self.record_seconds = int(s['record_seconds'])
-        if 'record_gain' in s: self.record_gain = max(0.0, min(2.0, float(s['record_gain'])))
+        if 'record_gain' in s: self.record_gain = max(0.0, min(6.0, float(s['record_gain'])))
         if s.get('record_mode') in ('fixed', 'auto'): self.record_mode = s['record_mode']
         if s.get('min_stable_seconds') is not None: self.min_stable_seconds = max(0.5, min(10.0, float(s['min_stable_seconds'])))
         if s.get('max_record_seconds') is not None: self.max_record_seconds = max(3.0, min(60.0, float(s['max_record_seconds'])))
@@ -3260,7 +3260,7 @@ def create_web_app(engine: RecorderEngine):
         if 'loopback_device_id' in data:
             engine.loopback_device_id = data['loopback_device_id']
         if 'record_gain' in data:
-            engine.record_gain = max(0.0, min(2.0, float(data['record_gain'])))
+            engine.record_gain = max(0.0, min(6.0, float(data['record_gain'])))
         if data.get('record_mode') in ('fixed', 'auto'):
             engine.record_mode = data['record_mode']
         # None-guard: een leeg number-veld levert JSON null op — dat mag de
@@ -4487,7 +4487,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.10</span></div>
+    <div class="logo">JM-Rec <span>v3.11</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -4715,7 +4715,7 @@ body {
             <div class="d-form-row">
                 <div class="d-form-group" style="flex:1;">
                     <label class="d-form-label">Volume <span id="dGainVal">100%</span></label>
-                    <input type="range" id="dGain" min="0" max="200" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="document.getElementById('dGainVal').textContent=this.value+'%'">
+                    <input type="range" id="dGain" min="0" max="600" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="var l=document.getElementById('dGainVal');l.textContent=this.value+'%';l.style.color=this.value>200?'#f59e0b':''">
                 </div>
             </div>
         </div>
@@ -5038,7 +5038,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.10 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
         </div>
     </div>
 </div>
@@ -5354,7 +5354,9 @@ function syncDrawer(state) {
         document.getElementById('dBitrateGroup').style.display = (s.output_format || 'mp3') === 'mp3' ? '' : 'none';
         document.getElementById('dBitrate').value = s.mp3_bitrate;
         document.getElementById('dGain').value = Math.round((s.record_gain || 1.0) * 100);
-        document.getElementById('dGainVal').textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
+        var _gv = document.getElementById('dGainVal');
+        _gv.textContent = Math.round((s.record_gain || 1.0) * 100) + '%';
+        _gv.style.color = (s.record_gain || 1.0) > 2 ? '#f59e0b' : '';
         document.getElementById('dCountdown').value = s.countdown_seconds;
         document.getElementById('dRecordDur').value = s.record_seconds;
         document.getElementById('dRecordMode').value = s.record_mode || 'fixed';
@@ -6534,7 +6536,7 @@ body {
             </div>
             <div class="form-group" style="flex-basis:100%;">
                 <label class="form-label">Volume <span id="fGainVal">100%</span></label>
-                <input type="range" id="fGain" min="0" max="200" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="document.getElementById('fGainVal').textContent=this.value+'%'">
+                <input type="range" id="fGain" min="0" max="600" value="100" step="5" style="width:100%;accent-color:var(--accent);" oninput="var l=document.getElementById('fGainVal');l.textContent=this.value+'%';l.style.color=this.value>200?'#f59e0b':''">
             </div>
         </div>
     </div>
