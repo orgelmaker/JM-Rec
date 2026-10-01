@@ -139,7 +139,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.11"
+JM_REC_VERSION = "3.12"
 GITHUB_REPO = "orgelmaker/JM-Rec"
 # Copyright-tekst die in de metadata van elke opgeslagen sample wordt gezet
 # (WAV: LIST-INFO ICOP-chunk, FLAC: Vorbis-tag, MP3: ID3-commentaar).
@@ -381,7 +381,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -446,7 +446,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -511,7 +511,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr'];
@@ -1207,6 +1207,20 @@ class RecorderEngine:
             self.last_error = f"Opname mislukt: {e}"
             self._notify()
 
+    def _loopback_recorder_source(self):
+        """Bron om 'Wat je hoort' (WASAPI loopback) mee op te nemen.
+
+        LET OP: een soundcard-_Speaker heeft zelf geen recorder() — loopback
+        loopt via get_microphone(..., include_loopback=True). De luidspreker
+        uit de instellingen wordt daarop afgebeeld.
+        """
+        spk = (sc.get_speaker(self.loopback_device_id)
+               if self.loopback_device_id else sc.default_speaker())
+        try:
+            return sc.get_microphone(id=str(spk.id), include_loopback=True)
+        except Exception:
+            return sc.get_microphone(id=str(spk.name), include_loopback=True)
+
     def _do_record_loopback(self):
         """Record system audio ('what you hear') via WASAPI loopback."""
         if not HAS_SOUNDCARD:
@@ -1217,17 +1231,12 @@ class RecorderEngine:
         channels = self.channels
 
         try:
-            # Get the speaker to record from
-            if self.loopback_device_id:
-                speaker = sc.get_speaker(self.loopback_device_id)
-            else:
-                speaker = sc.default_speaker()
-
             # Record in chunks for VU meter updates
             chunk_size = int(self.sample_rate * 0.05)  # 50ms chunks
             collected = []
 
-            with speaker.recorder(samplerate=self.sample_rate, channels=channels) as recorder:
+            with self._loopback_recorder_source().recorder(
+                    samplerate=self.sample_rate, channels=channels) as recorder:
                 start_time = time.time()
                 while time.time() - start_time < self.record_seconds:
                     if not self.is_running or self._abort_take:
@@ -4487,7 +4496,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.11</span></div>
+    <div class="logo">JM-Rec <span>v3.12</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -5038,7 +5047,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.11 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
         </div>
     </div>
 </div>
