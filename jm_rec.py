@@ -154,6 +154,37 @@ JM_REC_COPYRIGHT = "JM-Rec (github.com/orgelmaker/JM-Rec)"
 # rate-limit): de app werkt altijd gewoon door.
 # ─────────────────────────────────────────────
 
+def _com_init_thread():
+    """Initialiseer COM (MTA) op de huidige thread, zoals soundcard dat doet.
+
+    WASAPI/Media Foundation loopt via COM en dat moet PER THREAD gebeuren.
+    De opnamecyclus draait in een eigen thread, dus zonder dit faalt
+    "Wat je hoort" met 0x800401f0 (CO_E_NOTINITIALIZED).
+
+    Geeft True als er later een CoUninitialize moet volgen.
+    """
+    if sys.platform != "win32":
+        return False
+    try:
+        import ctypes
+        hr = ctypes.windll.ole32.CoInitializeEx(None, 0)   # COINIT_MULTITHREADED
+    except Exception:
+        return False
+    # S_OK (0) en S_FALSE (1, al geinitialiseerd) moeten allebei worden
+    # afgesloten; RPC_E_CHANGED_MODE (negatief) juist niet.
+    return hr in (0, 1)
+
+
+def _com_uninit_thread(geinitialiseerd):
+    """Tegenhanger van _com_init_thread()."""
+    if geinitialiseerd and sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.ole32.CoUninitialize()
+        except Exception:
+            pass
+
+
 def _version_tuple(v):
     """'v3.10' / '3.10' → (3, 10); onparseerbaar deel telt als 0."""
     parts = []
@@ -978,7 +1009,7 @@ class RecorderEngine:
             self.check_prompt = None
             self._abort_take = False
             self.pause_requested = False
-        thread = threading.Thread(target=self._recording_cycle, daemon=True)
+        thread = threading.Thread(target=self._recording_cycle_thread, daemon=True)
         thread.start()
 
     def _check_completion_prompt(self):
@@ -1011,6 +1042,14 @@ class RecorderEngine:
         if not is_bas and not self.split_record_disc:
             return True
         return False
+
+    def _recording_cycle_thread(self):
+        """Thread-ingang: COM klaarzetten en daarna pas de cyclus draaien."""
+        com = _com_init_thread()
+        try:
+            self._recording_cycle()
+        finally:
+            _com_uninit_thread(com)
 
     def _recording_cycle(self):
         """Main recording cycle: countdown → record → (auto)advance."""
@@ -1095,6 +1134,10 @@ class RecorderEngine:
                 # Brief pause between notes
                 time.sleep(0.5)
             else:
+                # Einde van de reeks (of enkele opname): de thread stopt hier,
+                # dus is_running moet mee uit - anders lijkt er nog een opname
+                # te lopen terwijl er niets meer draait.
+                self.is_running = False
                 self.state = "paused"
                 self._check_completion_prompt()
                 self._notify()
