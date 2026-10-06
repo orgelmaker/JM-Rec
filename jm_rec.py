@@ -46,6 +46,15 @@ try:
 except ImportError:
     HAS_QRCODE = False
 
+# Looppunten zoeken. Ontbreekt de module of soundfile, dan werkt de rest
+# gewoon door - er komen dan alleen geen loops.
+try:
+    import loops
+    HAS_LOOPS = loops.HAS_SF
+except Exception:
+    loops = None
+    HAS_LOOPS = False
+
 try:
     import soundfile as sf
     HAS_SOUNDFILE = True
@@ -282,7 +291,9 @@ I18N_JS = r'''
     // QR / hotspot
     "Remote Control":"Remote Control","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Make sure your phone is on the same network as this PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choose the network your phone is connected to:","Directe verbinding (geen WiFi nodig)":"Direct connection (no WiFi needed)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"No WiFi at this location? Let this PC broadcast its own network and connect your phone or tablet to it.","Open hotspot-instellingen":"Open hotspot settings",
     // review modal
-    "Sample Controle":"Sample Review","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done",
+    "Sample Controle":"Sample Review",
+    // loops
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Finds, for every sample, the stretch that joins seamlessly onto itself and stores it in the file, so a note can be held indefinitely. Where the waveform does not join cleanly it is crossfaded, and the original is copied aside first.","Alleen meten":"Measure only","Loops maken":"Create loops","Afbreken":"Abort","Stemtoon (Hz)":"Pitch standard (Hz)","Na een opname automatisch controleren":"Check automatically after recording","Na een opname ook loops maken":"Also create loops after recording","zonder loop:":"without a loop:","Looppunten vragen de module soundfile":"Loop points need the soundfile module","Er loopt al een loopronde":"A loop pass is already running","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Find loop points and write them into every sample? For samples whose audio is altered, a copy of the original is placed in the output folder first.","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done",
     // handleiding
     "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Quick start","Kleurcodes per register":"Colour codes per register","Kleur":"Colour","Betekenis":"Meaning","Knop":"Button","Functie":"Function",
     "Register":"Register","op":"on","is volledig opgenomen":"is fully recorded","Wil je het nu controleren?":"Review it now?","is compleet":"is complete","Controleren?":"Review?",
@@ -312,7 +323,9 @@ I18N_JS = r'''
     "Instellingen & Bediening":"Einstellungen & Steuerung","Audiobron":"Audioquelle","Verversen":"Aktualisieren","Microfoon":"Mikrofon","Wat je hoort":"Was du hörst","Audio":"Audio","Volume":"Lautstärke","Workflow":"Ablauf","Startnoot (MIDI)":"Startnote (MIDI)","Eindnoot (MIDI)":"Endnote (MIDI)","Bas/Discant splitsen":"Bass/Diskant trennen","Splitstoets (MIDI)":"Trennton (MIDI)","Bas opnemen":"Bass aufnehmen","Discant opnemen":"Diskant aufnehmen","Orgelnaam":"Orgelname","Opslaglocatie":"Speicherort","Pedaal":"Pedal","Toepassen":"Anwenden","Instellingen toepassen":"Einstellungen anwenden",
     "Exporteren":"Exportieren","Exporteer .organ (JM-Orgue)":".organ exportieren (JM-Orgue)","Exporteer projectgegevens (.json)":"Projektdaten exportieren (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Erstellt eine .organ-Definitionsdatei im Projektordner, die JM-Orgue direkt laden kann.",".organ opgeslagen:":".organ gespeichert:","registers":"Register","samples":"Samples","ontbrekend":"fehlend","Export mislukt:":"Export fehlgeschlagen:","Update beschikbaar:":"Update verfügbar:","Feedback":"Feedback","Feedback geven":"Feedback geben","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Ein Problem gefunden oder eine Idee für JM-Rec? Ihr Text wird als GitHub-Meldung vorbereitet.","Probleem melden":"Problem melden","Idee of verbetering":"Idee oder Verbesserung","Beschrijf je probleem of idee zo concreet mogelijk…":"Beschreiben Sie Ihr Problem oder Ihre Idee so konkret wie möglich…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Es öffnet sich eine GitHub-Seite mit Ihrem Text (inkl. Versionsinfo). Zum Absenden ist ein kostenloses GitHub-Konto nötig.","Openen op GitHub":"Auf GitHub öffnen","Project-JSON opgeslagen:":"Projekt-JSON gespeichert:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Hinweis: JM-Orgue unterstützt kein FLAC; wählen Sie WAV oder MP3 als Format",
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
-    "Sample Controle":"Sample-Kontrolle","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
+    "Sample Controle":"Sample-Kontrolle",
+    // loops
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Sucht pro Sample den Abschnitt, der nahtlos an sich selbst anschlieÃŸt, und legt ihn in der Datei ab, damit ein Ton beliebig lange gehalten werden kann. SchlieÃŸt die Wellenform nicht sauber an, wird Ã¼bergeblendet und das Original vorher beiseitegelegt.","Alleen meten":"Nur messen","Loops maken":"Loops erstellen","Afbreken":"Abbrechen","Stemtoon (Hz)":"Stimmton (Hz)","Na een opname automatisch controleren":"Nach der Aufnahme automatisch prÃ¼fen","Na een opname ook loops maken":"Nach der Aufnahme auch Loops erstellen","zonder loop:":"ohne Loop:","Looppunten vragen de module soundfile":"Loop-Punkte benÃ¶tigen das Modul soundfile","Er loopt al een loopronde":"Es lÃ¤uft bereits ein Loop-Durchlauf","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Loop-Punkte suchen und in alle Samples schreiben? Von Samples, deren Audio verÃ¤ndert wird, kommt zuerst eine Kopie des Originals in den Ausgabeordner.","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
     "Register":"Register","op":"auf","is volledig opgenomen":"ist vollständig aufgenommen","Wil je het nu controleren?":"Möchten Sie es jetzt prüfen?","is compleet":"ist vollständig","Controleren?":"Prüfen?",
     "Klavier / Pedaal":"Manual / Pedal","Register opnemen":"Register aufnehmen","Apparaten verversen":"Geräte aktualisieren","Laden...":"Lädt...","MP3 Bitrate":"MP3-Bitrate","Mapnaam:":"Ordnername:","Mapnaam: —":"Ordnername: —","Scan de QR-code met je telefoon of tablet":"Scannen Sie den QR-Code mit Ihrem Telefon oder Tablet","om de afstandsbediening te openen":"um die Fernsteuerung zu öffnen","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet ist nicht nötig — die Steuerung funktioniert auch ohne. Lassen Sie dieses Fenster offen; schaltet sich der Hotspot ab, schalten Sie ihn erneut ein.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Klicken Sie auf 'Hotspot-Einstellungen öffnen' und schalten Sie den Mobilen Hotspot EIN.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notieren Sie den Netzwerknamen und das Passwort, die Windows anzeigt.","Verbind je iPad/iPhone of Android met dat netwerk.":"Verbinden Sie Ihr iPad/iPhone oder Android mit diesem Netzwerk.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wählen Sie oben das Hotspot-Netzwerk und scannen Sie den QR-Code (oder tippen Sie die Adresse).","Pad naar register-, klavier- of orgelmap":"Pfad zum Register-, Manual- oder Orgelordner","Her-opname:":"Neuaufnahme:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Register pro Manual hinzufügen/entfernen. Großes C = MIDI 36.","Register toevoegen":"Register hinzufügen"
@@ -341,7 +354,9 @@ I18N_JS = r'''
     "Instellingen & Bediening":"Réglages & Commande","Audiobron":"Source audio","Verversen":"Actualiser","Microfoon":"Microphone","Wat je hoort":"Ce que vous entendez","Audio":"Audio","Volume":"Volume","Workflow":"Déroulement","Startnoot (MIDI)":"Note de départ (MIDI)","Eindnoot (MIDI)":"Note de fin (MIDI)","Bas/Discant splitsen":"Séparer basse/dessus","Splitstoets (MIDI)":"Note de coupure (MIDI)","Bas opnemen":"Enregistrer la basse","Discant opnemen":"Enregistrer le dessus","Orgelnaam":"Nom de l'orgue","Opslaglocatie":"Emplacement de stockage","Pedaal":"Pédalier","Toepassen":"Appliquer","Instellingen toepassen":"Appliquer les réglages",
     "Exporteren":"Exporter","Exporteer .organ (JM-Orgue)":"Exporter .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exporter les données du projet (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crée un fichier de définition .organ dans le dossier du projet, directement chargeable par JM-Orgue.",".organ opgeslagen:":".organ enregistré :","registers":"jeux","samples":"échantillons","ontbrekend":"manquant","Export mislukt:":"Échec de l'export :","Update beschikbaar:":"Mise à jour disponible :","Feedback":"Retour","Feedback geven":"Donner un retour","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Un problème ou une idée pour JM-Rec ? Votre texte est préparé comme signalement GitHub.","Probleem melden":"Signaler un problème","Idee of verbetering":"Idée ou amélioration","Beschrijf je probleem of idee zo concreet mogelijk…":"Décrivez votre problème ou idée aussi concrètement que possible…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Une page GitHub s'ouvre avec votre texte prérempli (avec les infos de version). Un compte GitHub gratuit est requis pour envoyer.","Openen op GitHub":"Ouvrir sur GitHub","Project-JSON opgeslagen:":"JSON du projet enregistré :","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attention : JM-Orgue ne prend pas en charge le FLAC ; choisissez WAV ou MP3",
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
-    "Sample Controle":"Contrôle des samples","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
+    "Sample Controle":"Contrôle des samples",
+    // loops
+    "Loops":"Boucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cherche pour chaque Ã©chantillon le passage qui se raccorde sans couture Ã  lui-mÃªme et l'inscrit dans le fichier, afin qu'une note puisse Ãªtre tenue indÃ©finiment. Si la forme d'onde ne se raccorde pas proprement, un fondu est appliquÃ© et l'original est d'abord mis de cÃ´tÃ©.","Alleen meten":"Mesurer seulement","Loops maken":"CrÃ©er les boucles","Afbreken":"Interrompre","Stemtoon (Hz)":"Diapason (Hz)","Na een opname automatisch controleren":"ContrÃ´ler automatiquement aprÃ¨s l'enregistrement","Na een opname ook loops maken":"CrÃ©er aussi les boucles aprÃ¨s l'enregistrement","zonder loop:":"sans boucle :","Looppunten vragen de module soundfile":"Les points de boucle nÃ©cessitent le module soundfile","Er loopt al een loopronde":"Un cycle de boucles est dÃ©jÃ  en cours","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Chercher les points de boucle et les Ã©crire dans tous les Ã©chantillons ? Pour ceux dont l'audio est modifiÃ©, une copie de l'original est d'abord placÃ©e dans le dossier de sortie.","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
     "Register":"Jeu","op":"sur","is volledig opgenomen":"est entièrement enregistré","Wil je het nu controleren?":"Le contrôler maintenant ?","is compleet":"est complet","Controleren?":"Contrôler ?",
     "Klavier / Pedaal":"Clavier / Pédalier","Register opnemen":"Enregistrer le jeu","Apparaten verversen":"Actualiser les appareils","Laden...":"Chargement...","MP3 Bitrate":"Débit MP3","Mapnaam:":"Nom du dossier :","Mapnaam: —":"Nom du dossier : —","Scan de QR-code met je telefoon of tablet":"Scannez le QR code avec votre téléphone ou tablette","om de afstandsbediening te openen":"pour ouvrir la télécommande","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet n'est pas nécessaire — la commande fonctionne sans. Gardez cette fenêtre ouverte ; si le point d'accès se coupe, réactivez-le.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Cliquez sur « Ouvrir les réglages du point d'accès » et activez le point d'accès mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notez le nom du réseau et le mot de passe affichés par Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connectez votre iPad/iPhone ou Android à ce réseau.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Choisissez le réseau du point d'accès ci-dessus et scannez le QR code (ou tapez l'adresse).","Pad naar register-, klavier- of orgelmap":"Chemin vers le dossier jeu, clavier ou orgue","Her-opname:":"Réenregistrement :","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Ajouter/supprimer des jeux par clavier. Do grave = MIDI 36.","Register toevoegen":"Ajouter un jeu"
@@ -379,6 +394,10 @@ I18N_JS = r'''
 <p>Per note: <strong>Countdown</strong> (default 5s) → <strong>Record</strong> (default 5s) → <strong>Next note</strong>. This repeats automatically until the last note.</p>
 <h2>Intelligent recording (assistive)</h2>
 <p>Set <strong>Recording mode</strong> to <em>Intelligent (assistive)</em> in the settings (microphone input only). The recorder measures the noise floor, waits for the tone and listens whether the sound is <strong>stable and loopable</strong>. Once there is enough good tone, a green cue <strong>&ldquo;Enough — release&rdquo;</strong> appears. Release the key: the <strong>release tail</strong> is captured down to silence and the recorder moves on. For a <em>tremulant</em> series it waits for a stable tremulant modulation instead of a flat tone. <em>Min. stable tone</em> sets how much good tone is required, <em>Max. duration</em> is a safety cap, and <em>Sensitivity</em> controls how sensitive detection is (higher = approves faster, lower = stricter). You can always use <strong>Next</strong>/<strong>Stop</strong> manually.</p>
+<h2>Loops</h2>
+<p>An organ note has to be holdable indefinitely. JM-Rec therefore looks in every sample for the stretch in the middle that <strong>joins seamlessly onto itself</strong> and stores it as loop points in the file, where JM-Orgue reads them. You will find it in the drawer under <strong>Loops</strong>: <strong>Measure only</strong> shows what would come out without changing anything, <strong>Create loops</strong> writes it.</p>
+<p>Where the waveform does not join cleanly &mdash; mostly in mixtures and cornets, whose several pipes per key beat against one another &mdash; the last hundred and twenty milliseconds are <strong>crossfaded</strong> so the seam closes anyway. That alters the audio, so the original is first copied to a folder <em>_origineel_&lt;organ&gt;_voor_loops</em> beside your recordings. If even crossfading leaves no usable seam, that note gets no loop and is reported: a click returning every second is worse than a note that simply dies away.</p>
+<p>Set <strong>Pitch standard</strong> to what the organ is tuned to (often 440, but 441 to 444 is common). That tells JM-Rec which pitch to expect per note. With <strong>Check automatically after a series</strong> the sample review runs by itself once a stop is finished; creating loops stays off by default, because it writes into the audio.</p>
 <h2>File names</h2>
 <p>File naming:</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-number}-{note-name}.mp3</code></div>
@@ -444,6 +463,10 @@ I18N_JS = r'''
 <p>Pro Note: <strong>Countdown</strong> (Standard 5s) → <strong>Aufnehmen</strong> (Standard 5s) → <strong>Nächste Note</strong>. Dies wiederholt sich automatisch bis zur letzten Note.</p>
 <h2>Intelligente Aufnahme (assistierend)</h2>
 <p>Stellen Sie in den Einstellungen den <strong>Aufnahmemodus</strong> auf <em>Intelligent (assistierend)</em> (nur Mikrofoneingang). Der Recorder misst den Geräuschpegel, wartet auf den Ton und prüft, ob der Klang <strong>stabil und loop-fähig</strong> ist. Sobald genug guter Ton vorhanden ist, erscheint ein grünes Signal <strong>&ldquo;Genug — loslassen&rdquo;</strong>. Lassen Sie die Taste los: der <strong>Ausklang</strong> wird bis zur Stille aufgenommen und der Recorder geht weiter. Bei einer <em>Tremulant</em>-Reihe wartet er auf eine stabile Tremulant-Modulation statt auf einen gleichmäßigen Ton. <em>Min. stabiler Ton</em> legt fest, wie viel guter Ton nötig ist, <em>Max. Dauer</em> ist eine Sicherheitsgrenze und <em>Empfindlichkeit</em> steuert, wie empfindlich die Erkennung ist (höher = schnellere Freigabe, niedriger = strenger). <strong>Nächste</strong>/<strong>Stopp</strong> geht jederzeit manuell.</p>
+<h2>Loops</h2>
+<p>Ein Orgelton muss beliebig lange gehalten werden können. Darum sucht JM-Rec in jedem Sample den Abschnitt aus der Mitte, der <strong>nahtlos an sich selbst anschließt</strong>, und legt ihn als Loop-Punkte in der Datei ab, wo JM-Orgue sie liest. Zu finden in der Lade unter <strong>Loops</strong>: <strong>Nur messen</strong> zeigt, was herauskäme, ohne etwas zu ändern; <strong>Loops erstellen</strong> schreibt es.</p>
+<p>Schließt die Wellenform nicht sauber an &mdash; vor allem bei Mixturen und Kornetten, deren mehrere Pfeifen je Taste gegeneinander schweben &mdash; wird über die letzten hundertzwanzig Millisekunden <strong>übergeblendet</strong>, damit die Naht dennoch schließt. Dabei ändert sich die Audiodatei, deshalb kommt das Original zuerst in einen Ordner <em>_origineel_&lt;Orgel&gt;_voor_loops</em> neben Ihren Aufnahmen. Bleibt auch mit Überblendung keine brauchbare Naht, bekommt diese Note keinen Loop und wird gemeldet: ein Klick, der jede Sekunde wiederkehrt, ist schlimmer als ein Ton, der einfach ausklingt.</p>
+<p>Tragen Sie bei <strong>Stimmton</strong> ein, worauf die Orgel steht (oft 440, aber 441 bis 444 ist häufig). Damit weiß JM-Rec, welche Tonhöhe pro Note zu erwarten ist. Mit <strong>Nach einer Reihe automatisch prüfen</strong> läuft die Sample-Prüfung von selbst, sobald ein Register fertig ist; Loops erstellen bleibt standardmäßig aus, weil es in die Audiodatei schreibt.</p>
 <h2>Dateinamen</h2>
 <p>Dateibenennung:</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{MIDI-Nummer}-{Notenname}.mp3</code></div>
@@ -509,6 +532,10 @@ I18N_JS = r'''
 <p>Par note : <strong>Compte à rebours</strong> (5s par défaut) → <strong>Enregistrer</strong> (5s par défaut) → <strong>Note suivante</strong>. Cela se répète automatiquement jusqu'à la dernière note.</p>
 <h2>Enregistrement intelligent (assisté)</h2>
 <p>Réglez le <strong>Mode d'enregistrement</strong> sur <em>Intelligent (assisté)</em> dans les réglages (entrée microphone uniquement). L'enregistreur mesure le bruit de fond, attend le son et vérifie s'il est <strong>stable et bouclable</strong>. Dès qu'il y a assez de bon son, un signal vert <strong>&ldquo;Assez — relâchez&rdquo;</strong> apparaît. Relâchez la touche : la <strong>résonance</strong> est capturée jusqu'au silence et l'enregistreur passe à la note suivante. Pour une série <em>tremblant</em>, il attend une modulation de tremblant stable au lieu d'un son plat. <em>Son stable min.</em> définit la quantité de bon son requise, <em>Durée max.</em> est une limite de sécurité et <em>Sensibilité</em> règle la sensibilité de la détection (plus haut = validation plus rapide, plus bas = plus strict). <strong>Suivante</strong>/<strong>Stop</strong> restent disponibles manuellement.</p>
+<h2>Boucles</h2>
+<p>Une note d'orgue doit pouvoir être tenue indéfiniment. JM-Rec cherche donc dans chaque échantillon le passage central qui <strong>se raccorde sans couture à lui-même</strong> et l'inscrit comme points de boucle dans le fichier, où JM-Orgue les lit. Dans le tiroir, sous <strong>Boucles</strong> : <strong>Mesurer seulement</strong> montre le résultat sans rien modifier, <strong>Créer les boucles</strong> l'écrit.</p>
+<p>Si la forme d'onde ne se raccorde pas proprement &mdash; surtout dans les fournitures et les cornets, dont les plusieurs tuyaux par touche battent entre eux &mdash; les cent vingt dernières millisecondes sont <strong>fondues</strong> pour que la jointure ferme malgré tout. Cela modifie l'audio : l'original est donc d'abord copié dans un dossier <em>_origineel_&lt;orgue&gt;_voor_loops</em> à côté de vos enregistrements. Si même le fondu ne donne pas de jointure utilisable, cette note ne reçoit pas de boucle et est signalée : un clic qui revient chaque seconde est pire qu'une note qui s'éteint simplement.</p>
+<p>Indiquez dans <strong>Diapason</strong> l'accord de l'orgue (souvent 440, mais 441 à 444 est courant). JM-Rec sait ainsi quelle hauteur attendre pour chaque note. Avec <strong>Contrôler automatiquement après une série</strong>, le contrôle des échantillons se lance tout seul dès qu'un jeu est terminé ; la création des boucles reste désactivée par défaut, car elle écrit dans l'audio.</p>
 <h2>Noms de fichiers</h2>
 <p>Nommage des fichiers :</p>
 <div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format : <code>{numéro-MIDI}-{nom-de-note}.mp3</code></div>
@@ -722,6 +749,17 @@ class RecorderEngine:
         # Recording workflow settings
         self.countdown_seconds = 5
         self.record_seconds = 5
+        # Stemtoon van het orgel; zelden precies 440. De loopzoeker leidt er de
+        # verwachte grondtoon van een noot uit af.
+        self.stemtoon = 440.0
+        # Nawerk na een reeks: controleren hoort erbij (alleen lezen), loops
+        # maken niet - dat verandert audio, dus dat vraagt een bewuste klik.
+        self.auto_review = True
+        self.auto_loops = False
+        self.loop_state = "idle"         # "idle" | "busy" | "done"
+        self.loop_progress = 0.0
+        self.loop_results = []
+        self.loop_message = ""
 
         # Intelligent (assistive) auto-record mode
         self.record_mode = "fixed"        # "fixed" | "auto"
@@ -1031,7 +1069,156 @@ class RecorderEngine:
             "recorded": prog["recorded"], "expected": prog["expected"],
         }
         self._refresh_plan_cache()
+        if self.auto_review and self.review_state != "analyzing":
+            threading.Thread(target=self._na_reeks,
+                             args=(self.active_keyboard, self.active_register,
+                                   self.active_variant), daemon=True).start()
     
+    # ─────────────────────────────────────────────
+    # Looppunten
+    #
+    # Een orgeltoon moet onbeperkt aangehouden kunnen worden; daarvoor zoekt
+    # loops.py per sample het stuk dat naadloos op zichzelf aansluit en zet dat
+    # als smpl-chunk in de WAV. Hier wordt dat over een heel project gehaald.
+    # ─────────────────────────────────────────────
+
+    def loop_backup_dir(self):
+        """Waar de originelen komen van samples waarvan de audio verandert."""
+        return os.path.join(self.output_dir,
+                            "_origineel_%s_voor_loops" % sanitize_path_component(self.project_name))
+
+    def _loop_hold(self):
+        """Hoe lang de toon werd aangehouden; richtsnoer voor het stabiele deel.
+
+        Bij een opname met vaste duur is dat de opnametijd zelf. Is die niet
+        bruikbaar, dan leidt loops.py het uit de omhullende af.
+        """
+        try:
+            return float(self.record_seconds) if self.record_seconds else None
+        except (TypeError, ValueError):
+            return None
+
+    def start_loops(self, schrijven=True):
+        """Zoek looppunten voor de hele set; draait op de achtergrond."""
+        if not HAS_LOOPS:
+            self.loop_message = "Looppunten vragen de module soundfile"
+            self._notify()
+            return False
+        if self.loop_state == "busy":
+            return False
+        self.loop_state = "busy"
+        self.loop_progress = 0.0
+        self.loop_results = []
+        self.loop_message = ""
+        self._notify()
+        threading.Thread(target=self._loop_thread, args=(bool(schrijven),),
+                         daemon=True).start()
+        return True
+
+    def _loop_thread(self, schrijven):
+        try:
+            self._do_loops(schrijven)
+        except Exception as e:
+            self.loop_message = "Looppunten mislukt: %s" % e
+            print(self.loop_message, flush=True)
+        self.loop_state = "done"
+        self.loop_progress = 1.0
+        self._notify()
+
+    def _loop_series(self):
+        """(klavier, mapnaam, voetmaat) voor elke reeks die op schijf staat."""
+        uit = []
+        for kb_naam, kb in self._keyboard_entries():
+            for reg in kb.get("registers", []):
+                varianten = [""] + (["_trem"] if kb.get("tremulant") else [])
+                for achter in varianten:
+                    uit.append((kb_naam, reg["name"] + achter, reg.get("foot", "")))
+        return uit
+
+    def _do_loops(self, schrijven):
+        basis = os.path.join(self.output_dir, sanitize_path_component(self.project_name))
+        werk = []
+        for kb_naam, mapnaam, voet in self._loop_series():
+            map_ = os.path.join(basis, kb_naam, mapnaam)
+            if not os.path.isdir(map_):
+                continue
+            bestanden = []
+            for wortel, _d, namen in os.walk(map_):
+                bestanden += [os.path.join(wortel, f) for f in sorted(namen)
+                              if f.lower().endswith(".wav")]
+            if bestanden:
+                werk.append((kb_naam, mapnaam, voet, sorted(bestanden)))
+        totaal = sum(len(b) for _k, _m, _v, b in werk)
+        if not totaal:
+            self.loop_message = "Geen wav-bestanden gevonden om loops in te zoeken"
+            return
+
+        kopie_basis = self.loop_backup_dir() if schrijven else None
+        hold = self._loop_hold()
+        gedaan = tot_schoon = tot_fade = tot_geen = 0
+        for kb_naam, mapnaam, voet, bestanden in werk:
+            if self.loop_state != "busy":
+                return
+            schoon = fade = geen = 0
+            mislukt = []
+            for pad in bestanden:
+                if self.loop_state != "busy":
+                    return
+                kopie = (os.path.join(kopie_basis, kb_naam, mapnaam,
+                                      os.path.relpath(pad, os.path.join(basis, kb_naam, mapnaam)))
+                         if kopie_basis else None)
+                try:
+                    r = loops.verwerk(pad, voet, self.stemtoon, schrijven=schrijven,
+                                      hold=hold, kopie_pad=kopie)
+                except Exception as e:
+                    r = {"goed": False}
+                    print("loop mislukt voor %s: %s" % (pad, e), flush=True)
+                if not r.get("goed"):
+                    geen += 1
+                    mislukt.append(os.path.basename(pad))
+                elif r.get("fade_nodig"):
+                    fade += 1
+                else:
+                    schoon += 1
+                gedaan += 1
+                self.loop_progress = gedaan / float(totaal)
+                if gedaan % 10 == 0:
+                    self._notify()
+            tot_schoon += schoon
+            tot_fade += fade
+            tot_geen += geen
+            self.loop_results.append({
+                "keyboard": kb_naam, "register": mapnaam, "foot": voet,
+                "noten": len(bestanden), "schoon": schoon, "overvloeien": fade,
+                "geen": geen, "mislukt": mislukt[:12],
+            })
+            self._notify()
+        self.loop_message = ("%d van %d samples kregen een loop "
+                             "(%d schone naad, %d overgevloeid)"
+                             % (tot_schoon + tot_fade, totaal, tot_schoon, tot_fade))
+        if tot_geen:
+            self.loop_message += "; %d zonder loop" % tot_geen
+
+    def _na_reeks(self, keyboard, register, variant):
+        """Controleer de zojuist afgeronde reeks.
+
+        Trimmen blijft hier uit: _calculate_trim knipt alles onder -40 dBFS weg,
+        en bij een opname in een ruime kerk is dat juist de uitklank. Wie wil
+        trimmen doet dat bewust via de controleknop.
+        """
+        mapnaam = register + ("_trem" if variant == "trem" else "")
+        pad = os.path.join(self.output_dir, sanitize_path_component(self.project_name),
+                           sanitize_path_component(keyboard), mapnaam)
+        if not os.path.isdir(pad):
+            return
+        try:
+            self._do_review(pad, False)
+        except Exception as e:
+            print("controleronde mislukt: %s" % e, flush=True)
+        self.review_state = "done"
+        self.review_progress = 1.0
+        self._notify()
+
     def _should_skip_note(self):
         """Check if current note should be skipped based on split settings."""
         if not self.bass_treble_split:
@@ -2377,6 +2564,13 @@ class RecorderEngine:
         if 'mp3_bitrate' in s: self.mp3_bitrate = int(s['mp3_bitrate'])
         if 'countdown_seconds' in s: self.countdown_seconds = int(s['countdown_seconds'])
         if 'record_seconds' in s: self.record_seconds = int(s['record_seconds'])
+        if 'auto_review' in s: self.auto_review = bool(s['auto_review'])
+        if 'auto_loops' in s: self.auto_loops = bool(s['auto_loops'])
+        if s.get('stemtoon') is not None:
+            try:
+                self.stemtoon = max(380.0, min(500.0, float(s['stemtoon'])))
+            except (TypeError, ValueError):
+                pass
         if 'record_gain' in s: self.record_gain = max(0.0, min(6.0, float(s['record_gain'])))
         if s.get('record_mode') in ('fixed', 'auto'): self.record_mode = s['record_mode']
         if s.get('min_stable_seconds') is not None: self.min_stable_seconds = max(0.5, min(10.0, float(s['min_stable_seconds'])))
@@ -3057,6 +3251,9 @@ class RecorderEngine:
                     'mp3_bitrate': self.mp3_bitrate,
                     'countdown_seconds': self.countdown_seconds,
                     'record_seconds': self.record_seconds,
+                    'stemtoon': self.stemtoon,
+                    'auto_review': self.auto_review,
+                    'auto_loops': self.auto_loops,
                     'record_mode': self.record_mode,
                     'min_stable_seconds': self.min_stable_seconds,
                     'max_record_seconds': self.max_record_seconds,
@@ -3074,6 +3271,13 @@ class RecorderEngine:
                     'split_note': self.split_note,
                     'split_record_bas': self.split_record_bas,
                     'split_record_disc': self.split_record_disc,
+                },
+                'loops': {
+                    'available': HAS_LOOPS,
+                    'state': self.loop_state,
+                    'progress': self.loop_progress,
+                    'message': self.loop_message,
+                    'results': self.loop_results,
                 },
                 'review': {
                     'state': self.review_state,
@@ -3615,6 +3819,26 @@ def create_web_app(engine: RecorderEngine):
             json.dump(project, f, indent=2, ensure_ascii=False)
 
         return jsonify({'success': True, 'path': export_path, 'project': project})
+
+    @app.route('/api/loops', methods=['POST'])
+    def api_loops():
+        """Looppunten zoeken voor de hele set (start / meten / stop)."""
+        data = request.json or {}
+        actie = str(data.get('action') or 'start').lower()
+        if actie == 'stop':
+            if engine.loop_state == 'busy':
+                engine.loop_state = 'done'
+                engine.loop_message = 'afgebroken'
+            engine._notify()
+            return jsonify({'success': True, 'state': engine.get_state()})
+        if not HAS_LOOPS:
+            return jsonify({'success': False,
+                            'error': 'Looppunten vragen de module soundfile'})
+        # "meten" verandert niets aan de bestanden; handig om eerst te kijken.
+        ok = engine.start_loops(schrijven=(actie != 'meten'))
+        return jsonify({'success': bool(ok),
+                        'error': None if ok else 'Er loopt al een loopronde',
+                        'state': engine.get_state()})
 
     @app.route('/api/export-organ', methods=['POST'])
     def api_export_organ():
@@ -4854,6 +5078,26 @@ body {
         </div>
 
         <div class="drawer-section">
+            <div class="drawer-section-title">Loops</div>
+            <div style="font-size:0.72rem;color:var(--dim);margin-bottom:8px;">Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.</div>
+            <button class="d-btn" onclick="dLoops('meten')" style="width:100%;">Alleen meten</button>
+            <button class="d-btn d-btn-primary" onclick="dLoops('start')" style="width:100%;margin-top:6px;">Loops maken</button>
+            <button class="d-btn" id="dLoopStop" onclick="dLoops('stop')" style="width:100%;margin-top:6px;display:none;color:var(--recording);">Afbreken</button>
+            <div id="dLoopStand" style="font-size:0.75rem;color:var(--dim);margin-top:6px;"></div>
+            <div class="d-form-row" style="margin-top:10px;">
+                <label class="d-form-label">Stemtoon (Hz)</label>
+                <input type="number" class="d-form-input" id="dStemtoon" min="380" max="500" step="0.5"
+                       onchange="dNawerk()" style="width:90px;">
+            </div>
+            <label class="d-checkbox-row" style="font-size:0.78rem;">
+                <input type="checkbox" id="dAutoReview" onchange="dNawerk()">
+                Na een reeks automatisch controleren</label>
+            <label class="d-checkbox-row" style="font-size:0.78rem;">
+                <input type="checkbox" id="dAutoLoops" onchange="dNawerk()">
+                Na een reeks ook loops maken</label>
+        </div>
+
+        <div class="drawer-section">
             <div class="drawer-section-title">Exporteren</div>
             <div style="font-size:0.72rem;color:var(--dim);margin-bottom:8px;">Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.</div>
             <button class="d-btn d-btn-primary" onclick="dExportOrgan()" style="width:100%;">Exporteer .organ (JM-Orgue)</button>
@@ -5033,6 +5277,11 @@ body {
 
         <h2>Intelligent opnemen (assisterend)</h2>
         <p>Zet <strong>Opnamemodus</strong> in de instellingen op <em>Intelligent (assisterend)</em> (alleen microfooningang). De recorder meet eerst de ruisvloer, wacht op de toon en luistert of de klank <strong>stabiel en loopbaar</strong> is. Zodra er genoeg goede toon is verschijnt een groen sein <strong>&ldquo;Genoeg &mdash; laat los&rdquo;</strong>. Laat de toets dan los: de <strong>uitklank</strong> wordt automatisch meegenomen tot stilte en de recorder gaat door naar de volgende noot. Bij een <em>tremulant</em>-reeks wacht hij op een stabiele tremulant-modulatie i.p.v. een vlakke toon. <em>Min. stabiele toon</em> bepaalt hoeveel goede toon nodig is, <em>Max. duur</em> is een veiligheidsgrens, en <em>Gevoeligheid</em> regelt hoe gevoelig de detectie is (hoger = sneller goedkeuren, lager = strenger). Je kunt altijd handmatig <strong>Volgende</strong>/<strong>Stop</strong> gebruiken.</p>
+
+        <h2>Loops</h2>
+        <p>Een orgeltoon moet onbeperkt aangehouden kunnen worden. Daarvoor zoekt JM-Rec in elke sample het stuk uit het midden dat <strong>naadloos op zichzelf aansluit</strong> en zet dat als looppunt in het bestand, waar JM-Orgue het leest. Je vindt het in de lade onder <strong>Loops</strong>: met <strong>Alleen meten</strong> zie je eerst wat eruit zou komen zonder dat er iets verandert, met <strong>Loops maken</strong> wordt het weggeschreven.</p>
+        <p>Sluit de golfvorm niet schoon aan &mdash; dat gebeurt vooral bij mixturen en cornetten, waar meerdere pijpen per toets onderling zweven &mdash; dan wordt er over de laatste honderdtwintig milliseconde <strong>overgevloeid</strong> zodat de naad toch sluit. Daarbij verandert de audio, en daarom komt het origineel eerst in een map <em>_origineel_&lt;orgel&gt;_voor_loops</em> naast je opnamen. Is zelfs met overvloeien geen bruikbare naad te vinden, dan krijgt die noot géén loop: hij wordt gemeld, want een tik die elke seconde terugkomt is erger dan een toon die netjes uitklinkt.</p>
+        <p>Vul bij <strong>Stemtoon</strong> in waarop het orgel staat (vaak 440, maar 441 tot 444 komt veel voor). Daarmee weet JM-Rec welke toonhoogte hij per noot mag verwachten. Met <strong>Na een reeks automatisch controleren</strong> loopt de samplecontrole vanzelf zodra een register af is; loops maken staat standaard uit, omdat dat in de audio schrijft.</p>
 
         <h2>Bestandsnamen</h2>
         <p>Bestandsnaamgeving:</p>
@@ -5356,6 +5605,50 @@ function fbSend() {
 }
 
 // ── Exporteren (.organ voor JM-Orgue + project-JSON) ──
+// ── Looppunten ──
+async function dNawerk(){
+    await dApi('/api/settings', {
+        auto_review: document.getElementById('dAutoReview').checked,
+        auto_loops: document.getElementById('dAutoLoops').checked,
+        stemtoon: parseFloat(document.getElementById('dStemtoon').value) || 440.0,
+    });
+}
+async function dLoops(actie){
+    if (actie === 'start' &&
+        !confirm(tr('Looppunten zoeken en wegschrijven in alle samples? Van de samples '
+                  + 'waarvan de audio wordt aangepast komt eerst een reservekopie in de '
+                  + 'uitvoermap.'))) return;
+    const r = await dApi('/api/loops', { action: actie });
+    if (r && r.success === false && r.error) alert(r.error);
+}
+function dLoopUI(state){
+    const st = state.settings || {};
+    const kr = document.getElementById('dAutoReview');
+    const kl = document.getElementById('dAutoLoops');
+    const stem = document.getElementById('dStemtoon');
+    // Niet overschrijven terwijl er net iets is aangeklikt: de poll zou de
+    // wijziging anders meteen terugdraaien.
+    if (kr && document.activeElement !== kr) kr.checked = !!st.auto_review;
+    if (kl && document.activeElement !== kl) kl.checked = !!st.auto_loops;
+    if (stem && document.activeElement !== stem && st.stemtoon) stem.value = st.stemtoon;
+    const el = document.getElementById('dLoopStand');
+    const stop = document.getElementById('dLoopStop');
+    if (!el) return;
+    const l = state.loops;
+    if (!l){ el.textContent = ''; return; }
+    if (stop) stop.style.display = l.state === 'busy' ? '' : 'none';
+    if (l.state === 'busy'){
+        el.textContent = tr('bezig') + ' ' + Math.round((l.progress || 0) * 100) + '%';
+    } else if (l.message){
+        const zonder = (l.results || []).filter(r => r.geen > 0);
+        el.textContent = l.message + (zonder.length
+            ? ' — ' + tr('zonder loop:') + ' ' + zonder.map(r => r.register + ' (' + r.geen + ')').join(', ')
+            : '');
+    } else {
+        el.textContent = '';
+    }
+}
+
 async function dExportOrgan() {
     const el = document.getElementById('dExportResult');
     el.textContent = '…';
@@ -5472,6 +5765,8 @@ function dRenderPlan(state){
 }
 
 function updateUI(state) {
+    dLoopUI(state);
+
     // State badge
     const badge = document.getElementById('stateBadge');
     const _stMap = {idle:'GEREED', countdown:'AFTELLEN', recording:'OPNAME', paused:'GEPAUZEERD'};

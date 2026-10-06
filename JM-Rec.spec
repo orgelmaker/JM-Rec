@@ -9,6 +9,8 @@ hiddenimports += collect_submodules('soundcard')
 hiddenimports += ['audioop', 'audioop_lts']
 hiddenimports += collect_submodules('jaraco')
 hiddenimports += ['soundfile', '_soundfile_data']
+# loops.py staat naast jm_rec.py en wordt alleen dynamisch geimporteerd.
+hiddenimports += ['loops']
 if sys.platform == 'win32':
     hiddenimports += ['comtypes', 'comtypes.stream']
 
