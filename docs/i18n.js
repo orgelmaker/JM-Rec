@@ -4,7 +4,7 @@
 const I18N = {
   nl: {
     page_title: "JM-Rec — Pijporgels samplen voor JM-Orgue",
-    tagline: "Pijporgels samplen, zonder kabelgedoe.",
+    tagline: "Pijporgels samplen, zonder gedoe.",
     sub: "JM-Rec neemt pijp voor pijp op, loopt automatisch door klavieren en registers heen en schrijft het resultaat weg in het mapformaat dat JM-Orgue direct leest. Bediening vanaf elke telefoon of tablet in het netwerk, zonder app te installeren.",
     cta_download: "Downloaden",
     cta_manual: "Handleiding",
