@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handleiding — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">&larr; Terug naar de JM-Rec-pagina</a> &middot; <a href="en.html">English version</a></p>
+  <h1>JM-Rec &mdash; stap voor stap</h1>
+  <p>Een rondleiding door JM-Rec aan de hand van echte schermafbeeldingen. De cijfers tussen haakjes verwijzen naar de bijhorende afbeelding; de volgorde is de volgorde die u in de app ook doorloopt.</p>
+
+  <h2>1. Welkom</h2>
+  <div class="step">
+    <h3>(01) Het opstartscherm</h3>
+    <p>JM-Rec onthoudt het laatst gebruikte orgel. Begint u een nieuwe sessie, dan vraagt het eerst of u met dat orgel verder wilt of een nieuw orgel wilt opzetten.</p>
+    <ul>
+      <li><b>Doorgaan met dit orgel</b> &mdash; opent het hoofdscherm meteen in de staat waarin u het laatst sloot: dezelfde opslagmap, dezelfde registers, dezelfde voortgang.</li>
+      <li><b>Nieuw orgel instellen</b> &mdash; start de wizard van tien stappen die hieronder volgt.</li>
+    </ul>
+    <img src="cap_nl_01.png" alt="Opstartscherm met de twee keuzeknoppen">
+  </div>
+
+  <h2>2. De wizard &mdash; tien stappen</h2>
+  <p>Via tien korte stappen zet u de hele structuur klaar: waar de opnamen heen gaan, welke orgelbouwer en kerk het betreft, hoe de klavieren en registers eruitzien. Elke stap is terug te zetten met de pijl linksonder.</p>
+
+  <div class="step">
+    <h3>(02) Stap 1 &mdash; Opslaglocatie</h3>
+    <p>De map waarin alle opnamen worden bewaard. Kies een lege map op een schijf met voldoende ruimte &mdash; een gemiddelde set is al snel enkele gigabytes groot. In diezelfde map komt automatisch per orgel een submap, zodat u meerdere orgels naast elkaar kunt opnemen.</p>
+    <img src="cap_nl_02.png" alt="Wizard, stap 1: Opslaglocatie">
+  </div>
+
+  <div class="step">
+    <h3>(03) Stap 2 &mdash; Orgelbouwer</h3>
+    <p>De naam van de orgelbouwer (bijvoorbeeld <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec bewaart dit later als meta-informatie bij de opnamen, zodat u in JM-Orgue direct ziet welk orgel u speelt.</p>
+    <img src="cap_nl_03.png" alt="Wizard, stap 2: Orgelbouwer">
+  </div>
+
+  <div class="step">
+    <h3>(04) Stap 3 &mdash; Plaats</h3>
+    <p>De plaats waar het orgel staat (bijvoorbeeld <i>Putten</i>). Samen met de kerknaam vormt dit het label waaronder het orgel in uw bibliotheek terugkomt.</p>
+    <img src="cap_nl_04.png" alt="Wizard, stap 3: Plaats">
+  </div>
+
+  <div class="step">
+    <h3>(05) Stap 4 &mdash; Kerknaam</h3>
+    <p>De naam van het gebouw (<i>Oude Kerk</i>, <i>Grote Kerk</i>, &hellip;). Deze wordt als info-tekst in de opnamen vastgelegd en verschijnt op de kaart van het orgel in JM-Orgue.</p>
+    <img src="cap_nl_05.png" alt="Wizard, stap 4: Kerknaam">
+  </div>
+
+  <div class="step">
+    <h3>(06) Stap 5 &mdash; Bouwjaar</h3>
+    <p>Optioneel het bouwjaar van het orgel. Niet verplicht; u kunt het veld leeg laten als het onbekend is.</p>
+    <img src="cap_nl_06.png" alt="Wizard, stap 5: Bouwjaar">
+  </div>
+
+  <div class="step">
+    <h3>(07) Stap 6 &mdash; Audio-instellingen</h3>
+    <p>Hier kiest u uw opname&shy;apparaat (microfoon of &ldquo;Wat je hoort&rdquo;-loopback), het aantal kanalen, de sample&shy;frequentie en het bitformaat. Standaard neemt JM-Rec in mono 48&nbsp;000&nbsp;Hz / 16-bit op als MP3; die waarden passen voor de meeste pijporgels.</p>
+    <img src="cap_nl_07.png" alt="Wizard, stap 6: Audio-instellingen">
+  </div>
+
+  <div class="step">
+    <h3>(08) Stap 7 &mdash; MIDI</h3>
+    <p>Welk MIDI-apparaat speelt het orgel? Kies de MIDI-ingang die uw speeltafel of klavier gebruikt. Als u met &ldquo;Wat je hoort&rdquo;-loopback werkt op een virtueel orgel, kunt u ook een virtuele MIDI-poort (loopMIDI) kiezen; JM-Rec stuurt dan zelf de noten.</p>
+    <img src="cap_nl_08.png" alt="Wizard, stap 7: MIDI">
+  </div>
+
+  <div class="step">
+    <h3>(09) Stap 8 &mdash; Klavieren</h3>
+    <p>Welke klavieren heeft het orgel, en welk MIDI-kanaal gebruikt elk? Een gemiddeld tweeklaviersorgel heeft Hoofdwerk, Bovenwerk en Pedaal. Elk klavier krijgt een eigen kanaal, zodat JM-Rec de noten naar het juiste klavier stuurt bij automatisch doorlopen.</p>
+    <img src="cap_nl_09.png" alt="Wizard, stap 8: Klavieren">
+  </div>
+
+  <div class="step">
+    <h3>(10) Stap 9 &mdash; Registers per klavier</h3>
+    <p>De kern van het instellen. Per klavier geeft u op welke registers er zijn, de voetmaat (8&prime;, 4&prime;, 2&prime;, een gemengd &ldquo;4&nbsp;st&rdquo;&hellip;), en van welke MIDI-noot tot welke MIDI-noot de registratie klinkt. Houd daarbij <b>C-groot = MIDI&nbsp;36</b> aan als geheugensteun. Een bas/discant-register (<i>Trompet 8 B/D</i>) kunt u met het vinkje &ldquo;Bas/disc&rdquo; markeren.</p>
+    <img src="cap_nl_10.png" alt="Wizard, stap 9: Registers per klavier">
+  </div>
+
+  <div class="step">
+    <h3>(11) Stap 10 &mdash; Overzicht</h3>
+    <p>De laatste stap laat alles nog &eacute;&eacute;n keer samen zien: aantal klavieren, aantal registers, aantal te maken opnamen en de verwachte opslagruimte. Klopt het beeld, dan sluit u de wizard af; wilt u nog iets bijstellen, dan springt u met <b>Vorige</b> terug.</p>
+    <img src="cap_nl_11.png" alt="Wizard, stap 10: Overzicht">
+  </div>
+
+  <h2>3. Opnemen</h2>
+  <div class="step">
+    <h3>(12) Het hoofdscherm</h3>
+    <p>Na de wizard belandt u op het hoofdscherm. Groot in beeld staat de noot die aan de beurt is (<i>C2</i>), met daaronder de bestandsnaam waaronder de opname wordt bewaard (<code>036-c.mp3</code>). De drie knoppen eronder zijn:</p>
+    <ul>
+      <li><b>Opnemen</b> &mdash; start de opname en loopt bij een &ldquo;slimme&rdquo; opstelling automatisch naar de volgende noot.</li>
+      <li><b>Pauze</b> &mdash; onderbreekt tussen twee noten; handig als er een storing voorbijkomt.</li>
+      <li><b>Stop</b> &mdash; sluit de huidige opname en keert terug naar &ldquo;Gereed&rdquo;.</li>
+    </ul>
+    <p>Onderaan ziet u per klavier (<i>Hoofdwerk</i>, <i>Bovenwerk</i>, <i>Pedaal</i>) alle registers met hun voortgang. De kleurenlegenda &mdash; nog op te nemen (rood), niet compleet (geel), nog te controleren (paars), goed (groen) &mdash; vertelt in &eacute;&eacute;n oogopslag waar u staat.</p>
+    <img src="cap_nl_12.png" alt="Hoofdscherm met noot C2, opnameknoppen en registervoortgang">
+  </div>
+
+  <div class="step">
+    <h3>(13) Register compleet</h3>
+    <p>Zodra de laatste pijp van een register binnen is, verschijnt een dialoog. U kunt kiezen:</p>
+    <ul>
+      <li><b>Nu controleren</b> &mdash; opent het controlescherm meteen voor dit register.</li>
+      <li><b>Goedgekeurd</b> &mdash; markeert het register als klaar en gaat door naar het volgende.</li>
+      <li><b>Later</b> &mdash; houdt het register op &ldquo;nog te controleren&rdquo;, zodat u er later nog eens naar luistert.</li>
+    </ul>
+    <img src="cap_nl_13.png" alt="Dialoog: Register compleet, met de drie keuzeknoppen">
+  </div>
+
+  <h2>4. Controleren</h2>
+  <div class="step">
+    <h3>(14) Controlescherm</h3>
+    <p>Via de knop <b>Controle</b> bovenin, of via de dialoog uit stap&nbsp;13, komt u in het controlescherm. JM-Rec laat per toon zien of de opname geldig is: stilte vooraan, oversturing (clipping), een te korte uitklank &mdash; alles wordt met kleur en symbool aangegeven. Opnieuw opnemen kan direct vanuit deze lijst.</p>
+    <img src="cap_nl_14.png" alt="Controlescherm met gevonden punten per toon">
+  </div>
+
+  <div class="step">
+    <h3>(15) Loop-detectie</h3>
+    <p>Een pijporgel klinkt lang; voor samplers wordt een &ldquo;loop&rdquo; gezet, zodat de toon kan blijven klinken zonder dat de opname onbegrensd lang hoeft te zijn. JM-Rec stelt voor elke toon een of meer loop-punten voor, laat ze zien in de golfvorm en speelt ze op proef af. Een klik bevestigt het voorstel of kiest een andere positie.</p>
+    <img src="cap_nl_15.png" alt="Loop-detectie met voorgestelde punten">
+  </div>
+
+  <h2>5. Afstandsbediening</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>Via de knop <b>QR Remote</b> toont JM-Rec een QR-code met het netwerkadres (bijvoorbeeld <code>http://192.168.1.10:5570</code>). Scant u die met uw telefoon of tablet, dan opent de afstandsbediening in de browser. U bedient <b>Opnemen</b>, <b>Pauze</b> en <b>Stop</b> en ziet de huidige noot vanaf de orgelbank &mdash; zonder apps te installeren.</p>
+    <p>Geen wifi? Zet de Mobiele hotspot van Windows aan (knop <b>Open hotspot-instellingen</b> onderin), verbind uw telefoon met dat netwerk en kies hier het hotspot-netwerk uit het pulldown-menu.</p>
+    <img src="cap_nl_16.png" alt="QR Remote met QR-code en netwerkadres">
+  </div>
+
+  <h2>6. Resultaat in JM-Orgue</h2>
+  <div class="step">
+    <h3>De opnamen openen</h3>
+    <p>Zodra de opnamen af zijn, start u <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a> en opent u in de bibliotheek de knop <b>Open organ&hellip;</b>. Wijst u de opslagmap aan die u in stap&nbsp;1 koos, dan verschijnt het orgel in de bibliotheek met alle klavieren, registers en koppels die u in de wizard hebt opgegeven. Van daar af is het spelen zoals bij elke andere sampleset.</p>
+  </div>
+
+  <p class="back"><a href="../">&larr; Terug naar de JM-Rec-pagina</a></p>
+</div>
+
+</body>
+</html>

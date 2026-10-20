@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">&larr; Back to the JM-Rec page</a> &middot; <a href="nl.html">Nederlandse versie</a></p>
+  <h1>JM-Rec &mdash; step by step</h1>
+  <p>A walk-through of JM-Rec with real screenshots. The numbers in brackets refer to the matching image; the order mirrors the flow you follow in the app.</p>
+
+  <h2>1. Welcome</h2>
+  <div class="step">
+    <h3>(01) The start screen</h3>
+    <p>JM-Rec remembers the last organ you worked on. When you start a new session it asks whether you want to continue with that organ or set up a new one.</p>
+    <ul>
+      <li><b>Continue with this organ</b> &mdash; opens the main screen in the exact state you last left it: same storage folder, same stops, same progress.</li>
+      <li><b>Set up a new organ</b> &mdash; starts the ten-step wizard described below.</li>
+    </ul>
+    <img src="cap_en_01.png" alt="Start screen with the two choice buttons">
+  </div>
+
+  <h2>2. The wizard &mdash; ten steps</h2>
+  <p>Ten short steps set up the whole structure: where the recordings go, which builder and church it is, what the manuals and stops look like. Any step can be revisited with the arrow at the bottom left.</p>
+
+  <div class="step">
+    <h3>(02) Step 1 &mdash; Storage location</h3>
+    <p>The folder where all recordings are kept. Pick an empty folder on a drive with enough space &mdash; a typical set runs to several gigabytes. JM-Rec creates a sub-folder per organ there, so you can record multiple organs side by side.</p>
+    <img src="cap_en_02.png" alt="Wizard step 1: Storage location">
+  </div>
+
+  <div class="step">
+    <h3>(03) Step 2 &mdash; Organ builder</h3>
+    <p>The name of the organ builder (for example <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec keeps this as metadata on the recordings, so you see at a glance which organ you're playing in JM-Orgue.</p>
+    <img src="cap_en_03.png" alt="Wizard step 2: Organ builder">
+  </div>
+
+  <div class="step">
+    <h3>(04) Step 3 &mdash; Place</h3>
+    <p>The town or village where the organ sits (for example <i>Putten</i>). Together with the church name this makes up the label the organ shows under in your library.</p>
+    <img src="cap_en_04.png" alt="Wizard step 3: Place">
+  </div>
+
+  <div class="step">
+    <h3>(05) Step 4 &mdash; Church name</h3>
+    <p>The name of the building (<i>Old Church</i>, <i>Great Church</i>, &hellip;). It's written into the recordings as info text and appears on the organ's library card in JM-Orgue.</p>
+    <img src="cap_en_05.png" alt="Wizard step 4: Church name">
+  </div>
+
+  <div class="step">
+    <h3>(06) Step 5 &mdash; Year built</h3>
+    <p>The year the organ was built, optional. Leave the field blank if it's unknown.</p>
+    <img src="cap_en_06.png" alt="Wizard step 5: Year built">
+  </div>
+
+  <div class="step">
+    <h3>(07) Step 6 &mdash; Audio settings</h3>
+    <p>Choose your recording device (microphone or &ldquo;what you hear&rdquo; loopback), channel count, sample rate and bit depth. By default JM-Rec records in mono at 48&thinsp;000&nbsp;Hz / 16-bit as MP3; this works for most pipe organs.</p>
+    <img src="cap_en_07.png" alt="Wizard step 6: Audio settings">
+  </div>
+
+  <div class="step">
+    <h3>(08) Step 7 &mdash; MIDI</h3>
+    <p>Which MIDI device plays the organ? Pick the MIDI input your console or keyboard uses. If you work with the &ldquo;what you hear&rdquo; loopback against a virtual organ, you can select a virtual MIDI port (loopMIDI) and let JM-Rec drive the notes itself.</p>
+    <img src="cap_en_08.png" alt="Wizard step 7: MIDI">
+  </div>
+
+  <div class="step">
+    <h3>(09) Step 8 &mdash; Manuals</h3>
+    <p>Which manuals does the organ have, and which MIDI channel does each use? A typical two-manual organ has Great, Swell and Pedal. Each manual gets its own channel so JM-Rec sends the notes to the right one when it walks through automatically.</p>
+    <img src="cap_en_09.png" alt="Wizard step 8: Manuals">
+  </div>
+
+  <div class="step">
+    <h3>(10) Step 9 &mdash; Stops per manual</h3>
+    <p>The heart of the setup. Per manual you list the stops, their pitch (8&prime;, 4&prime;, 2&prime;, a mixed &ldquo;4&nbsp;st&rdquo;&hellip;) and the MIDI note range they speak over. Use <b>middle C = MIDI&nbsp;36</b> as a memory aid. A bass/treble split stop (<i>Trumpet 8 B/D</i>) gets the &ldquo;bass/disc&rdquo; tick.</p>
+    <img src="cap_en_10.png" alt="Wizard step 9: Stops per manual">
+  </div>
+
+  <div class="step">
+    <h3>(11) Step 10 &mdash; Overview</h3>
+    <p>The last step shows the full picture: number of manuals, number of stops, total recordings to make, expected disk usage. If it looks right, finish the wizard; if you want to tweak something, step back with <b>Previous</b>.</p>
+    <img src="cap_en_11.png" alt="Wizard step 10: Overview">
+  </div>
+
+  <h2>3. Recording</h2>
+  <div class="step">
+    <h3>(12) The main screen</h3>
+    <p>After the wizard you land on the main screen. The note that's up next is shown large (<i>C2</i>), with the file name it will be saved under (<code>036-c.mp3</code>) below it. The three buttons are:</p>
+    <ul>
+      <li><b>Record</b> &mdash; starts the capture and, in a &ldquo;smart&rdquo; setup, moves on to the next note automatically.</li>
+      <li><b>Pause</b> &mdash; stops between two notes; handy when a disturbance comes along.</li>
+      <li><b>Stop</b> &mdash; closes the current recording and returns to &ldquo;Ready&rdquo;.</li>
+    </ul>
+    <p>At the bottom you see all stops per manual (<i>Great</i>, <i>Swell</i>, <i>Pedal</i>) with their progress. The colour legend &mdash; still to record (red), incomplete (yellow), to be checked (purple), good (green) &mdash; tells you where you stand at a glance.</p>
+    <img src="cap_en_12.png" alt="Main screen with note C2, record buttons and stop progress">
+  </div>
+
+  <div class="step">
+    <h3>(13) Stop complete</h3>
+    <p>As soon as the last pipe of a stop is in, a dialog comes up. You pick:</p>
+    <ul>
+      <li><b>Check now</b> &mdash; opens the verification screen for this stop right away.</li>
+      <li><b>Approved</b> &mdash; marks the stop done and moves on to the next.</li>
+      <li><b>Later</b> &mdash; keeps the stop at &ldquo;to be checked&rdquo; so you can listen through it later.</li>
+    </ul>
+    <img src="cap_en_13.png" alt="Dialog: Stop complete, with the three choice buttons">
+  </div>
+
+  <h2>4. Verifying</h2>
+  <div class="step">
+    <h3>(14) Verification screen</h3>
+    <p>Via the <b>Check</b> button at the top &mdash; or the dialog from step&nbsp;13 &mdash; you reach the verification screen. JM-Rec shows per tone whether the recording is valid: leading silence, clipping, a tail that cuts off too early &mdash; every issue is flagged with a colour and a symbol. Re-recording a single note is one click away.</p>
+    <img src="cap_en_14.png" alt="Verification screen with findings per tone">
+  </div>
+
+  <div class="step">
+    <h3>(15) Loop detection</h3>
+    <p>Pipe organ tones last long; for samplers a &ldquo;loop&rdquo; is set so the tone can keep sounding without the recording having to be endlessly long. JM-Rec proposes one or more loop points per tone, shows them in the waveform and plays them back on demand. One click confirms the suggestion or picks a different spot.</p>
+    <img src="cap_en_15.png" alt="Loop detection with proposed points">
+  </div>
+
+  <h2>5. Wireless control</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>The <b>QR Remote</b> button shows a QR code with the network address (for example <code>http://192.168.1.10:5570</code>). Scan it with your phone or tablet and the remote opens in the browser. You drive <b>Record</b>, <b>Pause</b> and <b>Stop</b> and see the current note from the organ bench &mdash; no apps to install.</p>
+    <p>No wifi? Turn on the Mobile hotspot in Windows (button <b>Open hotspot settings</b> at the bottom), connect your phone to that network and pick the hotspot network from the drop-down here.</p>
+    <img src="cap_en_16.png" alt="QR Remote with QR code and network address">
+  </div>
+
+  <h2>6. The result in JM-Orgue</h2>
+  <div class="step">
+    <h3>Opening the recordings</h3>
+    <p>Once the recordings are in, start <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a>, open the library and click <b>Open organ&hellip;</b>. Point it to the storage folder you chose in step&nbsp;1 and the organ turns up in the library with all the manuals, stops and couplers you set in the wizard. From there, it plays like any other sample set.</p>
+  </div>
+
+  <p class="back"><a href="../">&larr; Back to the JM-Rec page</a></p>
+</div>
+
+</body>
+</html>
