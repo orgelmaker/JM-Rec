@@ -26,66 +26,94 @@
   </div>
 
   <h2>2. De wizard &mdash; tien stappen</h2>
-  <p>Via tien korte stappen zet u de hele structuur klaar: waar de opnamen heen gaan, welke orgelbouwer en kerk het betreft, hoe de klavieren en registers eruitzien. Elke stap is terug te zetten met de pijl linksonder.</p>
+  <p>Via tien korte stappen zet u de hele structuur klaar: waar de opnamen heen gaan, welke orgelbouwer en kerk het betreft, hoe de klavieren en registers eruitzien en hoe JM-Rec de audio moet opnemen. Elke stap is terug te zetten met de knop <b>Vorige</b> linksonder.</p>
 
   <div class="step">
     <h3>(02) Stap 1 &mdash; Opslaglocatie</h3>
-    <p>De map waarin alle opnamen worden bewaard. Kies een lege map op een schijf met voldoende ruimte &mdash; een gemiddelde set is al snel enkele gigabytes groot. In diezelfde map komt automatisch per orgel een submap, zodat u meerdere orgels naast elkaar kunt opnemen.</p>
+    <p>De map waarin alle opnamen worden bewaard. Kies een map op een schijf met voldoende ruimte &mdash; een gemiddelde set is al snel enkele gigabytes groot. In diezelfde map komt automatisch per orgel een submap met de mapcode uit stap&nbsp;5, zodat u meerdere orgels naast elkaar kunt opnemen zonder dat ze door elkaar lopen.</p>
     <img src="cap_nl_02.png" alt="Wizard, stap 1: Opslaglocatie">
   </div>
 
   <div class="step">
-    <h3>(03) Stap 2 &mdash; Orgelbouwer</h3>
-    <p>De naam van de orgelbouwer (bijvoorbeeld <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec bewaart dit later als meta-informatie bij de opnamen, zodat u in JM-Orgue direct ziet welk orgel u speelt.</p>
-    <img src="cap_nl_03.png" alt="Wizard, stap 2: Orgelbouwer">
+    <h3>(03) Stap 2 &mdash; Microfoon(s)</h3>
+    <p>De opnamebron waarmee JM-Rec de pijpen vastlegt. Twee keuzes:</p>
+    <ul>
+      <li><b>Microfoon(s)</b> &mdash; neem rechtstreeks op via een of meer microfoons. Bij meerdere microfoons krijgt elke microfoon een eigen <b>positienaam</b>; die wordt een submap onder elk register (bijvoorbeeld <code>front</code>, <code>rear</code>, <code>surround</code>), zodat u later per positie een eigen mix kunt maken in JM-Orgue.</li>
+      <li><b>Wat je hoort (loopback)</b> &mdash; neem op wat Windows afspeelt. Handig voor een virtueel orgel of om een bestaande audiostream vast te leggen.</li>
+    </ul>
+    <p>Heeft u een microfoonmatrix (bijvoorbeeld <i>Intel&reg; Smart Sound Technology</i>) die meerdere microfoons als &eacute;&eacute;n apparaat aanbiedt, vink dan het vakje aan en geef de positienaam op.</p>
+    <img src="cap_nl_03.png" alt="Wizard, stap 2: Microfoon(s)">
   </div>
 
   <div class="step">
-    <h3>(04) Stap 3 &mdash; Plaats</h3>
-    <p>De plaats waar het orgel staat (bijvoorbeeld <i>Putten</i>). Samen met de kerknaam vormt dit het label waaronder het orgel in uw bibliotheek terugkomt.</p>
-    <img src="cap_nl_04.png" alt="Wizard, stap 3: Plaats">
+    <h3>(04) Stap 3 &mdash; Plaatsnaam</h3>
+    <p>De plaats waar het orgel staat (bijvoorbeeld <i>Putten</i>). Samen met de orgelbouwer uit stap&nbsp;5 vormt dit automatisch de <b>mapcode</b> (vier letters plaats + vier letters bouwer) waaronder het orgel op schijf komt te staan. Onder het invoerveld ziet u direct hoe de mapcode wordt opgebouwd.</p>
+    <img src="cap_nl_04.png" alt="Wizard, stap 3: Plaatsnaam">
   </div>
 
   <div class="step">
     <h3>(05) Stap 4 &mdash; Kerknaam</h3>
-    <p>De naam van het gebouw (<i>Oude Kerk</i>, <i>Grote Kerk</i>, &hellip;). Deze wordt als info-tekst in de opnamen vastgelegd en verschijnt op de kaart van het orgel in JM-Orgue.</p>
+    <p>De naam van het gebouw (<i>Oude Kerk</i>, <i>Grote Kerk</i>, &hellip;). Deze wordt als info-tekst in de opnamen vastgelegd en verschijnt in JM-Orgue op de kaart van het orgel.</p>
     <img src="cap_nl_05.png" alt="Wizard, stap 4: Kerknaam">
   </div>
 
   <div class="step">
-    <h3>(06) Stap 5 &mdash; Bouwjaar</h3>
-    <p>Optioneel het bouwjaar van het orgel. Niet verplicht; u kunt het veld leeg laten als het onbekend is.</p>
-    <img src="cap_nl_06.png" alt="Wizard, stap 5: Bouwjaar">
+    <h3>(06) Stap 5 &mdash; Orgelbouwer</h3>
+    <p>De naam van de orgelbouwer (bijvoorbeeld <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>, <i>Van Oeckelen</i>). JM-Rec bewaart dit later als meta-informatie bij de opnamen, zodat u in JM-Orgue direct ziet welk orgel u speelt.</p>
+    <p>Onder het invoerveld staat de voorgestelde <b>mapnaam</b> (vier letters plaats + vier letters bouwer, bijvoorbeeld <code>PuttVanO</code>). Dat is de submap waarin de opnamen van dit orgel terechtkomen. U mag die vrij aanpassen voordat u verdergaat; na stap&nbsp;10 ligt de map vast.</p>
+    <img src="cap_nl_06.png" alt="Wizard, stap 5: Orgelbouwer">
   </div>
 
   <div class="step">
-    <h3>(07) Stap 6 &mdash; Audio-instellingen</h3>
-    <p>Hier kiest u uw opname&shy;apparaat (microfoon of &ldquo;Wat je hoort&rdquo;-loopback), het aantal kanalen, de sample&shy;frequentie en het bitformaat. Standaard neemt JM-Rec in mono 48&nbsp;000&nbsp;Hz / 16-bit op als MP3; die waarden passen voor de meeste pijporgels.</p>
-    <img src="cap_nl_07.png" alt="Wizard, stap 6: Audio-instellingen">
+    <h3>(07) Stap 6 &mdash; Klavieren en pedaal</h3>
+    <p>Het aantal <b>manualen</b> (klavieren) van het orgel &mdash; standaard twee &mdash; en of er een <b>pedaal</b> aanwezig is. Op basis van deze twee waarden maakt JM-Rec in de volgende stappen de juiste rijen aan voor namen, tremulant/zwelkast en registers. Vergeet u een klavier, dan kunt u met <b>Vorige</b> altijd terug.</p>
+    <img src="cap_nl_07.png" alt="Wizard, stap 6: Klavieren en pedaal">
   </div>
 
   <div class="step">
-    <h3>(08) Stap 7 &mdash; MIDI</h3>
-    <p>Welk MIDI-apparaat speelt het orgel? Kies de MIDI-ingang die uw speeltafel of klavier gebruikt. Als u met &ldquo;Wat je hoort&rdquo;-loopback werkt op een virtueel orgel, kunt u ook een virtuele MIDI-poort (loopMIDI) kiezen; JM-Rec stuurt dan zelf de noten.</p>
-    <img src="cap_nl_08.png" alt="Wizard, stap 7: MIDI">
+    <h3>(08) Stap 7 &mdash; Naam per klavier</h3>
+    <p>Geef elk klavier een naam &mdash; de gebruikelijke keuzes zoals <i>Hoofdwerk</i>, <i>Bovenwerk</i>, <i>Zwelwerk</i>, <i>Borstwerk</i> of <i>Rugwerk</i> worden al voorgesteld. Deze namen worden overal gebruikt: in de mapstructuur op schijf, in het hoofdscherm en in JM-Orgue. Het pedaal krijgt automatisch de naam <i>Pedaal</i> en hoeft u hier niet in te vullen.</p>
+    <img src="cap_nl_08.png" alt="Wizard, stap 7: Naam per klavier">
   </div>
 
   <div class="step">
-    <h3>(09) Stap 8 &mdash; Klavieren</h3>
-    <p>Welke klavieren heeft het orgel, en welk MIDI-kanaal gebruikt elk? Een gemiddeld tweeklaviersorgel heeft Hoofdwerk, Bovenwerk en Pedaal. Elk klavier krijgt een eigen kanaal, zodat JM-Rec de noten naar het juiste klavier stuurt bij automatisch doorlopen.</p>
-    <img src="cap_nl_09.png" alt="Wizard, stap 8: Klavieren">
+    <h3>(09) Stap 8 &mdash; Tremulant en zwelkast</h3>
+    <p>Twee verwante vragen in &eacute;&eacute;n stap:</p>
+    <ul>
+      <li><b>Tremulant</b> &mdash; staat er een tremulant op het hele orgel, op een enkel klavier, of niet? Bij <i>Heel het orgel</i> wordt elk register tweemaal opgenomen (normaal &eacute;n met achtervoegsel <code>_trem</code>). Bij <i>Per klavier</i> vinkt u aan welke klavieren een tremulant hebben; alleen die registers worden dubbel opgenomen.</li>
+      <li><b>Zwelkast</b> &mdash; vink per klavier aan welk klavier in een <i>zwelkast</i> staat (een zwelwerk). JM-Rec markeert die registers in JM-Orgue zodat ze op de juiste manier door de zwelpedalen worden aangestuurd.</li>
+    </ul>
+    <img src="cap_nl_09.png" alt="Wizard, stap 8: Tremulant en zwelkast">
   </div>
 
   <div class="step">
     <h3>(10) Stap 9 &mdash; Registers per klavier</h3>
-    <p>De kern van het instellen. Per klavier geeft u op welke registers er zijn, de voetmaat (8&prime;, 4&prime;, 2&prime;, een gemengd &ldquo;4&nbsp;st&rdquo;&hellip;), en van welke MIDI-noot tot welke MIDI-noot de registratie klinkt. Houd daarbij <b>C-groot = MIDI&nbsp;36</b> aan als geheugensteun. Een bas/discant-register (<i>Trompet 8 B/D</i>) kunt u met het vinkje &ldquo;Bas/disc&rdquo; markeren.</p>
+    <p>De kern van het instellen. Per klavier geeft u op welke registers er zijn, de voetmaat (8&prime;, 4&prime;, 2&prime;, een gemengd &ldquo;4&nbsp;st&rdquo;&hellip;), en van welke MIDI-noot tot welke MIDI-noot de registratie klinkt. Houd daarbij <b>C-groot = MIDI&nbsp;36</b> aan als geheugensteun. De meeste klavieren tellen 56 toetsen en lopen dan van 36 tot 91; het pedaal begint &oacute;&oacute;k op 36 en loopt bijvoorbeeld bij 30 toetsen tot 65. Een <i>halfregister</i> (bijvoorbeeld <i>Trompet 8 B/D</i>) loopt doorgaans tot de splitstoets of start juist daar &mdash; markeer het met het vinkje <b>Bas/disc</b> en stel de splitstoets verderop in stap&nbsp;10 in.</p>
+    <p>Met <b>+ Register</b> onder elk klavier voegt u een extra register toe; met het rode kruisje aan de rechterkant verwijdert u een regel.</p>
     <img src="cap_nl_10.png" alt="Wizard, stap 9: Registers per klavier">
   </div>
 
   <div class="step">
-    <h3>(11) Stap 10 &mdash; Overzicht</h3>
-    <p>De laatste stap laat alles nog &eacute;&eacute;n keer samen zien: aantal klavieren, aantal registers, aantal te maken opnamen en de verwachte opslagruimte. Klopt het beeld, dan sluit u de wizard af; wilt u nog iets bijstellen, dan springt u met <b>Vorige</b> terug.</p>
-    <img src="cap_nl_11.png" alt="Wizard, stap 10: Overzicht">
+    <h3>(11) Stap 10 &mdash; Opname-instellingen en koppels</h3>
+    <p>In de laatste stap kiest u <i>hoe</i> JM-Rec opneemt en voegt u eventuele <i>koppels</i> toe. Rechtsonder staat <b>Opslaan &amp; starten</b>; daarna is de wizard klaar en opent het hoofdscherm.</p>
+    <h4>Audio-instellingen</h4>
+    <p>JM-Rec komt uit de wizard met deze standaardwaarden:</p>
+    <ul>
+      <li><b>Samplerate 48&nbsp;000&nbsp;Hz</b> &mdash; de hogere waarde die Windows en de meeste USB-interfaces zelf ook als standaard gebruiken; vermijdt onnodige resampling. 44&nbsp;100&nbsp;Hz is prima als uw opnameketen daarop staat; 96&nbsp;000&nbsp;Hz heeft voor pijporgelsamples zelden meerwaarde en verdubbelt het bestandsformaat.</li>
+      <li><b>16-bit</b> &mdash; voor pijporgelopnames in een redelijk stille ruimte ruim voldoende dynamisch bereik. Kies <b>24-bit</b> alleen als u aan de bronkant zacht moet opnemen (ver van de pijpen, veel ruis-reserve nodig) &mdash; de bestanden worden anderhalf keer zo groot.</li>
+      <li><b>Mono</b> &mdash; een pijp is per definitie &eacute;&eacute;n geluidsbron, en in JM-Orgue krijgt elke pijp pas plaats in de ruimte via het sample-set-ontwerp. Opnemen in mono halveert het schijfgebruik en voorkomt faseproblemen tussen linker- en rechterkanaal. Werkt u met meerdere microfoons (zie stap&nbsp;2), dan maakt JM-Rec per <i>positie</i> een eigen monobestand &mdash; en dat is wat samplers als JM-Orgue daarna als stereo-/surround-mix combineren. Kies <b>Stereo</b> alleen bij een echte stereomicrofoon op &eacute;&eacute;n positie waar u die stereo-informatie op elke pijp wilt bewaren.</li>
+      <li><b>MP3 (192&nbsp;kbps)</b> &mdash; een gemiddeld tweeklaviersorgel kan al snel enkele duizenden samples opleveren; MP3 houdt dat beheersbaar (ongeveer een tiende van WAV) zonder dat u het hoort op een orgelpijp. Wilt u verliesvrij werken &mdash; bijvoorbeeld om later nog loops of edits over te doen &mdash; kies dan <b>FLAC</b> (ongeveer de helft van WAV, bit-identiek) of <b>WAV</b> (ongecomprimeerd, nodig voor sommige externe editors). Zet <i>Formaat</i> op WAV of FLAC en de MP3-bitrate verdwijnt; de rest van de workflow verandert niet.</li>
+    </ul>
+    <p class="hint"><b>Tip:</b> wilt u later toch naar WAV? Dan kunt u via <code>ffmpeg</code> in &eacute;&eacute;n commando een hele map omzetten (zie de README).</p>
+    <h4>Workflow</h4>
+    <ul>
+      <li><b>Aftellen</b> en <b>Opnameduur</b> (sec) &mdash; standaard 5 en 5; voldoende voor een rustige toon met natuurlijke uitklank.</li>
+      <li><b>Splitstoets bas/disc (MIDI)</b> &mdash; standaard 60 (C4). Dit is de grens die JM-Rec gebruikt voor registers waarin u in stap&nbsp;9 <b>Bas/disc</b> hebt aangevinkt.</li>
+      <li><b>Opnamemodus</b> &mdash; <i>Vaste duur</i> gebruikt gewoon de opgegeven seconden. <i>Intelligent (assisterend)</i> luistert mee en stopt zodra er genoeg stabiele, loopbare toon is; u krijgt dan op het scherm een duidelijk sein om los te laten. Alleen beschikbaar met een microfooningang.</li>
+    </ul>
+    <h4>Koppels</h4>
+    <p>Onderin kiest u links en rechts twee klavieren en klikt u op <b>+ Koppel</b> om een koppel toe te voegen (bijvoorbeeld <i>Bovenwerk &rarr; Hoofdwerk</i> of <i>Hoofdwerk &rarr; Pedaal</i>). De koppels worden in JM-Orgue als knoppen zichtbaar; voor de opname zelf verandert er niets &mdash; JM-Rec neemt alleen de pijpen op, nooit de koppeling.</p>
+    <img src="cap_nl_11.png" alt="Wizard, stap 10: Opname-instellingen en koppels">
   </div>
 
   <h2>3. Opnemen</h2>
