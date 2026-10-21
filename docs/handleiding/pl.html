@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instrukcja — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">← Powrót do strony JM-Rec</a> &middot; <a href="en.html">Wersja angielska</a></p>
+  <h1>JM-Rec — krok po kroku</h1>
+  <p>Przewodnik po JM-Rec na podstawie prawdziwych zrzutów ekranu. Liczby w nawiasach odsyłają do odpowiedniego obrazka; kolejność jest taka sama, jak w aplikacji.</p>
+
+  <h2>1. Powitanie</h2>
+  <div class="step">
+    <h3>(01) Ekran startowy</h3>
+    <p>JM-Rec pamięta ostatnio używane organy. Na nowej sesji pyta, czy kontynuować z tymi organami, czy skonfigurować nowe.</p>
+    <ul>
+      <li><b>Kontynuuj z tymi organami</b> — otwiera ekran główny dokładnie tam, gdzie został zostawiony: ten sam folder zapisu, te same rejestry, ten sam postęp.</li>
+      <li><b>Skonfiguruj nowe organy</b> — uruchamia dziesięciokrokowy kreator opisany niżej.</li>
+    </ul>
+    <img src="cap_en_01.png" alt="Ekran startowy z dwoma przyciskami wyboru">
+  </div>
+
+  <h2>2. Kreator — dziesięć kroków</h2>
+  <p>Dziesięć krótkich kroków ustawia całą strukturę: dokąd idą nagrania, który budowniczy i który kościół, jak wyglądają manualy i rejestry. Każdy krok można cofnąć strzałką w lewym dolnym rogu.</p>
+
+  <div class="step"><h3>(02) Krok 1 — Lokalizacja zapisu</h3><p>Folder, w którym są przechowywane wszystkie nagrania. Wybierz pusty folder na dysku z wystarczającą ilością miejsca — zestaw szybko sięga kilku gigabajtów. JM-Rec tworzy tam podfolder na każde organy, dzięki czemu możesz nagrywać wiele organów obok siebie.</p><img src="cap_en_02.png" alt="Kreator krok 1: lokalizacja zapisu"></div>
+  <div class="step"><h3>(03) Krok 2 — Budowniczy organów</h3><p>Nazwa budowniczego organów (np. <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec zapisuje to jako metadane w nagraniach, więc w JM-Orgue od razu widać, które organy grasz.</p><img src="cap_en_03.png" alt="Kreator krok 2: budowniczy organów"></div>
+  <div class="step"><h3>(04) Krok 3 — Miejscowość</h3><p>Miejscowość, w której znajdują się organy (np. <i>Putten</i>). Razem z nazwą kościoła tworzy etykietę, pod którą organy pojawiają się w bibliotece.</p><img src="cap_en_04.png" alt="Kreator krok 3: miejscowość"></div>
+  <div class="step"><h3>(05) Krok 4 — Nazwa kościoła</h3><p>Nazwa budynku (<i>Stary Kościół</i>, <i>Wielki Kościół</i>, …). Zapisywana jako tekst informacyjny w nagraniach i widoczna na karcie organów w JM-Orgue.</p><img src="cap_en_05.png" alt="Kreator krok 4: nazwa kościoła"></div>
+  <div class="step"><h3>(06) Krok 5 — Rok budowy</h3><p>Rok budowy organów, opcjonalny. Zostaw pole puste, jeśli jest nieznany.</p><img src="cap_en_06.png" alt="Kreator krok 5: rok budowy"></div>
+  <div class="step"><h3>(07) Krok 6 — Ustawienia audio</h3><p>Wybierz urządzenie nagrywające (mikrofon lub loopback „co słyszysz”), liczbę kanałów, częstotliwość próbkowania i głębię bitową. Domyślnie JM-Rec nagrywa mono 48 000 Hz / 16-bit jako MP3; to pasuje do większości organów piszczałkowych.</p><img src="cap_en_07.png" alt="Kreator krok 6: ustawienia audio"></div>
+  <div class="step"><h3>(08) Krok 7 — MIDI</h3><p>Które urządzenie MIDI gra na organach? Wybierz wejście MIDI używane przez stół gry lub klawiaturę. Z loopbackiem „co słyszysz” na organach wirtualnych możesz wybrać też wirtualny port MIDI (loopMIDI); wtedy JM-Rec sam wysyła nuty.</p><img src="cap_en_08.png" alt="Kreator krok 7: MIDI"></div>
+  <div class="step"><h3>(09) Krok 8 — Klawiatury</h3><p>Jakie klawiatury mają organy i jakiego kanału MIDI używa każda? Typowe dwumanualne organy mają Manuał Główny, Manuał II i Pedał. Każda klawiatura ma swój kanał, dzięki czemu JM-Rec kieruje nuty do właściwej klawiatury przy automatycznym przechodzeniu.</p><img src="cap_en_09.png" alt="Kreator krok 8: klawiatury"></div>
+  <div class="step"><h3>(10) Krok 9 — Rejestry na klawiaturę</h3><p>Serce konfiguracji. Dla każdej klawiatury wymieniasz rejestry, wysokość (8′, 4′, 2′, mieszany „4 st”…) i zakres nut MIDI, w którym rejestr brzmi. Pomoc pamięciowa: <b>duże C = MIDI 36</b>. Dzielony rejestr bas/dyszkant (<i>Trąbka 8 B/D</i>) dostaje haczyk „Bass/disc”.</p><img src="cap_en_10.png" alt="Kreator krok 9: rejestry na klawiaturę"></div>
+  <div class="step"><h3>(11) Krok 10 — Podsumowanie</h3><p>Ostatni krok pokazuje całość: liczbę klawiatur, rejestrów, nagrań do wykonania i spodziewane zużycie dysku. Jeśli obraz się zgadza, zakończ kreatora; jeśli chcesz coś poprawić, cofnij się przyciskiem <b>Poprzednie</b>.</p><img src="cap_en_11.png" alt="Kreator krok 10: podsumowanie"></div>
+
+  <h2>3. Nagrywanie</h2>
+  <div class="step">
+    <h3>(12) Ekran główny</h3>
+    <p>Po kreatorze lądujesz na ekranie głównym. Dużym drukiem jest nuta, która zaraz nadejdzie (<i>C2</i>), a pod nią nazwa pliku, pod którą nagranie zostanie zapisane (<code>036-c.mp3</code>). Trzy przyciski to:</p>
+    <ul>
+      <li><b>Nagraj</b> — rozpoczyna nagranie i w konfiguracji „inteligentnej” automatycznie przechodzi do następnej nuty.</li>
+      <li><b>Pauza</b> — zatrzymuje się między dwiema nutami; przydatne, jeśli przechodzi zakłócenie.</li>
+      <li><b>Stop</b> — zamyka bieżące nagranie i wraca do „Gotowe”.</li>
+    </ul>
+    <p>Na dole widzisz dla każdej klawiatury (<i>Manuał Główny</i>, <i>Manuał II</i>, <i>Pedał</i>) wszystkie rejestry z ich postępem. Legenda kolorów — do nagrania (czerwony), niekompletny (żółty), do sprawdzenia (fioletowy), zrobione (zielony) — mówi od razu, gdzie jesteś.</p>
+    <img src="cap_en_12.png" alt="Ekran główny z nutą C2, przyciskami nagrywania i postępem rejestrów">
+  </div>
+
+  <div class="step">
+    <h3>(13) Rejestr ukończony</h3>
+    <p>Jak tylko ostatnia piszczałka rejestru jest w środku, pojawia się okno. Wybierasz:</p>
+    <ul>
+      <li><b>Sprawdź teraz</b> — otwiera od razu ekran weryfikacji tego rejestru.</li>
+      <li><b>Zatwierdzono</b> — oznacza rejestr jako gotowy i przechodzi do następnego.</li>
+      <li><b>Później</b> — zostawia rejestr jako „do sprawdzenia”, żebyś odsłuchał go później.</li>
+    </ul>
+    <img src="cap_en_13.png" alt="Okno: rejestr ukończony, z trzema przyciskami wyboru">
+  </div>
+
+  <h2>4. Sprawdzanie</h2>
+  <div class="step"><h3>(14) Ekran weryfikacji</h3><p>Przyciskiem <b>Kontrola</b> u góry — lub oknem z kroku 13 — docierasz do ekranu weryfikacji. JM-Rec pokazuje dla każdej nuty, czy nagranie jest poprawne: cisza na początku, przester (clipping), zbyt krótkie wybrzmienie — każda nieprawidłowość oznaczona kolorem i symbolem. Ponowne nagranie pojedynczej nuty to jedno kliknięcie.</p><img src="cap_en_14.png" alt="Ekran weryfikacji z nieprawidłowościami per nuta"></div>
+  <div class="step"><h3>(15) Wykrywanie pętli</h3><p>Dźwięk organów trwa długo; dla samplerów ustawia się „pętlę”, żeby dźwięk mógł trwać bez nieskończonego nagrania. JM-Rec proponuje dla każdej nuty jeden lub więcej punktów pętli, pokazuje je na kształcie fali i odtwarza na żądanie. Jedno kliknięcie potwierdza propozycję albo wybiera inne miejsce.</p><img src="cap_en_15.png" alt="Wykrywanie pętli z proponowanymi punktami"></div>
+
+  <h2>5. Pilot</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>Przyciskiem <b>QR Remote</b> JM-Rec pokazuje kod QR z adresem sieciowym (np. <code>http://192.168.1.10:5570</code>). Zeskanuj go telefonem lub tabletem i pilot otworzy się w przeglądarce. Sterujesz <b>Nagraj</b>, <b>Pauza</b> i <b>Stop</b> oraz widzisz bieżącą nutę ze stołka — bez aplikacji do zainstalowania.</p>
+    <p>Brak wifi? Włącz Mobilny hotspot Windows (przycisk <b>Otwórz ustawienia hotspotu</b> na dole), połącz telefon z tą siecią i wybierz tutaj sieć hotspotu z listy rozwijanej.</p>
+    <img src="cap_en_16.png" alt="QR Remote z kodem QR i adresem sieciowym">
+  </div>
+
+  <h2>6. Wynik w JM-Orgue</h2>
+  <div class="step">
+    <h3>Otwieranie nagrań</h3>
+    <p>Gdy nagrania są gotowe, uruchom <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a>, otwórz bibliotekę i kliknij <b>Open organ…</b>. Wskaż folder zapisu wybrany w kroku 1 JM-Rec i organy pojawią się w bibliotece ze wszystkimi klawiaturami, rejestrami i kopulami ustawionymi w kreatorze. Od tej chwili grają jak każdy inny zestaw sampli.</p>
+  </div>
+
+  <p class="back"><a href="../">← Powrót do strony JM-Rec</a></p>
+</div>
+
+</body>
+</html>

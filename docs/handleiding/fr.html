@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manuel — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">← Retour à la page JM-Rec</a> &middot; <a href="en.html">Version anglaise</a></p>
+  <h1>JM-Rec — étape par étape</h1>
+  <p>Un parcours de JM-Rec appuyé sur de vraies captures d’écran. Les numéros entre parenthèses renvoient à l’image correspondante ; l’ordre suit celui que vous suivez dans l’appli.</p>
+
+  <h2>1. Bienvenue</h2>
+  <div class="step">
+    <h3>(01) L’écran d’accueil</h3>
+    <p>JM-Rec se souvient du dernier orgue utilisé. À chaque nouvelle session, il demande si vous voulez continuer avec cet orgue ou en configurer un nouveau.</p>
+    <ul>
+      <li><b>Continuer avec cet orgue</b> — ouvre l’écran principal exactement là où vous l’aviez laissé : même dossier de stockage, mêmes jeux, même avancement.</li>
+      <li><b>Configurer un nouvel orgue</b> — lance l’assistant à dix étapes décrit plus bas.</li>
+    </ul>
+    <img src="cap_en_01.png" alt="Écran d’accueil avec les deux boutons de choix">
+  </div>
+
+  <h2>2. L’assistant — dix étapes</h2>
+  <p>Dix courtes étapes mettent en place toute la structure : où vont les enregistrements, quel facteur et quelle église, à quoi ressemblent claviers et jeux. On revient sur chaque étape avec la flèche en bas à gauche.</p>
+
+  <div class="step"><h3>(02) Étape 1 — Dossier de stockage</h3><p>Le dossier où tous les enregistrements sont conservés. Choisissez un dossier vide sur un disque qui a de la place — un set dépasse vite plusieurs gigaoctets. JM-Rec y crée un sous-dossier par orgue, afin que vous puissiez enregistrer plusieurs orgues côte à côte.</p><img src="cap_en_02.png" alt="Assistant étape 1 : dossier de stockage"></div>
+  <div class="step"><h3>(03) Étape 2 — Facteur d’orgues</h3><p>Le nom du facteur (par exemple <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec le conserve en métadonnées, pour que vous voyiez tout de suite dans JM-Orgue quel orgue vous jouez.</p><img src="cap_en_03.png" alt="Assistant étape 2 : facteur d’orgues"></div>
+  <div class="step"><h3>(04) Étape 3 — Lieu</h3><p>La commune où se trouve l’orgue (par exemple <i>Putten</i>). Avec le nom de l’église, cela forme l’étiquette qui apparaîtra dans votre bibliothèque.</p><img src="cap_en_04.png" alt="Assistant étape 3 : lieu"></div>
+  <div class="step"><h3>(05) Étape 4 — Nom de l’église</h3><p>Le nom du bâtiment (<i>Vieille Église</i>, <i>Grande Église</i>, …). Il est écrit comme info dans les enregistrements et apparaît sur la fiche de l’orgue dans la bibliothèque de JM-Orgue.</p><img src="cap_en_05.png" alt="Assistant étape 4 : nom de l’église"></div>
+  <div class="step"><h3>(06) Étape 5 — Année de construction</h3><p>L’année de construction, facultative. Laissez le champ vide si vous ne la connaissez pas.</p><img src="cap_en_06.png" alt="Assistant étape 5 : année de construction"></div>
+  <div class="step"><h3>(07) Étape 6 — Réglages audio</h3><p>Vous choisissez votre périphérique d’enregistrement (microphone ou loopback « ce que vous entendez »), le nombre de canaux, la fréquence et la profondeur. Par défaut JM-Rec enregistre en mono 48 000 Hz / 16 bits en MP3 ; cela convient à la plupart des orgues à tuyaux.</p><img src="cap_en_07.png" alt="Assistant étape 6 : réglages audio"></div>
+  <div class="step"><h3>(08) Étape 7 — MIDI</h3><p>Quel appareil MIDI joue l’orgue ? Choisissez l’entrée MIDI utilisée par votre console ou votre clavier. En loopback contre un orgue virtuel, vous pouvez aussi choisir un port MIDI virtuel (loopMIDI) ; JM-Rec enverra lui-même les notes.</p><img src="cap_en_08.png" alt="Assistant étape 7 : MIDI"></div>
+  <div class="step"><h3>(09) Étape 8 — Claviers</h3><p>Quels claviers l’orgue a-t-il, et sur quel canal MIDI chacun ? Un deux-claviers typique a Grand-Orgue, Récit et Pédalier. Chaque clavier a son canal, afin que JM-Rec envoie les notes au bon clavier pendant le parcours automatique.</p><img src="cap_en_09.png" alt="Assistant étape 8 : claviers"></div>
+  <div class="step"><h3>(10) Étape 9 — Jeux par clavier</h3><p>Le cœur de la configuration. Par clavier vous listez les jeux, la hauteur (8′, 4′, 2′, un « 4 st » mélangé…) et la plage de notes MIDI couverte. Repère mémoriel : <b>do médian = MIDI 36</b>. Un jeu coupé en basse/dessus (<i>Trompette 8 B/D</i>) reçoit la coche « Bass/disc ».</p><img src="cap_en_10.png" alt="Assistant étape 9 : jeux par clavier"></div>
+  <div class="step"><h3>(11) Étape 10 — Récapitulatif</h3><p>La dernière étape récapitule : nombre de claviers, de jeux, nombre de prises à faire, espace disque prévu. Si tout est juste, terminez l’assistant ; sinon, revenez en arrière avec <b>Précédent</b>.</p><img src="cap_en_11.png" alt="Assistant étape 10 : récapitulatif"></div>
+
+  <h2>3. Enregistrer</h2>
+  <div class="step">
+    <h3>(12) L’écran principal</h3>
+    <p>Après l’assistant, vous arrivez sur l’écran principal. La note en cours (<i>C2</i>) s’affiche en grand, avec le nom du fichier à venir (<code>036-c.mp3</code>). Les trois boutons :</p>
+    <ul>
+      <li><b>Enregistrer</b> — démarre la prise et, dans un montage « intelligent », passe automatiquement à la note suivante.</li>
+      <li><b>Pause</b> — s’arrête entre deux notes ; pratique si un bruit passe.</li>
+      <li><b>Stop</b> — clôt la prise en cours et revient à « Prêt ».</li>
+    </ul>
+    <p>En bas, par clavier (<i>Grand-Orgue</i>, <i>Récit</i>, <i>Pédalier</i>), tous les jeux apparaissent avec leur progression. La légende colorée — à enregistrer (rouge), incomplet (jaune), à vérifier (violet), bon (vert) — indique en un coup d’œil où vous en êtes.</p>
+    <img src="cap_en_12.png" alt="Écran principal avec note C2, boutons d’enregistrement et progression des jeux">
+  </div>
+
+  <div class="step">
+    <h3>(13) Jeu terminé</h3>
+    <p>Dès que la dernière note d’un jeu est capturée, une boîte de dialogue apparaît. Choisissez :</p>
+    <ul>
+      <li><b>Vérifier maintenant</b> — ouvre l’écran de contrôle pour ce jeu tout de suite.</li>
+      <li><b>Approuvé</b> — marque le jeu comme terminé et passe au suivant.</li>
+      <li><b>Plus tard</b> — garde le jeu « à vérifier », pour l’écouter plus tard.</li>
+    </ul>
+    <img src="cap_en_13.png" alt="Boîte de dialogue : jeu terminé, avec les trois boutons de choix">
+  </div>
+
+  <h2>4. Vérifier</h2>
+  <div class="step"><h3>(14) Écran de contrôle</h3><p>Via le bouton <b>Vérifier</b> en haut, ou via la boîte de dialogue de l’étape 13, vous arrivez à l’écran de contrôle. JM-Rec montre pour chaque note si la prise est valide : silence au début, saturation (clipping), queue coupée trop tôt — chaque anomalie est marquée par une couleur et un symbole. Refaire une seule note se fait d’un clic.</p><img src="cap_en_14.png" alt="Écran de contrôle avec les anomalies par note"></div>
+  <div class="step"><h3>(15) Détection des boucles</h3><p>Un tuyau d’orgue tient longtemps ; pour les échantillonneurs on pose une « boucle » afin que le son puisse continuer sans que la prise doive être infiniment longue. JM-Rec propose un ou plusieurs points de boucle par note, les affiche sur la forme d’onde et les lit à la demande. Un clic valide la proposition ou choisit un autre endroit.</p><img src="cap_en_15.png" alt="Détection des boucles avec les points proposés"></div>
+
+  <h2>5. Télécommande</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>Via le bouton <b>QR Remote</b>, JM-Rec affiche un code QR avec l’adresse réseau (par exemple <code>http://192.168.1.10:5570</code>). Scannez-le avec votre téléphone ou tablette : la télécommande s’ouvre dans le navigateur. Vous pilotez <b>Enregistrer</b>, <b>Pause</b> et <b>Stop</b> et voyez la note en cours depuis le banc — sans rien installer.</p>
+    <p>Pas de wifi ? Activez le point d’accès mobile de Windows (bouton <b>Ouvrir les paramètres de point d’accès</b> en bas), connectez votre téléphone à ce réseau et choisissez ici le réseau du point d’accès dans la liste déroulante.</p>
+    <img src="cap_en_16.png" alt="QR Remote avec code QR et adresse réseau">
+  </div>
+
+  <h2>6. Résultat dans JM-Orgue</h2>
+  <div class="step">
+    <h3>Ouvrir les enregistrements</h3>
+    <p>Une fois les prises terminées, lancez <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a>, ouvrez la bibliothèque et cliquez sur <b>Open organ…</b>. Pointez vers le dossier de stockage choisi à l’étape 1 : l’orgue apparaît dans la bibliothèque avec tous les claviers, jeux et accouplements configurés dans l’assistant. À partir de là, il se joue comme n’importe quel autre jeu d’échantillons.</p>
+  </div>
+
+  <p class="back"><a href="../">← Retour à la page JM-Rec</a></p>
+</div>
+
+</body>
+</html>

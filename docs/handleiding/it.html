@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manuale — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">← Torna alla pagina JM-Rec</a> &middot; <a href="en.html">Versione inglese</a></p>
+  <h1>JM-Rec — passo passo</h1>
+  <p>Un giro di JM-Rec sulla base di schermate reali. I numeri tra parentesi rimandano all’immagine corrispondente; l’ordine è quello che segui nell’app.</p>
+
+  <h2>1. Benvenuto</h2>
+  <div class="step">
+    <h3>(01) La schermata iniziale</h3>
+    <p>JM-Rec ricorda l’ultimo organo usato. Alla nuova sessione chiede se vuoi continuare con quello o impostarne uno nuovo.</p>
+    <ul>
+      <li><b>Continua con questo organo</b> — apre la schermata principale esattamente dove l’avevi lasciata: stessa cartella di salvataggio, stessi registri, stesso avanzamento.</li>
+      <li><b>Imposta un nuovo organo</b> — avvia la procedura guidata di dieci passi qui sotto.</li>
+    </ul>
+    <img src="cap_en_01.png" alt="Schermata iniziale con i due pulsanti di scelta">
+  </div>
+
+  <h2>2. La procedura guidata — dieci passi</h2>
+  <p>Dieci brevi passi mettono su tutta la struttura: dove vanno le registrazioni, quale costruttore e quale chiesa, come sono fatte tastiere e registri. Ogni passo è reversibile con la freccia in basso a sinistra.</p>
+
+  <div class="step"><h3>(02) Passo 1 — Cartella di salvataggio</h3><p>La cartella in cui vengono tenute tutte le registrazioni. Scegli una cartella vuota su un disco con abbastanza spazio — un set arriva presto a vari gigabyte. JM-Rec crea lì una sottocartella per organo, così puoi registrare più organi fianco a fianco.</p><img src="cap_en_02.png" alt="Procedura guidata passo 1: cartella di salvataggio"></div>
+  <div class="step"><h3>(03) Passo 2 — Costruttore</h3><p>Il nome del costruttore (ad esempio <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec lo conserva come metadato nelle registrazioni, così in JM-Orgue vedi subito quale organo stai suonando.</p><img src="cap_en_03.png" alt="Procedura guidata passo 2: costruttore"></div>
+  <div class="step"><h3>(04) Passo 3 — Luogo</h3><p>La località dell’organo (ad esempio <i>Putten</i>). Insieme al nome della chiesa forma l’etichetta con cui l’organo compare nella tua libreria.</p><img src="cap_en_04.png" alt="Procedura guidata passo 3: luogo"></div>
+  <div class="step"><h3>(05) Passo 4 — Nome della chiesa</h3><p>Il nome dell’edificio (<i>Vecchia Chiesa</i>, <i>Chiesa Grande</i>, …). Viene scritto come testo informativo nelle registrazioni e appare sulla scheda dell’organo in JM-Orgue.</p><img src="cap_en_05.png" alt="Procedura guidata passo 4: nome della chiesa"></div>
+  <div class="step"><h3>(06) Passo 5 — Anno di costruzione</h3><p>L’anno di costruzione, facoltativo. Lascia il campo vuoto se non lo conosci.</p><img src="cap_en_06.png" alt="Procedura guidata passo 5: anno di costruzione"></div>
+  <div class="step"><h3>(07) Passo 6 — Impostazioni audio</h3><p>Scegli il dispositivo di registrazione (microfono o loopback «cosa senti»), il numero di canali, la frequenza di campionamento e la profondità. Per default JM-Rec registra in mono a 48 000 Hz / 16-bit come MP3; va bene per la maggior parte degli organi a canne.</p><img src="cap_en_07.png" alt="Procedura guidata passo 6: impostazioni audio"></div>
+  <div class="step"><h3>(08) Passo 7 — MIDI</h3><p>Quale dispositivo MIDI suona l’organo? Scegli l’ingresso MIDI usato dalla tua consolle o tastiera. Con il loopback «cosa senti» su un organo virtuale puoi scegliere anche una porta MIDI virtuale (loopMIDI); JM-Rec guiderà le note da solo.</p><img src="cap_en_08.png" alt="Procedura guidata passo 7: MIDI"></div>
+  <div class="step"><h3>(09) Passo 8 — Tastiere</h3><p>Quali tastiere ha l’organo e quale canale MIDI usa ciascuna? Un due manuali tipico ha Grand’Organo, Positivo/Recitativo e Pedale. Ogni tastiera ha un canale, così JM-Rec invia le note alla tastiera giusta quando scorre automaticamente.</p><img src="cap_en_09.png" alt="Procedura guidata passo 8: tastiere"></div>
+  <div class="step"><h3>(10) Passo 9 — Registri per tastiera</h3><p>Il cuore della configurazione. Per ogni tastiera elenchi i registri, la bocca (8′, 4′, 2′, un «4 st» misto…) e l’intervallo di note MIDI coperto. Promemoria: <b>Do centrale = MIDI 36</b>. Un registro spezzato in basso/soprano (<i>Tromba 8 B/D</i>) riceve il segno di spunta «Bass/disc».</p><img src="cap_en_10.png" alt="Procedura guidata passo 9: registri per tastiera"></div>
+  <div class="step"><h3>(11) Passo 10 — Riepilogo</h3><p>L’ultimo passo riepiloga tutto: numero di tastiere, di registri, prese totali da fare, spazio disco previsto. Se il quadro va, chiudi la procedura; vuoi correggere qualcosa, torni indietro con <b>Indietro</b>.</p><img src="cap_en_11.png" alt="Procedura guidata passo 10: riepilogo"></div>
+
+  <h2>3. Registrare</h2>
+  <div class="step">
+    <h3>(12) La schermata principale</h3>
+    <p>Dopo la procedura guidata arrivi alla schermata principale. La nota in arrivo (<i>C2</i>) è mostrata in grande, con il nome del file in cui sarà salvata (<code>036-c.mp3</code>). I tre pulsanti sono:</p>
+    <ul>
+      <li><b>Registra</b> — avvia la ripresa e, in un setup «intelligente», passa automaticamente alla nota successiva.</li>
+      <li><b>Pausa</b> — si ferma tra due note; comodo se passa un disturbo.</li>
+      <li><b>Stop</b> — chiude la ripresa in corso e torna a «Pronto».</li>
+    </ul>
+    <p>In basso vedi, per ogni tastiera (<i>Grand’Organo</i>, <i>Recitativo</i>, <i>Pedale</i>), tutti i registri con il loro avanzamento. La legenda colori — da registrare (rosso), incompleto (giallo), da controllare (viola), fatto (verde) — ti dice a colpo d’occhio dove sei.</p>
+    <img src="cap_en_12.png" alt="Schermata principale con nota C2, pulsanti di registrazione e avanzamento dei registri">
+  </div>
+
+  <div class="step">
+    <h3>(13) Registro completo</h3>
+    <p>Appena l’ultima canna di un registro è dentro, compare una finestra. Scegli:</p>
+    <ul>
+      <li><b>Controlla ora</b> — apre subito la schermata di verifica per questo registro.</li>
+      <li><b>Approvato</b> — segna il registro come fatto e passa al prossimo.</li>
+      <li><b>Dopo</b> — tiene il registro su «da controllare», per riascoltarlo più tardi.</li>
+    </ul>
+    <img src="cap_en_13.png" alt="Finestra: registro completo, con i tre pulsanti di scelta">
+  </div>
+
+  <h2>4. Verificare</h2>
+  <div class="step"><h3>(14) Schermata di verifica</h3><p>Dal pulsante <b>Controllo</b> in alto — o dalla finestra del passo 13 — arrivi alla schermata di verifica. JM-Rec mostra per ogni nota se la presa è valida: silenzio iniziale, clipping, coda troppo corta — ogni anomalia è segnalata con colore e simbolo. Rifare una singola nota è un clic.</p><img src="cap_en_14.png" alt="Schermata di verifica con le anomalie per nota"></div>
+  <div class="step"><h3>(15) Rilevamento dei loop</h3><p>Un suono d’organo dura a lungo; per i campionatori si imposta un «loop» così il suono può proseguire senza che la registrazione debba essere infinitamente lunga. JM-Rec propone uno o più punti di loop per nota, li mostra nella forma d’onda e li suona a richiesta. Un clic conferma la proposta o sceglie un altro punto.</p><img src="cap_en_15.png" alt="Rilevamento dei loop con i punti proposti"></div>
+
+  <h2>5. Telecomando</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>Dal pulsante <b>QR Remote</b> JM-Rec mostra un codice QR con l’indirizzo di rete (ad esempio <code>http://192.168.1.10:5570</code>). Lo scansioni col telefono o tablet e il telecomando si apre nel browser. Comandi <b>Registra</b>, <b>Pausa</b> e <b>Stop</b> e vedi la nota corrente dalla panca — senza app da installare.</p>
+    <p>Niente wifi? Accendi l’hotspot mobile di Windows (pulsante <b>Apri impostazioni hotspot</b> in basso), connetti il telefono a quella rete e scegli qui la rete hotspot dal menu a tendina.</p>
+    <img src="cap_en_16.png" alt="QR Remote con codice QR e indirizzo di rete">
+  </div>
+
+  <h2>6. Risultato in JM-Orgue</h2>
+  <div class="step">
+    <h3>Aprire le registrazioni</h3>
+    <p>Quando le prese sono pronte, avvia <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a>, apri la libreria e clicca <b>Open organ…</b>. Punta alla cartella di salvataggio scelta al passo 1 di JM-Rec e l’organo compare in libreria con tutte le tastiere, i registri e le unioni della procedura guidata. Da lì si suona come qualunque altro set.</p>
+  </div>
+
+  <p class="back"><a href="../">← Torna alla pagina JM-Rec</a></p>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handbuch — JM-Rec</title>
+<link rel="stylesheet" href="../style.css">
+<link rel="icon" type="image/x-icon" href="../assets/favicon.ico">
+</head>
+<body>
+
+<div class="manual-wrap">
+  <p class="back"><a href="../">← Zurück zur JM-Rec-Seite</a> &middot; <a href="en.html">Englische Version</a></p>
+  <h1>JM-Rec — Schritt für Schritt</h1>
+  <p>Eine Führung durch JM-Rec anhand echter Screenshots. Die Zahlen in Klammern verweisen auf das zugehörige Bild; die Reihenfolge entspricht dem Ablauf in der App.</p>
+
+  <h2>1. Willkommen</h2>
+  <div class="step">
+    <h3>(01) Der Startbildschirm</h3>
+    <p>JM-Rec merkt sich die zuletzt bearbeitete Orgel. Beim Neustart fragt es, ob Sie mit dieser Orgel weitermachen oder eine neue einrichten möchten.</p>
+    <ul>
+      <li><b>Mit dieser Orgel weiter</b> — öffnet den Hauptbildschirm genau so, wie Sie ihn zuletzt verlassen haben: gleicher Speicherordner, gleiche Register, gleicher Fortschritt.</li>
+      <li><b>Neue Orgel einrichten</b> — startet den zehnteiligen Assistenten unten.</li>
+    </ul>
+    <img src="cap_en_01.png" alt="Startbildschirm mit den beiden Auswahltasten">
+  </div>
+
+  <h2>2. Der Assistent — zehn Schritte</h2>
+  <p>Zehn kurze Schritte legen die gesamte Struktur fest: wohin die Aufnahmen gehen, welcher Erbauer und welche Kirche, wie Manuale und Register aussehen. Jeder Schritt lässt sich mit dem Pfeil unten links zurücknehmen.</p>
+
+  <div class="step"><h3>(02) Schritt 1 — Speicherort</h3><p>Der Ordner, in dem alle Aufnahmen gespeichert werden. Wählen Sie einen leeren Ordner auf einem Laufwerk mit genug Platz — ein Set erreicht schnell mehrere Gigabyte. JM-Rec legt pro Orgel einen Unterordner an, damit Sie mehrere Orgeln nebeneinander aufnehmen können.</p><img src="cap_en_02.png" alt="Assistent Schritt 1: Speicherort"></div>
+  <div class="step"><h3>(03) Schritt 2 — Orgelbauer</h3><p>Der Name des Orgelbauers (z. B. <i>Van Vulpen</i>, <i>Flentrop</i>, <i>Reil</i>). JM-Rec speichert dies als Metadaten in den Aufnahmen, damit Sie in JM-Orgue sofort sehen, welche Orgel Sie spielen.</p><img src="cap_en_03.png" alt="Assistent Schritt 2: Orgelbauer"></div>
+  <div class="step"><h3>(04) Schritt 3 — Ort</h3><p>Der Ort der Orgel (z. B. <i>Putten</i>). Zusammen mit dem Kirchennamen bildet das die Beschriftung, unter der die Orgel in Ihrer Bibliothek erscheint.</p><img src="cap_en_04.png" alt="Assistent Schritt 3: Ort"></div>
+  <div class="step"><h3>(05) Schritt 4 — Kirchenname</h3><p>Der Name des Gebäudes (<i>Alte Kirche</i>, <i>Große Kirche</i>, …). Wird als Infotext in die Aufnahmen geschrieben und erscheint auf der Bibliothekskarte der Orgel in JM-Orgue.</p><img src="cap_en_05.png" alt="Assistent Schritt 4: Kirchenname"></div>
+  <div class="step"><h3>(06) Schritt 5 — Baujahr</h3><p>Das Baujahr der Orgel, optional. Lassen Sie das Feld leer, wenn es unbekannt ist.</p><img src="cap_en_06.png" alt="Assistent Schritt 5: Baujahr"></div>
+  <div class="step"><h3>(07) Schritt 6 — Audio-Einstellungen</h3><p>Wählen Sie Ihr Aufnahmegerät (Mikrofon oder „Was Sie hören“-Loopback), die Kanalzahl, die Abtastrate und die Bittiefe. Standardmäßig nimmt JM-Rec in Mono 48 000 Hz / 16-bit als MP3 auf; das passt für die meisten Pfeifenorgeln.</p><img src="cap_en_07.png" alt="Assistent Schritt 6: Audio-Einstellungen"></div>
+  <div class="step"><h3>(08) Schritt 7 — MIDI</h3><p>Welches MIDI-Gerät spielt die Orgel? Wählen Sie den MIDI-Eingang, den Ihr Spieltisch oder Keyboard nutzt. Bei Loopback-Aufnahme einer virtuellen Orgel können Sie auch einen virtuellen MIDI-Port (loopMIDI) wählen; JM-Rec steuert die Noten dann selbst.</p><img src="cap_en_08.png" alt="Assistent Schritt 7: MIDI"></div>
+  <div class="step"><h3>(09) Schritt 8 — Manuale</h3><p>Welche Manuale hat die Orgel, und welchen MIDI-Kanal nutzt jedes? Eine typische zweimanualige Orgel hat Hauptwerk, Oberwerk und Pedal. Jedes Manual bekommt einen eigenen Kanal, damit JM-Rec die Noten beim automatischen Durchlaufen an das richtige Manual sendet.</p><img src="cap_en_09.png" alt="Assistent Schritt 8: Manuale"></div>
+  <div class="step"><h3>(10) Schritt 9 — Register pro Manual</h3><p>Das Herzstück der Einrichtung. Pro Manual listen Sie die Register, die Fußzahl (8′, 4′, 2′, ein gemischtes „4 st“…) und von welcher MIDI-Note bis zu welcher MIDI-Note die Registrierung klingt. Als Gedächtnisstütze: <b>großes C = MIDI 36</b>. Ein geteiltes Bass/Diskant-Register (<i>Trompete 8 B/D</i>) markieren Sie mit dem Häkchen „Bass/disc“.</p><img src="cap_en_10.png" alt="Assistent Schritt 9: Register pro Manual"></div>
+  <div class="step"><h3>(11) Schritt 10 — Übersicht</h3><p>Der letzte Schritt zeigt das Ganze nochmals: Anzahl der Manuale, der Register, der zu erstellenden Aufnahmen und der erwartete Speicherbedarf. Passt es, schließen Sie den Assistenten ab; möchten Sie etwas ändern, springen Sie mit <b>Zurück</b> einen Schritt zurück.</p><img src="cap_en_11.png" alt="Assistent Schritt 10: Übersicht"></div>
+
+  <h2>3. Aufnehmen</h2>
+  <div class="step">
+    <h3>(12) Der Hauptbildschirm</h3>
+    <p>Nach dem Assistenten landen Sie auf dem Hauptbildschirm. Groß angezeigt wird die als Nächstes aufzunehmende Note (<i>C2</i>), darunter der Dateiname, unter dem die Aufnahme gespeichert wird (<code>036-c.mp3</code>). Die drei Schaltflächen sind:</p>
+    <ul>
+      <li><b>Aufnehmen</b> — startet die Aufnahme und wandert bei einem „smarten“ Setup automatisch zur nächsten Note.</li>
+      <li><b>Pause</b> — unterbricht zwischen zwei Noten; praktisch, wenn eine Störung kommt.</li>
+      <li><b>Stop</b> — schließt die laufende Aufnahme und kehrt zu „Bereit“ zurück.</li>
+    </ul>
+    <p>Unten sehen Sie pro Manual (<i>Hauptwerk</i>, <i>Oberwerk</i>, <i>Pedal</i>) alle Register mit ihrem Fortschritt. Die Farblegende — noch aufzunehmen (rot), unvollständig (gelb), zu prüfen (lila), fertig (grün) — zeigt auf einen Blick, wo Sie stehen.</p>
+    <img src="cap_en_12.png" alt="Hauptbildschirm mit Note C2, Aufnahmetasten und Registerfortschritt">
+  </div>
+
+  <div class="step">
+    <h3>(13) Register vollständig</h3>
+    <p>Sobald die letzte Pfeife eines Registers drin ist, erscheint ein Dialog. Sie wählen:</p>
+    <ul>
+      <li><b>Jetzt prüfen</b> — öffnet sofort den Prüfbildschirm für dieses Register.</li>
+      <li><b>Genehmigt</b> — markiert das Register als fertig und geht zum nächsten.</li>
+      <li><b>Später</b> — belässt das Register auf „noch prüfen“, damit Sie es später nochmals abhören.</li>
+    </ul>
+    <img src="cap_en_13.png" alt="Dialog: Register vollständig, mit den drei Auswahltasten">
+  </div>
+
+  <h2>4. Prüfen</h2>
+  <div class="step"><h3>(14) Prüfbildschirm</h3><p>Über die Schaltfläche <b>Prüfen</b> oben oder über den Dialog aus Schritt 13 erreichen Sie den Prüfbildschirm. JM-Rec zeigt pro Ton, ob die Aufnahme gültig ist: Stille am Anfang, Übersteuerung (Clipping), ein zu kurzer Nachklang — jedes Problem wird mit Farbe und Symbol markiert. Eine einzelne Note erneut aufnehmen ist ein Klick.</p><img src="cap_en_14.png" alt="Prüfbildschirm mit Befunden pro Ton"></div>
+  <div class="step"><h3>(15) Loop-Erkennung</h3><p>Orgeltöne sind lang; für Sampler wird eine „Schleife“ gesetzt, damit der Ton weiterklingen kann, ohne die Aufnahme endlos lang machen zu müssen. JM-Rec schlägt pro Ton einen oder mehrere Schleifenpunkte vor, zeigt sie in der Wellenform und spielt sie zur Probe ab. Ein Klick bestätigt den Vorschlag oder wählt eine andere Stelle.</p><img src="cap_en_15.png" alt="Loop-Erkennung mit vorgeschlagenen Punkten"></div>
+
+  <h2>5. Fernbedienung</h2>
+  <div class="step">
+    <h3>(16) QR Remote</h3>
+    <p>Über die Schaltfläche <b>QR Remote</b> zeigt JM-Rec einen QR-Code mit der Netzwerkadresse (z. B. <code>http://192.168.1.10:5570</code>). Scannen Sie ihn mit Handy oder Tablet, öffnet sich die Fernbedienung im Browser. Sie steuern <b>Aufnehmen</b>, <b>Pause</b> und <b>Stop</b> und sehen die aktuelle Note von der Orgelbank aus — ohne Apps zu installieren.</p>
+    <p>Kein WLAN? Schalten Sie den Mobilen Hotspot von Windows ein (Schaltfläche <b>Hotspot-Einstellungen öffnen</b> unten), verbinden Sie Ihr Handy mit diesem Netz und wählen Sie hier das Hotspot-Netzwerk aus dem Dropdown.</p>
+    <img src="cap_en_16.png" alt="QR Remote mit QR-Code und Netzwerkadresse">
+  </div>
+
+  <h2>6. Ergebnis in JM-Orgue</h2>
+  <div class="step">
+    <h3>Die Aufnahmen öffnen</h3>
+    <p>Sind die Aufnahmen fertig, starten Sie <a href="https://orgelmaker.github.io/JM-Orgue/">JM-Orgue</a> und öffnen in der Bibliothek <b>Open organ…</b>. Zeigen Sie auf den in Schritt 1 gewählten Speicherordner, und die Orgel erscheint in der Bibliothek mit allen Manualen, Registern und Koppeln aus dem Assistenten. Ab da spielt sie wie jedes andere Sample-Set.</p>
+  </div>
+
+  <p class="back"><a href="../">← Zurück zur JM-Rec-Seite</a></p>
+</div>
+
+</body>
+</html>
