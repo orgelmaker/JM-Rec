@@ -148,7 +148,7 @@ def sanitize_path_component(name):
     return cleaned
 
 
-JM_REC_VERSION = "3.12"
+JM_REC_VERSION = "3.13"
 GITHUB_REPO = "orgelmaker/JM-Rec"
 # Copyright-tekst die in de metadata van elke opgeslagen sample wordt gezet
 # (WAV: LIST-INFO ICOP-chunk, FLAC: Vorbis-tag, MP3: ID3-commentaar).
@@ -521,7 +521,7 @@ I18N_JS = r'''
 <div class="tip-box">Convert MP3 to WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Network &amp; Connection</h2>
 <div class="warn-box">Your phone and this PC must be on the <strong>same network</strong> (WiFi).<br>Alternatives: USB tethering or a mobile hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — all rights reserved; use of the source code only with permission</p>`,
     "de": `<div class="modal-title">JM-Rec — Handbuch</div>
 <h2>Schnellstart</h2>
 <ul>
@@ -590,7 +590,7 @@ I18N_JS = r'''
 <div class="tip-box">MP3 zu WAV konvertieren:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Netzwerk &amp; Verbindung</h2>
 <div class="warn-box">Ihr Telefon und dieser PC müssen im <strong>selben Netzwerk</strong> sein (WLAN).<br>Alternativen: USB-Tethering oder ein mobiler Hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — alle Rechte vorbehalten; Nutzung des Quellcodes nur mit Genehmigung</p>`,
     "fr": `<div class="modal-title">JM-Rec — Manuel</div>
 <h2>Démarrage rapide</h2>
 <ul>
@@ -659,7 +659,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`,
     "es": `<div class="modal-title">JM-Rec — Manual</div>
 <h2>Inicio rápido</h2>
 <ul>
@@ -728,7 +728,7 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 a WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Red y Conexión</h2>
 <div class="warn-box">Su teléfono y este PC deben estar en la <strong>misma red</strong> (WiFi).<br>Alternativas: compartir USB o un hotspot móvil.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — todos los derechos reservados; uso del código fuente solo con autorización</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — todos los derechos reservados; uso del código fuente solo con autorización</p>`,
     "it": `<div class="modal-title">JM-Rec — Manuale</div>
 <h2>Avvio rapido</h2>
 <ul>
@@ -797,7 +797,7 @@ I18N_JS = r'''
 <div class="tip-box">Converti MP3 in WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Rete e Connessione</h2>
 <div class="warn-box">Il tuo telefono e questo PC devono essere sulla <strong>stessa rete</strong> (WiFi).<br>Alternative: tethering USB o un hotspot mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tutti i diritti riservati; uso del codice sorgente solo con autorizzazione</p>`,
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — tutti i diritti riservati; uso del codice sorgente solo con autorizzazione</p>`,
     "pl": `<div class="modal-title">JM-Rec — Podręcznik</div>
 <h2>Szybki start</h2>
 <ul>
@@ -866,7 +866,7 @@ I18N_JS = r'''
 <div class="tip-box">Konwertuj MP3 na WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Sieć i Połączenie</h2>
 <div class="warn-box">Twój telefon i ten komputer muszą być w <strong>tej samej sieci</strong> (WiFi).<br>Alternatywy: tethering USB lub mobilny hotspot.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — wszelkie prawa zastrzeżone; użycie kodu źródłowego tylko za zgodą</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — wszelkie prawa zastrzeżone; użycie kodu źródłowego tylko za zgodą</p>`
   };
   let LANG = 'nl';
   window.jmLangs = ['nl','en','de','fr','es','it','pl'];
@@ -5060,7 +5060,7 @@ body {
 </div>
 
 <div class="header">
-    <div class="logo">JM-Rec <span>v3.12</span></div>
+    <div class="logo">JM-Rec <span>v3.13</span></div>
     <div class="header-actions">
         <div class="project-info">
             <span id="projectInfo">—</span>
@@ -5636,7 +5636,7 @@ body {
             Alternatieven: USB-tethering of een mobiele hotspot.
         </div>
 
-        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
+        <p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.13 · &copy; 2026 Martijn van der Kolk — alle rechten voorbehouden; gebruik van de broncode alleen met toestemming</p>
         </div>
     </div>
 </div>

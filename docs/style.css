@@ -167,6 +167,8 @@ nav.lang button.active { background: var(--teal); color: #0e2520; font-weight: 6
   text-align: center;
 }
 .dl-list li, .man-list li { padding: 0.3rem 0; }
+.dl-badges { text-align: center; margin: 0.5rem 0 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; }
+.dl-badges img { height: 22px; }
 
 /* Zusterproject-blok */
 .sister-card {
