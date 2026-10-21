@@ -360,6 +360,96 @@ I18N_JS = r'''
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
     "Register":"Jeu","op":"sur","is volledig opgenomen":"est entièrement enregistré","Wil je het nu controleren?":"Le contrôler maintenant ?","is compleet":"est complet","Controleren?":"Contrôler ?",
     "Klavier / Pedaal":"Clavier / Pédalier","Register opnemen":"Enregistrer le jeu","Apparaten verversen":"Actualiser les appareils","Laden...":"Chargement...","MP3 Bitrate":"Débit MP3","Mapnaam:":"Nom du dossier :","Mapnaam: —":"Nom du dossier : —","Scan de QR-code met je telefoon of tablet":"Scannez le QR code avec votre téléphone ou tablette","om de afstandsbediening te openen":"pour ouvrir la télécommande","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet n'est pas nécessaire — la commande fonctionne sans. Gardez cette fenêtre ouverte ; si le point d'accès se coupe, réactivez-le.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Cliquez sur « Ouvrir les réglages du point d'accès » et activez le point d'accès mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notez le nom du réseau et le mot de passe affichés par Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connectez votre iPad/iPhone ou Android à ce réseau.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Choisissez le réseau du point d'accès ci-dessus et scannez le QR code (ou tapez l'adresse).","Pad naar register-, klavier- of orgelmap":"Chemin vers le dossier jeu, clavier ou orgue","Her-opname:":"Réenregistrement :","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Ajouter/supprimer des jeux par clavier. Do grave = MIDI 36.","Register toevoegen":"Ajouter un jeu"
+  },
+  "es": {
+    "Registers":"Registros","Controle":"Revisión","? Info":"? Ayuda","Nieuw orgel":"Nuevo órgano","Instellingen":"Ajustes","QR Remote":"QR Remoto","Bediening":"Control","Project":"Proyecto",
+    "Welkom":"Bienvenido","Doorgaan met dit orgel":"Continuar con este órgano","Nieuw orgel instellen":"Configurar un nuevo órgano",
+    "Orgel instellen":"Configurar órgano","Stap":"Paso","Vorige":"Atrás","Volgende":"Siguiente","Opslaan & starten":"Guardar e iniciar","Vorige →":"Atrás","Volgende →":"Siguiente →","← Vorige":"← Atrás",
+    "1. Opslaglocatie":"1. Ubicación de almacenamiento","Map waarin alle opnames worden bewaard.":"Carpeta donde se guardan todas las grabaciones.","Opslagmap":"Carpeta de almacenamiento","Bladeren…":"Examinar…","bijv. D:\\Opnames":"p. ej. D:\\Grabaciones",
+    "2. Microfoon(s)":"2. Micrófono(s)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Elija la fuente de grabación. Con varios micrófonos, cada uno recibe su propio nombre de posición (subcarpeta).","Bron":"Fuente","Microfoon(s)":"Micrófono(s)","Wat je hoort (loopback)":"Lo que oyes (loopback)","positie":"posición","Geen microfoons gevonden.":"No se encontraron micrófonos.","Kon apparaten niet laden.":"No se pudieron cargar los dispositivos.","Speaker (loopback)":"Altavoz (loopback)","Geen loopback-apparaten.":"Sin dispositivos loopback.",
+    "3. Plaatsnaam":"3. Localidad","Plaats waar het orgel staat.":"Localidad donde se encuentra el órgano.","bijv. Puttershoek":"p. ej. Puttershoek","Mapcode wordt:":"Código de carpeta:",
+    "4. Kerknaam":"4. Nombre de la iglesia","Naam van de kerk/gebouw (wordt als info bewaard).":"Nombre de la iglesia/edificio (se guarda como información).","bijv. Hervormde Kerk":"p. ej. Iglesia de San Pedro",
+    "5. Orgelbouwer":"5. Organero","De bouwer van het orgel.":"El constructor del órgano.","bijv. Muller":"p. ej. Muller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Nombre de carpeta (4 letras localidad + 4 letras organero, editable)",
+    "6. Klavieren en pedaal":"6. Teclados y pedalero","Hoeveel klavieren (manualen) heeft het orgel?":"¿Cuántos teclados tiene el órgano?","Aantal klavieren":"Número de teclados","Pedaal aanwezig":"Pedalero presente",
+    "7. Naam per klavier":"7. Nombre por teclado","Geef elk klavier een naam.":"Dé un nombre a cada teclado.","Klavier":"Teclado",
+    "8. Tremulant en zwelkast":"8. Trémolo y caja expresiva","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Con un trémolo, cada registro se graba dos veces (normal y _trem).","Tremulant":"Trémolo","Geen tremulant":"Sin trémolo","Heel het orgel":"Todo el órgano","Per klavier":"Por teclado","Zwelkast (zwelwerk) per klavier":"Caja expresiva por teclado","Tremulant op":"Trémolo en","Zwelkast op":"Caja expresiva en",
+    "9. Registers per klavier":"9. Registros por teclado","Naam":"Nombre","Voet":"Pies","Begin":"Inicio","Eind":"Fin","Bas/disc":"Bajo/Tiple","+ Register":"+ Registro","Prestant":"Principal",
+    "10. Opname-instellingen en koppels":"10. Ajustes de grabación y acoplamientos","Samplerate":"Frecuencia de muestreo","Bitdiepte":"Profundidad de bits","Kanalen":"Canales","Formaat":"Formato","Aftellen (sec)":"Cuenta atrás (s)","Opnameduur (sec)":"Duración de grabación (s)","Splitstoets bas/disc (MIDI)":"Nota de corte bajo/tiple (MIDI)","Koppels":"Acoplamientos","+ Koppel":"+ Acoplamiento","Mono":"Mono","Stereo":"Estéreo",
+    "Opnamemodus":"Modo de grabación","Vaste duur":"Duración fija","Intelligent (assisterend)":"Inteligente (asistido)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Graba automáticamente hasta que haya suficiente tono estable y apto para bucle, y entonces señala que puede soltar. Solo entrada de micrófono.","Min. stabiele toon (sec)":"Tono estable mín. (s)","Max. duur (sec)":"Duración máx. (s)","Gevoeligheid":"Sensibilidad","Gevoeligheid (0.3 streng – 3 los)":"Sensibilidad (0.3 estricta – 3 permisiva)","Wachten op toon…":"Esperando tono…","Stabiliseren…":"Estabilizando…","Genoeg — laat los":"Suficiente — suelte","Uitklank opnemen…":"Capturando resonancia…",
+    "Opnemen":"Grabar","Pauze":"Pausa","Stop":"Detener","Vorige noot":"Nota anterior","Opnieuw":"Repetir","Volgende noot":"Nota siguiente","Opname":"Grabación","Enkele opname (zonder auto-advance)":"Grabación única (sin avance automático)",
+    "nog op te nemen":"por grabar","niet compleet":"incompleto","nog te controleren":"por revisar","nog controleren":"revisar","goed":"aprobado","controleren":"revisar",
+    "Register kiezen":"Elegir registro","Geen registers":"Sin registros","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"No hay registros definidos. Configure el órgano en el PC maestro.","Geen registers gedefinieerd op de master-PC.":"No hay registros definidos en el PC maestro.",
+    "Register compleet":"Registro completo","Nu controleren":"Revisar ahora","Goedgekeurd":"Aprobado","Later":"Más tarde","Controleren":"Revisar",
+    "Registerbeheer":"Gestión de registros","Nieuw register":"Nuevo registro","Nog geen registers.":"Aún no hay registros.","normaal":"normal","tremulant":"trémolo","gecontroleerd":"revisado","beginnoot":"nota inicial","eindnoot":"nota final","bas/disc":"bajo/tiple","naam (bijv. Prestant)":"nombre (p. ej. Principal)",
+    "GEREED":"LISTO","AFTELLEN":"CUENTA ATRÁS","OPNAME":"GRABANDO","GEPAUZEERD":"EN PAUSA","IDLE":"LISTO",
+    "Instellingen & Bediening":"Ajustes y Control","Audiobron":"Fuente de audio","Verversen":"Actualizar","Microfoon":"Micrófono","Wat je hoort":"Lo que oyes","Audio":"Audio","Volume":"Volumen","Workflow":"Flujo de trabajo","Startnoot (MIDI)":"Nota inicial (MIDI)","Eindnoot (MIDI)":"Nota final (MIDI)","Bas/Discant splitsen":"Separar bajo/tiple","Splitstoets (MIDI)":"Nota de corte (MIDI)","Bas opnemen":"Grabar bajo","Discant opnemen":"Grabar tiple","Orgelnaam":"Nombre del órgano","Opslaglocatie":"Ubicación de almacenamiento","Pedaal":"Pedalero","Toepassen":"Aplicar","Instellingen toepassen":"Aplicar ajustes",
+    "Exporteren":"Exportar","Exporteer .organ (JM-Orgue)":"Exportar .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exportar datos del proyecto (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crea un archivo de definición .organ en la carpeta del proyecto que JM-Orgue puede cargar directamente.",".organ opgeslagen:":".organ guardado:","registers":"registros","samples":"muestras","ontbrekend":"faltante","Export mislukt:":"Error al exportar:","Update beschikbaar:":"Actualización disponible:","Feedback":"Comentarios","Feedback geven":"Dar comentarios","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"¿Encontró un problema o tiene una idea para JM-Rec? Su texto se prepara como un informe de GitHub.","Probleem melden":"Informar un problema","Idee of verbetering":"Idea o mejora","Beschrijf je probleem of idee zo concreet mogelijk…":"Describa su problema o idea de la forma más concreta posible…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Se abre una página de GitHub con su texto rellenado (incluida la información de versión). Para enviarlo se necesita una cuenta gratuita de GitHub.","Openen op GitHub":"Abrir en GitHub","Project-JSON opgeslagen:":"JSON del proyecto guardado:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Nota: JM-Orgue no admite FLAC; elija WAV o MP3 como formato",
+    "Remote Control":"Mando a distancia","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Asegúrese de que su teléfono esté en la misma red que este PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Elija la red a la que está conectado su teléfono:","Directe verbinding (geen WiFi nodig)":"Conexión directa (sin WiFi)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"¿Sin WiFi en este lugar? Deje que este PC emita su propia red y conecte su teléfono o tableta a ella.","Open hotspot-instellingen":"Abrir ajustes de hotspot",
+    "Sample Controle":"Revisión de muestras",
+    "Loops":"Bucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Busca en cada muestra el tramo que se une sin costuras consigo mismo y lo guarda en el archivo, de modo que una nota se pueda sostener indefinidamente. Si la forma de onda no empalma limpiamente, se aplica un fundido cruzado y el original se copia primero.","Alleen meten":"Solo medir","Loops maken":"Crear bucles","Afbreken":"Interrumpir","Stemtoon (Hz)":"Diapasón (Hz)","Na een opname automatisch controleren":"Comprobar automáticamente tras la grabación","Na een opname ook loops maken":"Crear también bucles tras la grabación","zonder loop:":"sin bucle:","Looppunten vragen de module soundfile":"Los puntos de bucle requieren el módulo soundfile","Er loopt al een loopronde":"Ya hay una ronda de bucles en curso","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"¿Buscar y escribir puntos de bucle en todas las muestras? De las muestras cuyo audio se modifique, se guarda primero una copia del original en la carpeta de salida.","Analyseren":"Analizar","Annuleren":"Cancelar","Map":"Carpeta","Orgel":"Órgano","Stilte knippen":"Recortar silencio","Klaar":"Listo",
+    "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Inicio rápido","Kleurcodes per register":"Códigos de color por registro","Kleur":"Color","Betekenis":"Significado","Knop":"Botón","Functie":"Función",
+    "Register":"Registro","op":"en","is volledig opgenomen":"está totalmente grabado","Wil je het nu controleren?":"¿Lo desea revisar ahora?","is compleet":"está completo","Controleren?":"¿Revisar?",
+    "Klavier / Pedaal":"Teclado / Pedalero","Register opnemen":"Grabar registro","Apparaten verversen":"Actualizar dispositivos","Laden...":"Cargando...","MP3 Bitrate":"Tasa de bits MP3","Mapnaam:":"Nombre de carpeta:","Mapnaam: —":"Nombre de carpeta: —","Scan de QR-code met je telefoon of tablet":"Escanee el código QR con su teléfono o tableta","om de afstandsbediening te openen":"para abrir el mando a distancia","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"No se necesita Internet — el control funciona igualmente. Mantenga esta ventana abierta; si el hotspot se desactiva, vuelva a encenderlo.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Haga clic en «Abrir ajustes de hotspot» y encienda el hotspot móvil.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Anote el nombre de red y la contraseña que muestra Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Conecte su iPad/iPhone o Android a esa red.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Elija arriba la red del hotspot y escanee el código QR (o escriba la dirección).","Pad naar register-, klavier- of orgelmap":"Ruta a la carpeta de registro, teclado u órgano","Her-opname:":"Regrabación:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Añadir/quitar registros por teclado. Do grave = MIDI 36.","Register toevoegen":"Añadir registro"
+  },
+  "it": {
+    "Registers":"Registri","Controle":"Verifica","? Info":"? Aiuto","Nieuw orgel":"Nuovo organo","Instellingen":"Impostazioni","QR Remote":"QR Remoto","Bediening":"Comandi","Project":"Progetto",
+    "Welkom":"Benvenuto","Doorgaan met dit orgel":"Continua con questo organo","Nieuw orgel instellen":"Configura un nuovo organo",
+    "Orgel instellen":"Configura organo","Stap":"Passo","Vorige":"Indietro","Volgende":"Avanti","Opslaan & starten":"Salva e avvia","Vorige →":"Indietro","Volgende →":"Avanti →","← Vorige":"← Indietro",
+    "1. Opslaglocatie":"1. Posizione di archiviazione","Map waarin alle opnames worden bewaard.":"Cartella in cui vengono salvate tutte le registrazioni.","Opslagmap":"Cartella di archiviazione","Bladeren…":"Sfoglia…","bijv. D:\\Opnames":"es. D:\\Registrazioni",
+    "2. Microfoon(s)":"2. Microfono(i)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Scegli la sorgente di registrazione. Con più microfoni, ciascuno riceve il proprio nome di posizione (sottocartella).","Bron":"Sorgente","Microfoon(s)":"Microfono(i)","Wat je hoort (loopback)":"Ciò che senti (loopback)","positie":"posizione","Geen microfoons gevonden.":"Nessun microfono trovato.","Kon apparaten niet laden.":"Impossibile caricare i dispositivi.","Speaker (loopback)":"Altoparlante (loopback)","Geen loopback-apparaten.":"Nessun dispositivo loopback.",
+    "3. Plaatsnaam":"3. Località","Plaats waar het orgel staat.":"Località in cui si trova l'organo.","bijv. Puttershoek":"es. Puttershoek","Mapcode wordt:":"Codice cartella:",
+    "4. Kerknaam":"4. Nome della chiesa","Naam van de kerk/gebouw (wordt als info bewaard).":"Nome della chiesa/edificio (salvato come informazione).","bijv. Hervormde Kerk":"es. Chiesa di San Pietro",
+    "5. Orgelbouwer":"5. Organaro","De bouwer van het orgel.":"Il costruttore dell'organo.","bijv. Muller":"es. Muller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Nome cartella (4 lettere località + 4 lettere organaro, modificabile)",
+    "6. Klavieren en pedaal":"6. Tastiere e pedaliera","Hoeveel klavieren (manualen) heeft het orgel?":"Quante tastiere ha l'organo?","Aantal klavieren":"Numero di tastiere","Pedaal aanwezig":"Pedaliera presente",
+    "7. Naam per klavier":"7. Nome per tastiera","Geef elk klavier een naam.":"Dai un nome a ciascuna tastiera.","Klavier":"Tastiera",
+    "8. Tremulant en zwelkast":"8. Tremolo e cassa espressiva","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Con un tremolo, ogni registro viene registrato due volte (normale e _trem).","Tremulant":"Tremolo","Geen tremulant":"Nessun tremolo","Heel het orgel":"Tutto l'organo","Per klavier":"Per tastiera","Zwelkast (zwelwerk) per klavier":"Cassa espressiva per tastiera","Tremulant op":"Tremolo su","Zwelkast op":"Cassa espressiva su",
+    "9. Registers per klavier":"9. Registri per tastiera","Naam":"Nome","Voet":"Piedi","Begin":"Inizio","Eind":"Fine","Bas/disc":"Basso/Soprano","+ Register":"+ Registro","Prestant":"Principale",
+    "10. Opname-instellingen en koppels":"10. Impostazioni di registrazione e unioni","Samplerate":"Frequenza di campionamento","Bitdiepte":"Profondità di bit","Kanalen":"Canali","Formaat":"Formato","Aftellen (sec)":"Conto alla rovescia (s)","Opnameduur (sec)":"Durata registrazione (s)","Splitstoets bas/disc (MIDI)":"Nota di divisione basso/soprano (MIDI)","Koppels":"Unioni","+ Koppel":"+ Unione","Mono":"Mono","Stereo":"Stereo",
+    "Opnamemodus":"Modalità di registrazione","Vaste duur":"Durata fissa","Intelligent (assisterend)":"Intelligente (assistita)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Registra automaticamente finché c'è abbastanza suono stabile e idoneo al loop, poi segnala di rilasciare. Solo ingresso microfono.","Min. stabiele toon (sec)":"Suono stabile min. (s)","Max. duur (sec)":"Durata max. (s)","Gevoeligheid":"Sensibilità","Gevoeligheid (0.3 streng – 3 los)":"Sensibilità (0.3 stretta – 3 larga)","Wachten op toon…":"In attesa del suono…","Stabiliseren…":"Stabilizzazione…","Genoeg — laat los":"Basta — rilascia","Uitklank opnemen…":"Cattura della coda…",
+    "Opnemen":"Registra","Pauze":"Pausa","Stop":"Stop","Vorige noot":"Nota precedente","Opnieuw":"Rifai","Volgende noot":"Nota successiva","Opname":"Registrazione","Enkele opname (zonder auto-advance)":"Registrazione singola (senza avanzamento automatico)",
+    "nog op te nemen":"da registrare","niet compleet":"incompleto","nog te controleren":"da verificare","nog controleren":"verificare","goed":"approvato","controleren":"verificare",
+    "Register kiezen":"Scegli registro","Geen registers":"Nessun registro","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Nessun registro definito. Configura l'organo sul PC master.","Geen registers gedefinieerd op de master-PC.":"Nessun registro definito sul PC master.",
+    "Register compleet":"Registro completo","Nu controleren":"Verifica ora","Goedgekeurd":"Approvato","Later":"Più tardi","Controleren":"Verifica",
+    "Registerbeheer":"Gestione registri","Nieuw register":"Nuovo registro","Nog geen registers.":"Nessun registro ancora.","normaal":"normale","tremulant":"tremolo","gecontroleerd":"verificato","beginnoot":"nota iniziale","eindnoot":"nota finale","bas/disc":"basso/soprano","naam (bijv. Prestant)":"nome (es. Principale)",
+    "GEREED":"PRONTO","AFTELLEN":"CONTO ALLA ROVESCIA","OPNAME":"REGISTRAZIONE","GEPAUZEERD":"IN PAUSA","IDLE":"PRONTO",
+    "Instellingen & Bediening":"Impostazioni e Comandi","Audiobron":"Sorgente audio","Verversen":"Aggiorna","Microfoon":"Microfono","Wat je hoort":"Ciò che senti","Audio":"Audio","Volume":"Volume","Workflow":"Flusso di lavoro","Startnoot (MIDI)":"Nota iniziale (MIDI)","Eindnoot (MIDI)":"Nota finale (MIDI)","Bas/Discant splitsen":"Divisione basso/soprano","Splitstoets (MIDI)":"Nota di divisione (MIDI)","Bas opnemen":"Registra basso","Discant opnemen":"Registra soprano","Orgelnaam":"Nome dell'organo","Opslaglocatie":"Posizione di archiviazione","Pedaal":"Pedaliera","Toepassen":"Applica","Instellingen toepassen":"Applica impostazioni",
+    "Exporteren":"Esporta","Exporteer .organ (JM-Orgue)":"Esporta .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Esporta dati del progetto (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crea un file di definizione .organ nella cartella del progetto che JM-Orgue può caricare direttamente.",".organ opgeslagen:":".organ salvato:","registers":"registri","samples":"campioni","ontbrekend":"mancante","Export mislukt:":"Esportazione fallita:","Update beschikbaar:":"Aggiornamento disponibile:","Feedback":"Feedback","Feedback geven":"Invia feedback","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Hai trovato un problema o hai un'idea per JM-Rec? Il tuo testo viene preparato come segnalazione GitHub.","Probleem melden":"Segnala un problema","Idee of verbetering":"Idea o miglioramento","Beschrijf je probleem of idee zo concreet mogelijk…":"Descrivi il tuo problema o la tua idea nel modo più concreto possibile…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Si apre una pagina GitHub con il testo precompilato (incluse le informazioni di versione). Per inviare serve un account GitHub gratuito.","Openen op GitHub":"Apri su GitHub","Project-JSON opgeslagen:":"JSON del progetto salvato:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attenzione: JM-Orgue non supporta FLAC; scegli WAV o MP3 come formato",
+    "Remote Control":"Telecomando","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assicurati che il tuo telefono sia sulla stessa rete di questo PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Scegli la rete a cui è connesso il tuo telefono:","Directe verbinding (geen WiFi nodig)":"Connessione diretta (nessun WiFi richiesto)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Niente WiFi in questo luogo? Lascia che questo PC trasmetta la propria rete e collega il tuo telefono o tablet.","Open hotspot-instellingen":"Apri impostazioni hotspot",
+    "Sample Controle":"Verifica campioni",
+    "Loops":"Loop","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cerca in ogni campione il tratto che si unisce senza giunture a se stesso e lo salva nel file, in modo che una nota possa essere tenuta indefinitamente. Se la forma d'onda non si collega in modo pulito, viene applicato un crossfade e l'originale viene copiato prima a parte.","Alleen meten":"Solo misurazione","Loops maken":"Crea loop","Afbreken":"Interrompi","Stemtoon (Hz)":"Diapason (Hz)","Na een opname automatisch controleren":"Verifica automaticamente dopo la registrazione","Na een opname ook loops maken":"Crea anche i loop dopo la registrazione","zonder loop:":"senza loop:","Looppunten vragen de module soundfile":"I punti di loop richiedono il modulo soundfile","Er loopt al een loopronde":"È già in corso un ciclo di loop","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Cercare e scrivere i punti di loop in tutti i campioni? Per i campioni il cui audio viene modificato, viene prima salvata una copia dell'originale nella cartella di output.","Analyseren":"Analizza","Annuleren":"Annulla","Map":"Cartella","Orgel":"Organo","Stilte knippen":"Taglia silenzio","Klaar":"Fatto",
+    "JM-Rec — Handleiding":"JM-Rec — Manuale","Snelstart":"Avvio rapido","Kleurcodes per register":"Codici colore per registro","Kleur":"Colore","Betekenis":"Significato","Knop":"Pulsante","Functie":"Funzione",
+    "Register":"Registro","op":"su","is volledig opgenomen":"è completamente registrato","Wil je het nu controleren?":"Vuoi verificarlo ora?","is compleet":"è completo","Controleren?":"Verificare?",
+    "Klavier / Pedaal":"Tastiera / Pedaliera","Register opnemen":"Registra registro","Apparaten verversen":"Aggiorna dispositivi","Laden...":"Caricamento...","MP3 Bitrate":"Bitrate MP3","Mapnaam:":"Nome cartella:","Mapnaam: —":"Nome cartella: —","Scan de QR-code met je telefoon of tablet":"Scansiona il codice QR con il tuo telefono o tablet","om de afstandsbediening te openen":"per aprire il telecomando","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Non serve Internet — il controllo funziona anche senza. Tieni aperta questa finestra; se l'hotspot si spegne, riaccendilo.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Fai clic su «Apri impostazioni hotspot» e attiva l'hotspot mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Annota il nome di rete e la password che Windows mostra.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connetti il tuo iPad/iPhone o Android a quella rete.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Scegli sopra la rete dell'hotspot e scansiona il codice QR (o digita l'indirizzo).","Pad naar register-, klavier- of orgelmap":"Percorso alla cartella del registro, tastiera o organo","Her-opname:":"Rifare la registrazione:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Aggiungi/rimuovi registri per tastiera. Do grave = MIDI 36.","Register toevoegen":"Aggiungi registro"
+  },
+  "pl": {
+    "Registers":"Głosy","Controle":"Kontrola","? Info":"? Pomoc","Nieuw orgel":"Nowe organy","Instellingen":"Ustawienia","QR Remote":"QR Zdalny","Bediening":"Sterowanie","Project":"Projekt",
+    "Welkom":"Witaj","Doorgaan met dit orgel":"Kontynuuj z tymi organami","Nieuw orgel instellen":"Skonfiguruj nowe organy",
+    "Orgel instellen":"Konfiguracja organów","Stap":"Krok","Vorige":"Wstecz","Volgende":"Dalej","Opslaan & starten":"Zapisz i uruchom","Vorige →":"Wstecz","Volgende →":"Dalej →","← Vorige":"← Wstecz",
+    "1. Opslaglocatie":"1. Lokalizacja zapisu","Map waarin alle opnames worden bewaard.":"Folder, w którym są zapisywane wszystkie nagrania.","Opslagmap":"Folder zapisu","Bladeren…":"Przeglądaj…","bijv. D:\\Opnames":"np. D:\\Nagrania",
+    "2. Microfoon(s)":"2. Mikrofon(y)","Kies de opnamebron. Bij meerdere microfoons krijgt elke een eigen positienaam (submap).":"Wybierz źródło nagrania. Przy wielu mikrofonach każdy otrzymuje własną nazwę pozycji (podfolder).","Bron":"Źródło","Microfoon(s)":"Mikrofon(y)","Wat je hoort (loopback)":"To, co słyszysz (loopback)","positie":"pozycja","Geen microfoons gevonden.":"Nie znaleziono mikrofonów.","Kon apparaten niet laden.":"Nie można załadować urządzeń.","Speaker (loopback)":"Głośnik (loopback)","Geen loopback-apparaten.":"Brak urządzeń loopback.",
+    "3. Plaatsnaam":"3. Miejscowość","Plaats waar het orgel staat.":"Miejscowość, w której znajdują się organy.","bijv. Puttershoek":"np. Puttershoek","Mapcode wordt:":"Kod folderu:",
+    "4. Kerknaam":"4. Nazwa kościoła","Naam van de kerk/gebouw (wordt als info bewaard).":"Nazwa kościoła/budynku (zapisywana jako informacja).","bijv. Hervormde Kerk":"np. Kościół Mariacki",
+    "5. Orgelbouwer":"5. Organmistrz","De bouwer van het orgel.":"Budowniczy organów.","bijv. Muller":"np. Muller","Mapnaam (4 letters plaats + 4 letters bouwer, aanpasbaar)":"Nazwa folderu (4 litery miejscowości + 4 litery organmistrza, edytowalna)",
+    "6. Klavieren en pedaal":"6. Manuały i pedał","Hoeveel klavieren (manualen) heeft het orgel?":"Ile manuałów mają organy?","Aantal klavieren":"Liczba manuałów","Pedaal aanwezig":"Pedał obecny",
+    "7. Naam per klavier":"7. Nazwa manuału","Geef elk klavier een naam.":"Nadaj każdemu manuałowi nazwę.","Klavier":"Manuał",
+    "8. Tremulant en zwelkast":"8. Tremolo i szafa ekspresyjna","Bij een tremulant wordt elk register 2x opgenomen (normaal én _trem).":"Przy tremolo każdy głos jest nagrywany dwukrotnie (normalnie i _trem).","Tremulant":"Tremolo","Geen tremulant":"Bez tremolo","Heel het orgel":"Całe organy","Per klavier":"Na manuał","Zwelkast (zwelwerk) per klavier":"Szafa ekspresyjna na manuał","Tremulant op":"Tremolo na","Zwelkast op":"Szafa ekspresyjna na",
+    "9. Registers per klavier":"9. Głosy na manuał","Naam":"Nazwa","Voet":"Stopa","Begin":"Początek","Eind":"Koniec","Bas/disc":"Bas/Dyszkant","+ Register":"+ Głos","Prestant":"Pryncypał",
+    "10. Opname-instellingen en koppels":"10. Ustawienia nagrywania i kopule","Samplerate":"Częstotliwość próbkowania","Bitdiepte":"Głębia bitowa","Kanalen":"Kanały","Formaat":"Format","Aftellen (sec)":"Odliczanie (s)","Opnameduur (sec)":"Czas nagrywania (s)","Splitstoets bas/disc (MIDI)":"Nuta podziału bas/dyszkant (MIDI)","Koppels":"Kopule","+ Koppel":"+ Kopuła","Mono":"Mono","Stereo":"Stereo",
+    "Opnamemodus":"Tryb nagrywania","Vaste duur":"Stały czas","Intelligent (assisterend)":"Inteligentny (wspomagany)","Neemt automatisch op tot er genoeg stabiele, loopbare toon is en seint dan dat je kunt loslaten. Alleen microfooningang.":"Nagrywa automatycznie, aż będzie wystarczająco stabilnego, pętlowalnego dźwięku, a następnie sygnalizuje, że można puścić. Tylko wejście mikrofonowe.","Min. stabiele toon (sec)":"Min. stabilny dźwięk (s)","Max. duur (sec)":"Maks. czas (s)","Gevoeligheid":"Czułość","Gevoeligheid (0.3 streng – 3 los)":"Czułość (0.3 ścisła – 3 luźna)","Wachten op toon…":"Oczekiwanie na dźwięk…","Stabiliseren…":"Stabilizacja…","Genoeg — laat los":"Wystarczy — zwolnij","Uitklank opnemen…":"Nagrywanie wybrzmienia…",
+    "Opnemen":"Nagrywaj","Pauze":"Pauza","Stop":"Stop","Vorige noot":"Poprzednia nuta","Opnieuw":"Ponów","Volgende noot":"Następna nuta","Opname":"Nagranie","Enkele opname (zonder auto-advance)":"Pojedyncze nagranie (bez automatycznego przejścia)",
+    "nog op te nemen":"do nagrania","niet compleet":"niekompletny","nog te controleren":"do sprawdzenia","nog controleren":"sprawdzić","goed":"zatwierdzony","controleren":"sprawdzić",
+    "Register kiezen":"Wybierz głos","Geen registers":"Brak głosów","Geen registers gedefinieerd. Stel het orgel in op de master-PC.":"Nie zdefiniowano głosów. Skonfiguruj organy na komputerze głównym.","Geen registers gedefinieerd op de master-PC.":"Brak głosów zdefiniowanych na komputerze głównym.",
+    "Register compleet":"Głos kompletny","Nu controleren":"Sprawdź teraz","Goedgekeurd":"Zatwierdzony","Later":"Później","Controleren":"Sprawdź",
+    "Registerbeheer":"Zarządzanie głosami","Nieuw register":"Nowy głos","Nog geen registers.":"Jeszcze brak głosów.","normaal":"normalny","tremulant":"tremolo","gecontroleerd":"sprawdzony","beginnoot":"nuta początkowa","eindnoot":"nuta końcowa","bas/disc":"bas/dyszkant","naam (bijv. Prestant)":"nazwa (np. Pryncypał)",
+    "GEREED":"GOTOWY","AFTELLEN":"ODLICZANIE","OPNAME":"NAGRYWANIE","GEPAUZEERD":"WSTRZYMANE","IDLE":"GOTOWY",
+    "Instellingen & Bediening":"Ustawienia i Sterowanie","Audiobron":"Źródło audio","Verversen":"Odśwież","Microfoon":"Mikrofon","Wat je hoort":"To, co słyszysz","Audio":"Audio","Volume":"Głośność","Workflow":"Przebieg pracy","Startnoot (MIDI)":"Nuta początkowa (MIDI)","Eindnoot (MIDI)":"Nuta końcowa (MIDI)","Bas/Discant splitsen":"Podział bas/dyszkant","Splitstoets (MIDI)":"Nuta podziału (MIDI)","Bas opnemen":"Nagrywaj bas","Discant opnemen":"Nagrywaj dyszkant","Orgelnaam":"Nazwa organów","Opslaglocatie":"Lokalizacja zapisu","Pedaal":"Pedał","Toepassen":"Zastosuj","Instellingen toepassen":"Zastosuj ustawienia",
+    "Exporteren":"Eksportuj","Exporteer .organ (JM-Orgue)":"Eksportuj .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Eksportuj dane projektu (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Tworzy plik definicji .organ w folderze projektu, który JM-Orgue może bezpośrednio załadować.",".organ opgeslagen:":".organ zapisany:","registers":"głosy","samples":"próbki","ontbrekend":"brakujące","Export mislukt:":"Eksport nie powiódł się:","Update beschikbaar:":"Dostępna aktualizacja:","Feedback":"Opinie","Feedback geven":"Wyślij opinię","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Znalazłeś problem lub masz pomysł dla JM-Rec? Twój tekst zostanie przygotowany jako zgłoszenie GitHub.","Probleem melden":"Zgłoś problem","Idee of verbetering":"Pomysł lub ulepszenie","Beschrijf je probleem of idee zo concreet mogelijk…":"Opisz swój problem lub pomysł tak konkretnie, jak to możliwe…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Otworzy się strona GitHub z wypełnionym tekstem (łącznie z informacją o wersji). Do wysłania potrzebne jest bezpłatne konto GitHub.","Openen op GitHub":"Otwórz na GitHub","Project-JSON opgeslagen:":"JSON projektu zapisany:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Uwaga: JM-Orgue nie obsługuje FLAC; wybierz WAV lub MP3 jako format",
+    "Remote Control":"Pilot zdalny","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Upewnij się, że telefon jest w tej samej sieci co ten komputer.","Kies het netwerk waarmee je telefoon verbonden is:":"Wybierz sieć, z którą jest połączony twój telefon:","Directe verbinding (geen WiFi nodig)":"Połączenie bezpośrednie (bez WiFi)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Brak WiFi w tej lokalizacji? Pozwól temu komputerowi nadawać własną sieć i podłącz telefon lub tablet do niej.","Open hotspot-instellingen":"Otwórz ustawienia hotspotu",
+    "Sample Controle":"Kontrola próbek",
+    "Loops":"Pętle","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Wyszukuje w każdej próbce fragment, który łączy się bez szwu sam ze sobą i zapisuje go w pliku, aby dźwięk mógł być trzymany bez ograniczeń. Jeśli przebieg nie łączy się czysto, stosuje się crossfade, a oryginał jest najpierw kopiowany.","Alleen meten":"Tylko pomiar","Loops maken":"Utwórz pętle","Afbreken":"Przerwij","Stemtoon (Hz)":"Strój (Hz)","Na een opname automatisch controleren":"Automatycznie sprawdź po nagraniu","Na een opname ook loops maken":"Twórz również pętle po nagraniu","zonder loop:":"bez pętli:","Looppunten vragen de module soundfile":"Punkty pętli wymagają modułu soundfile","Er loopt al een loopronde":"Runda pętli już trwa","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Wyszukać i zapisać punkty pętli we wszystkich próbkach? Dla próbek, których audio jest zmieniane, najpierw tworzona jest kopia oryginału w folderze wyjściowym.","Analyseren":"Analizuj","Annuleren":"Anuluj","Map":"Folder","Orgel":"Organy","Stilte knippen":"Przytnij ciszę","Klaar":"Gotowe",
+    "JM-Rec — Handleiding":"JM-Rec — Podręcznik","Snelstart":"Szybki start","Kleurcodes per register":"Kody kolorów na głos","Kleur":"Kolor","Betekenis":"Znaczenie","Knop":"Przycisk","Functie":"Funkcja",
+    "Register":"Głos","op":"na","is volledig opgenomen":"jest w pełni nagrany","Wil je het nu controleren?":"Chcesz go teraz sprawdzić?","is compleet":"jest kompletny","Controleren?":"Sprawdzić?",
+    "Klavier / Pedaal":"Manuał / Pedał","Register opnemen":"Nagrywaj głos","Apparaten verversen":"Odśwież urządzenia","Laden...":"Ładowanie...","MP3 Bitrate":"Bitrate MP3","Mapnaam:":"Nazwa folderu:","Mapnaam: —":"Nazwa folderu: —","Scan de QR-code met je telefoon of tablet":"Zeskanuj kod QR telefonem lub tabletem","om de afstandsbediening te openen":"aby otworzyć pilota zdalnego","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet nie jest wymagany — sterowanie działa też bez niego. Nie zamykaj tego okna; jeśli hotspot się wyłączy, włącz go ponownie.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Kliknij „Otwórz ustawienia hotspotu” i włącz hotspot mobilny.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Zanotuj nazwę sieci i hasło, które pokazuje Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Połącz iPada/iPhone'a lub Androida z tą siecią.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wybierz powyżej sieć hotspotu i zeskanuj kod QR (lub wpisz adres).","Pad naar register-, klavier- of orgelmap":"Ścieżka do folderu głosu, manuału lub organów","Her-opname:":"Ponowne nagranie:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Dodawanie/usuwanie głosów na manuał. C duże = MIDI 36.","Register toevoegen":"Dodaj głos"
   }
   };
   const HANDLEIDING = {
@@ -569,10 +659,217 @@ I18N_JS = r'''
 <div class="tip-box">Convertir MP3 en WAV :<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
 <h2>Réseau &amp; Connexion</h2>
 <div class="warn-box">Votre téléphone et ce PC doivent être sur le <strong>même réseau</strong> (WiFi).<br>Alternatives : partage USB ou point d'accès mobile.</div>
-<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tous droits réservés ; utilisation du code source uniquement avec autorisation</p>`,
+    "es": `<div class="modal-title">JM-Rec — Manual</div>
+<h2>Inicio rápido</h2>
+<ul>
+<li>Al iniciar, siga el <strong>asistente</strong> (10 pasos) para definir el órgano + registros — o elija <strong>Continuar</strong> con el último órgano.</li>
+<li>En la <strong>pantalla principal</strong>: seleccione un registro y pulse <strong>Grabar</strong>.</li>
+<li>Escanee el <strong>código QR</strong> (QR Remoto) para controlar desde su teléfono.</li>
+<li>Editar después: botón <strong>Registros</strong> (añadir/quitar, marcar revisado) o <strong>Nuevo órgano</strong>.</li>
+</ul>
+<h2>Control</h2>
+<table>
+<tr><th>Botón</th><th>Función</th></tr>
+<tr><td><code>Grabar</code></td><td>Inicia el ciclo de grabación automática del registro seleccionado</td></tr>
+<tr><td><code>Pausa</code></td><td>Pausa después de la nota actual</td></tr>
+<tr><td><code>Detener</code></td><td>Detiene inmediatamente</td></tr>
+<tr><td><code>Nota anterior / Nota siguiente</code></td><td>Saltar a otra nota</td></tr>
+<tr><td><code>Repetir</code></td><td>Volver a grabar la nota actual</td></tr>
+</table>
+<h2>Códigos de color por registro</h2>
+<table>
+<tr><th>Color</th><th>Significado</th></tr>
+<tr><td>🔴 rojo</td><td>por grabar (0 notas)</td></tr>
+<tr><td>🟠 naranja</td><td>iniciado, aún no completo</td></tr>
+<tr><td>🟣 morado</td><td>totalmente grabado, por revisar</td></tr>
+<tr><td>🟢 verde</td><td>revisado y aprobado</td></tr>
+</table>
+<p>Marque un registro como <strong>revisado</strong> (morado → verde) con el botón <strong>Registros</strong>.</p>
+<p>En cuanto un registro está totalmente grabado, aparece automáticamente la pregunta <strong>Revisar ahora / Aprobado / Más tarde</strong> — en el PC y en el mando a distancia.</p>
+<h2>Ciclo de grabación</h2>
+<p>Por nota: <strong>Cuenta atrás</strong> (5s por defecto) → <strong>Grabar</strong> (5s por defecto) → <strong>Nota siguiente</strong>. Esto se repite automáticamente hasta la última nota.</p>
+<h2>Grabación inteligente (asistida)</h2>
+<p>Ajuste el <strong>Modo de grabación</strong> a <em>Inteligente (asistido)</em> en los ajustes (solo entrada de micrófono). El grabador mide el ruido de fondo, espera el tono y comprueba si el sonido es <strong>estable y apto para bucle</strong>. En cuanto hay suficiente tono bueno, aparece una señal verde <strong>&ldquo;Suficiente — suelte&rdquo;</strong>. Suelte la tecla: la <strong>resonancia</strong> se captura hasta el silencio y el grabador avanza. Para una serie con <em>trémolo</em>, espera una modulación de trémolo estable en lugar de un tono plano. <em>Tono estable mín.</em> fija cuánto buen tono se requiere, <em>Duración máx.</em> es un límite de seguridad y <em>Sensibilidad</em> controla la sensibilidad de la detección (más alta = aprueba más rápido, más baja = más estricta). <strong>Siguiente</strong>/<strong>Detener</strong> siguen disponibles manualmente.</p>
+<h2>Bucles</h2>
+<p>Una nota de órgano debe poder sostenerse indefinidamente. Por eso JM-Rec busca en cada muestra el tramo central que <strong>se une sin costuras consigo mismo</strong> y lo guarda como puntos de bucle en el archivo, donde JM-Orgue los lee. Lo encontrará en el cajón bajo <strong>Bucles</strong>: <strong>Solo medir</strong> muestra el resultado sin cambiar nada, <strong>Crear bucles</strong> lo escribe.</p>
+<p>Si la forma de onda no empalma limpiamente &mdash; sobre todo en mezclas y cornetas, cuyos varios tubos por tecla baten entre sí &mdash; los últimos ciento veinte milisegundos se <strong>funden en cruz</strong> para que la unión cierre igualmente. Eso altera el audio, por lo que el original se copia primero en una carpeta <em>_origineel_&lt;órgano&gt;_voor_loops</em> junto a sus grabaciones. Si ni siquiera el fundido deja una unión utilizable, esa nota no recibe bucle y se informa: un clic que vuelve cada segundo es peor que una nota que simplemente se apaga.</p>
+<p>Indique en <strong>Diapasón</strong> el tono al que está afinado el órgano (a menudo 440, pero 441 a 444 es común). Así JM-Rec sabe qué altura esperar en cada nota. Con <strong>Comprobar automáticamente tras una serie</strong>, la revisión de muestras se ejecuta sola en cuanto termina un registro; la creación de bucles permanece desactivada por defecto, porque escribe en el audio.</p>
+<h2>Nombres de archivo</h2>
+<p>Nomenclatura de archivos:</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Formato: <code>{número-MIDI}-{nombre-de-nota}.mp3</code></div>
+<h2>Estructura de carpetas</h2>
+<div class="tip-box"><code>Almacenamiento / Órgano / Teclado / Registro / 036-c.mp3</code><br>Con multi-micro: <code>... / Registro / Posición / 036-c.mp3</code></div>
+<h2>Exportar a JM-Orgue (.organ)</h2>
+<p>Vía <strong>Ajustes &rarr; Exportar</strong> crea un archivo de definición <code>.organ</code> en la carpeta del proyecto. Contiene todos los teclados, registros (con altura en pies), cajas expresivas, trémolos y acoplamientos, con referencias a las muestras grabadas. JM-Orgue carga este archivo directamente; las notas que falten quedan en silencio y se pueden grabar más tarde (luego vuelva a exportar). Con multi-micro se usa la primera posición configurada.</p>
+<h2>Parámetros ajustables</h2>
+<table>
+<tr><th>Parámetro</th><th>Por defecto</th><th>Opciones</th></tr>
+<tr><td>Frecuencia de muestreo</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Profundidad de bits</td><td>16-bit</td><td>16 / 24</td></tr>
+<tr><td>Canales</td><td>Mono</td><td>Mono / Estéreo</td></tr>
+<tr><td>Tasa de bits MP3</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Cuenta atrás</td><td>5 s</td><td>1 – 30</td></tr>
+<tr><td>Duración de grabación</td><td>5 s</td><td>1 – 60</td></tr>
+<tr><td>Nota inicial</td><td>MIDI 36 (do2)</td><td>0 – 127</td></tr>
+<tr><td>Nota final</td><td>MIDI 96 (do7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Consejos de grabación</h2>
+<ul>
+<li>Use un <strong>micrófono de condensador</strong> para la mejor calidad</li>
+<li>Grabe en <strong>24 bits</strong> para la máxima dinámica</li>
+<li>Use <strong>Estéreo</strong> con una toma AB u ORTF</li>
+<li>Ajuste una duración suficiente para tubos de habla lenta (<strong>10+ s</strong> para 16')</li>
+<li>Mantenga una <strong>presión de viento constante</strong> — espere a que el órgano esté estable</li>
+<li>Grabe en un <strong>entorno tranquilo</strong> — evite tráfico, viento y campanas</li>
+<li>Coloque el micrófono a <strong>1-2 metros</strong> de los tubos para un sonido natural</li>
+</ul>
+<h2>Conversión a WAV</h2>
+<div class="tip-box">Convertir MP3 a WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Red y Conexión</h2>
+<div class="warn-box">Su teléfono y este PC deben estar en la <strong>misma red</strong> (WiFi).<br>Alternativas: compartir USB o un hotspot móvil.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — todos los derechos reservados; uso del código fuente solo con autorización</p>`,
+    "it": `<div class="modal-title">JM-Rec — Manuale</div>
+<h2>Avvio rapido</h2>
+<ul>
+<li>All'avvio, segui l'<strong>assistente</strong> (10 passi) per definire l'organo + i registri — oppure scegli <strong>Continua</strong> con l'ultimo organo.</li>
+<li>Nella <strong>schermata principale</strong>: seleziona un registro e premi <strong>Registra</strong>.</li>
+<li>Scansiona il <strong>codice QR</strong> (QR Remoto) per comandare dal telefono.</li>
+<li>Modificare in seguito: pulsante <strong>Registri</strong> (aggiungi/rimuovi, segna come verificato) o <strong>Nuovo organo</strong>.</li>
+</ul>
+<h2>Comandi</h2>
+<table>
+<tr><th>Pulsante</th><th>Funzione</th></tr>
+<tr><td><code>Registra</code></td><td>Avvia il ciclo di registrazione automatica del registro selezionato</td></tr>
+<tr><td><code>Pausa</code></td><td>Mette in pausa dopo la nota corrente</td></tr>
+<tr><td><code>Stop</code></td><td>Ferma immediatamente</td></tr>
+<tr><td><code>Nota precedente / Nota successiva</code></td><td>Vai a un'altra nota</td></tr>
+<tr><td><code>Rifai</code></td><td>Rifa la registrazione della nota corrente</td></tr>
+</table>
+<h2>Codici colore per registro</h2>
+<table>
+<tr><th>Colore</th><th>Significato</th></tr>
+<tr><td>🔴 rosso</td><td>da registrare (0 note)</td></tr>
+<tr><td>🟠 arancione</td><td>avviato, non ancora completo</td></tr>
+<tr><td>🟣 viola</td><td>completamente registrato, da verificare</td></tr>
+<tr><td>🟢 verde</td><td>verificato e approvato</td></tr>
+</table>
+<p>Segna un registro come <strong>verificato</strong> (viola → verde) tramite il pulsante <strong>Registri</strong>.</p>
+<p>Non appena un registro è completamente registrato, appare automaticamente la domanda <strong>Verifica ora / Approvato / Più tardi</strong> — sul PC e sul telecomando.</p>
+<h2>Ciclo di registrazione</h2>
+<p>Per nota: <strong>Conto alla rovescia</strong> (5s predefinito) → <strong>Registra</strong> (5s predefinito) → <strong>Nota successiva</strong>. Si ripete automaticamente fino all'ultima nota.</p>
+<h2>Registrazione intelligente (assistita)</h2>
+<p>Imposta la <strong>Modalità di registrazione</strong> su <em>Intelligente (assistita)</em> nelle impostazioni (solo ingresso microfono). Il registratore misura il rumore di fondo, attende il suono e verifica se è <strong>stabile e idoneo al loop</strong>. Appena c'è abbastanza buon suono, appare un segnale verde <strong>&ldquo;Basta — rilascia&rdquo;</strong>. Rilascia il tasto: la <strong>coda di rilascio</strong> viene catturata fino al silenzio e il registratore prosegue. Per una serie <em>tremolo</em>, attende una modulazione di tremolo stabile anziché un suono piatto. <em>Suono stabile min.</em> stabilisce quanto buon suono è richiesto, <em>Durata max.</em> è un limite di sicurezza e <em>Sensibilità</em> controlla la sensibilità del rilevamento (più alta = approva più in fretta, più bassa = più severa). <strong>Successiva</strong>/<strong>Stop</strong> restano disponibili manualmente.</p>
+<h2>Loop</h2>
+<p>Una nota d'organo deve poter essere tenuta indefinitamente. JM-Rec cerca quindi in ogni campione il tratto centrale che <strong>si unisce senza giunture a se stesso</strong> e lo salva come punti di loop nel file, dove JM-Orgue li legge. Lo trovi nel cassetto sotto <strong>Loop</strong>: <strong>Solo misurazione</strong> mostra il risultato senza cambiare nulla, <strong>Crea loop</strong> lo scrive.</p>
+<p>Se la forma d'onda non si collega in modo pulito &mdash; soprattutto in ripieni e cornetti, con più canne per tasto che battono tra loro &mdash; gli ultimi centoventi millisecondi vengono <strong>sfumati</strong> affinché la giuntura chiuda comunque. Questo altera l'audio, perciò l'originale viene copiato prima in una cartella <em>_origineel_&lt;organo&gt;_voor_loops</em> accanto alle registrazioni. Se nemmeno la sfumatura lascia una giuntura utile, quella nota non riceve il loop e viene segnalata: un clic che ritorna ogni secondo è peggio di una nota che si spegne semplicemente.</p>
+<p>Indica in <strong>Diapason</strong> a quale accordatura è l'organo (spesso 440, ma 441-444 è comune). Così JM-Rec sa quale altezza aspettarsi per ogni nota. Con <strong>Verifica automaticamente dopo una serie</strong>, il controllo dei campioni parte da solo appena un registro è finito; la creazione dei loop resta disattivata per impostazione predefinita, perché scrive nell'audio.</p>
+<h2>Nomi dei file</h2>
+<p>Denominazione dei file:</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Formato: <code>{numero-MIDI}-{nome-nota}.mp3</code></div>
+<h2>Struttura delle cartelle</h2>
+<div class="tip-box"><code>Archiviazione / Organo / Tastiera / Registro / 036-c.mp3</code><br>Con multi-microfono: <code>... / Registro / Posizione / 036-c.mp3</code></div>
+<h2>Esportazione in JM-Orgue (.organ)</h2>
+<p>Tramite <strong>Impostazioni &rarr; Esporta</strong> crei un file di definizione <code>.organ</code> nella cartella del progetto. Contiene tutte le tastiere, i registri (con altezza in piedi), le casse espressive, i tremoli e le unioni, con riferimenti ai campioni registrati. JM-Orgue carica questo file direttamente; le note mancanti restano in silenzio e si possono registrare in seguito (poi riesporta). Con multi-microfono si usa la prima posizione configurata.</p>
+<h2>Parametri regolabili</h2>
+<table>
+<tr><th>Parametro</th><th>Predefinito</th><th>Opzioni</th></tr>
+<tr><td>Frequenza di campionamento</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Profondità di bit</td><td>16 bit</td><td>16 / 24</td></tr>
+<tr><td>Canali</td><td>Mono</td><td>Mono / Stereo</td></tr>
+<tr><td>Bitrate MP3</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Conto alla rovescia</td><td>5 s</td><td>1 – 30</td></tr>
+<tr><td>Durata registrazione</td><td>5 s</td><td>1 – 60</td></tr>
+<tr><td>Nota iniziale</td><td>MIDI 36 (do2)</td><td>0 – 127</td></tr>
+<tr><td>Nota finale</td><td>MIDI 96 (do7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Consigli di registrazione</h2>
+<ul>
+<li>Usa un <strong>microfono a condensatore</strong> per la migliore qualità</li>
+<li>Registra a <strong>24 bit</strong> per la massima dinamica</li>
+<li>Usa lo <strong>stereo</strong> con una ripresa AB o ORTF</li>
+<li>Imposta una durata sufficiente per le canne a parlata lenta (<strong>10+ s</strong> per 16')</li>
+<li>Mantieni una <strong>pressione d'aria costante</strong> — attendi che l'organo sia stabile</li>
+<li>Registra in un <strong>ambiente silenzioso</strong> — evita traffico, vento e campane</li>
+<li>Posiziona il microfono a <strong>1-2 metri</strong> dalle canne per un suono naturale</li>
+</ul>
+<h2>Conversione in WAV</h2>
+<div class="tip-box">Converti MP3 in WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Rete e Connessione</h2>
+<div class="warn-box">Il tuo telefono e questo PC devono essere sulla <strong>stessa rete</strong> (WiFi).<br>Alternative: tethering USB o un hotspot mobile.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — tutti i diritti riservati; uso del codice sorgente solo con autorizzazione</p>`,
+    "pl": `<div class="modal-title">JM-Rec — Podręcznik</div>
+<h2>Szybki start</h2>
+<ul>
+<li>Przy uruchomieniu przejdź przez <strong>asystenta</strong> (10 kroków), aby zdefiniować organy + głosy — albo wybierz <strong>Kontynuuj</strong> z ostatnimi organami.</li>
+<li>Na <strong>ekranie głównym</strong>: wybierz głos i naciśnij <strong>Nagrywaj</strong>.</li>
+<li>Zeskanuj <strong>kod QR</strong> (QR Zdalny), aby sterować z telefonu.</li>
+<li>Edycja później: przycisk <strong>Głosy</strong> (dodaj/usuń, oznacz jako sprawdzony) lub <strong>Nowe organy</strong>.</li>
+</ul>
+<h2>Sterowanie</h2>
+<table>
+<tr><th>Przycisk</th><th>Funkcja</th></tr>
+<tr><td><code>Nagrywaj</code></td><td>Rozpoczyna automatyczny cykl nagrywania wybranego głosu</td></tr>
+<tr><td><code>Pauza</code></td><td>Wstrzymuje po bieżącej nucie</td></tr>
+<tr><td><code>Stop</code></td><td>Zatrzymuje natychmiast</td></tr>
+<tr><td><code>Poprzednia nuta / Następna nuta</code></td><td>Przejdź do innej nuty</td></tr>
+<tr><td><code>Ponów</code></td><td>Nagraj ponownie bieżącą nutę</td></tr>
+</table>
+<h2>Kody kolorów na głos</h2>
+<table>
+<tr><th>Kolor</th><th>Znaczenie</th></tr>
+<tr><td>🔴 czerwony</td><td>do nagrania (0 nut)</td></tr>
+<tr><td>🟠 pomarańczowy</td><td>rozpoczęty, jeszcze nieukończony</td></tr>
+<tr><td>🟣 fioletowy</td><td>w pełni nagrany, do sprawdzenia</td></tr>
+<tr><td>🟢 zielony</td><td>sprawdzony i zatwierdzony</td></tr>
+</table>
+<p>Oznacz głos jako <strong>sprawdzony</strong> (fioletowy → zielony) przyciskiem <strong>Głosy</strong>.</p>
+<p>Gdy tylko głos zostanie w pełni nagrany, pojawia się automatycznie pytanie <strong>Sprawdź teraz / Zatwierdzony / Później</strong> — na komputerze i na pilocie.</p>
+<h2>Cykl nagrywania</h2>
+<p>Na nutę: <strong>Odliczanie</strong> (domyślnie 5s) → <strong>Nagrywaj</strong> (domyślnie 5s) → <strong>Następna nuta</strong>. Powtarza się automatycznie aż do ostatniej nuty.</p>
+<h2>Inteligentne nagrywanie (wspomagane)</h2>
+<p>Ustaw <strong>Tryb nagrywania</strong> na <em>Inteligentny (wspomagany)</em> w ustawieniach (tylko wejście mikrofonowe). Rejestrator mierzy poziom szumu, czeka na dźwięk i sprawdza, czy dźwięk jest <strong>stabilny i pętlowalny</strong>. Gdy jest wystarczająco dobrego dźwięku, pojawia się zielony sygnał <strong>&ldquo;Wystarczy — zwolnij&rdquo;</strong>. Zwolnij klawisz: <strong>wybrzmienie</strong> jest nagrywane aż do ciszy, a rejestrator przechodzi dalej. Dla serii z <em>tremolo</em> czeka na stabilną modulację tremolo zamiast na płaski dźwięk. <em>Min. stabilny dźwięk</em> określa, ile dobrego dźwięku jest wymagane, <em>Maks. czas</em> to limit bezpieczeństwa, a <em>Czułość</em> kontroluje wrażliwość detekcji (wyższa = szybsze zatwierdzenie, niższa = bardziej rygorystyczne). <strong>Dalej</strong>/<strong>Stop</strong> pozostają dostępne ręcznie.</p>
+<h2>Pętle</h2>
+<p>Nutę organową trzeba móc trzymać bez ograniczeń. Dlatego JM-Rec szuka w każdej próbce fragmentu środkowego, który <strong>łączy się bez szwu sam ze sobą</strong>, i zapisuje go jako punkty pętli w pliku, gdzie JM-Orgue je odczytuje. Znajdziesz to w szufladzie pod <strong>Pętle</strong>: <strong>Tylko pomiar</strong> pokazuje wynik bez zmian, <strong>Utwórz pętle</strong> zapisuje go.</p>
+<p>Gdy przebieg nie łączy się czysto &mdash; zwłaszcza w miksturach i kornetach, których kilka piszczałek na klawisz dudni między sobą &mdash; ostatnie sto dwadzieścia milisekund jest <strong>przenikane</strong>, aby szew mimo wszystko się zamknął. To zmienia audio, więc oryginał jest najpierw kopiowany do folderu <em>_origineel_&lt;organy&gt;_voor_loops</em> obok nagrań. Jeśli nawet przenikanie nie daje użytecznego szwu, ta nuta nie dostaje pętli i jest zgłaszana: kliknięcie wracające co sekundę jest gorsze niż nuta, która po prostu wybrzmiewa.</p>
+<p>W <strong>Stroju</strong> podaj, do jakiego dźwięku są nastrojone organy (często 440, ale 441–444 jest powszechne). Dzięki temu JM-Rec wie, jakiej wysokości oczekiwać dla każdej nuty. Z opcją <strong>Automatycznie sprawdź po serii</strong> kontrola próbek uruchamia się sama, gdy skończy się głos; tworzenie pętli pozostaje domyślnie wyłączone, bo zapisuje w audio.</p>
+<h2>Nazwy plików</h2>
+<p>Nazewnictwo plików:</p>
+<div class="tip-box"><code>036-c.mp3</code>, <code>037-c#.mp3</code>, <code>038-d.mp3</code>, ..., <code>096-c.mp3</code><br>Format: <code>{numer-MIDI}-{nazwa-nuty}.mp3</code></div>
+<h2>Struktura folderów</h2>
+<div class="tip-box"><code>Zapis / Organy / Manuał / Głos / 036-c.mp3</code><br>Przy wielu mikrofonach: <code>... / Głos / Pozycja / 036-c.mp3</code></div>
+<h2>Eksport do JM-Orgue (.organ)</h2>
+<p>Przez <strong>Ustawienia &rarr; Eksportuj</strong> tworzysz plik definicji <code>.organ</code> w folderze projektu. Zawiera on wszystkie manuały, głosy (z wysokością w stopach), szafy ekspresyjne, tremola i kopule, z odniesieniami do nagranych próbek. JM-Orgue ładuje ten plik bezpośrednio; brakujące nuty pozostają ciche i można je nagrać później (potem ponownie eksportuj). Przy wielu mikrofonach używana jest pierwsza skonfigurowana pozycja.</p>
+<h2>Regulowane parametry</h2>
+<table>
+<tr><th>Parametr</th><th>Domyślnie</th><th>Opcje</th></tr>
+<tr><td>Częstotliwość próbkowania</td><td>44100 Hz</td><td>44100 / 48000 / 96000</td></tr>
+<tr><td>Głębia bitowa</td><td>16-bit</td><td>16 / 24</td></tr>
+<tr><td>Kanały</td><td>Mono</td><td>Mono / Stereo</td></tr>
+<tr><td>Bitrate MP3</td><td>192 kbps</td><td>128 / 192 / 256 / 320</td></tr>
+<tr><td>Odliczanie</td><td>5 s</td><td>1 – 30</td></tr>
+<tr><td>Czas nagrywania</td><td>5 s</td><td>1 – 60</td></tr>
+<tr><td>Nuta początkowa</td><td>MIDI 36 (C2)</td><td>0 – 127</td></tr>
+<tr><td>Nuta końcowa</td><td>MIDI 96 (C7)</td><td>0 – 127</td></tr>
+</table>
+<h2>Wskazówki do nagrywania</h2>
+<ul>
+<li>Użyj <strong>mikrofonu pojemnościowego</strong> dla najlepszej jakości</li>
+<li>Nagrywaj w <strong>24 bitach</strong> dla maksymalnej dynamiki</li>
+<li>Użyj <strong>stereo</strong> przy ustawieniu AB lub ORTF</li>
+<li>Ustaw wystarczająco długi czas dla piszczałek wolno przemawiających (<strong>10+ s</strong> dla 16')</li>
+<li>Utrzymuj <strong>stałe ciśnienie wiatru</strong> — poczekaj, aż organy się ustabilizują</li>
+<li>Nagrywaj w <strong>cichym otoczeniu</strong> — unikaj ruchu, wiatru i dzwonów</li>
+<li>Umieść mikrofon <strong>1-2 metry</strong> od piszczałek dla naturalnego dźwięku</li>
+</ul>
+<h2>Konwersja do WAV</h2>
+<div class="tip-box">Konwertuj MP3 na WAV:<br><br><code>for %f in (*.mp3) do ffmpeg -i "%f" "%~nf.wav"</code></div>
+<h2>Sieć i Połączenie</h2>
+<div class="warn-box">Twój telefon i ten komputer muszą być w <strong>tej samej sieci</strong> (WiFi).<br>Alternatywy: tethering USB lub mobilny hotspot.</div>
+<p style="color:var(--dim);margin-top:20px;font-size:0.8rem;text-align:center;">JM-Rec v3.12 · &copy; 2026 Martijn van der Kolk — wszelkie prawa zastrzeżone; użycie kodu źródłowego tylko za zgodą</p>`
   };
   let LANG = 'nl';
-  window.jmLangs = ['nl','en','de','fr'];
+  window.jmLangs = ['nl','en','de','fr','es','it','pl'];
   window.jmInitLang = function(){
     let l = null; try { l = localStorage.getItem('jmLang'); } catch(e){}
     if(!l){ const n=(navigator.language||'en').slice(0,2).toLowerCase(); l = window.jmLangs.indexOf(n)>=0 ? n : 'en'; }
