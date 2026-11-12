@@ -103,6 +103,24 @@ def format_register_name(name):
     name = re.sub(r"[^\w\-]", "", name)
     return name or "Register"
 
+# Een mic-"positie" is een apparaat, of één ingang van een apparaat met meer
+# ingangen (een interface met 4 mic-ingangen). De sleutel blijft een gewoon
+# geheel getal, zodat opgeslagen instellingen en manifesten gewoon blijven werken:
+#   sleutel < 1000        -> het apparaat zelf, kanaalaantal volgens de instelling
+#   sleutel = dev+1000*k  -> ingang k (1-gebaseerd) van dat apparaat, altijd mono
+MIC_KEY_STRIDE = 1000
+
+
+def mic_device(key):
+    """Het apparaatnummer achter een positie-sleutel (None = systeemstandaard)."""
+    return None if key is None else int(key) % MIC_KEY_STRIDE
+
+
+def mic_channel(key):
+    """Gekozen ingang (1-gebaseerd), of 0 voor 'volgens de kanaalinstelling'."""
+    return 0 if key is None else int(key) // MIC_KEY_STRIDE
+
+
 def sanitize_device_name(name):
     """Convert audio device name to filesystem-safe folder name."""
     name = re.sub(r"\s*\(.*?\)\s*", "", name)
@@ -293,7 +311,7 @@ I18N_JS = r'''
     // review modal
     "Sample Controle":"Sample Review",
     // loops
-    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Finds, for every sample, the stretch that joins seamlessly onto itself and stores it in the file, so a note can be held indefinitely. Where the waveform does not join cleanly it is crossfaded, and the original is copied aside first.","Alleen meten":"Measure only","Loops maken":"Create loops","Afbreken":"Abort","Stemtoon (Hz)":"Pitch standard (Hz)","Na een opname automatisch controleren":"Check automatically after recording","Na een opname ook loops maken":"Also create loops after recording","zonder loop:":"without a loop:","Looppunten vragen de module soundfile":"Loop points need the soundfile module","Er loopt al een loopronde":"A loop pass is already running","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Find loop points and write them into every sample? For samples whose audio is altered, a copy of the original is placed in the output folder first.","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done",
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Finds, for every sample, the stretch that joins seamlessly onto itself and stores it in the file, so a note can be held indefinitely. Where the waveform does not join cleanly it is crossfaded, and the original is copied aside first.","Alleen meten":"Measure only","Loops maken":"Create loops","Afbreken":"Abort","Stemtoon (Hz)":"Pitch standard (Hz)","Na een opname automatisch controleren":"Check automatically after recording","Na een opname ook loops maken":"Also create loops after recording","zonder loop:":"without a loop:","Looppunten vragen de module soundfile":"Loop points need the soundfile module","Er loopt al een loopronde":"A loop pass is already running","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Find loop points and write them into every sample? For samples whose audio is altered, a copy of the original is placed in the output folder first.","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done","ingang":"input","alle kanalen (volgens kanaalinstelling)":"all channels (per channel setting)",
     // handleiding
     "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Quick start","Kleurcodes per register":"Colour codes per register","Kleur":"Colour","Betekenis":"Meaning","Knop":"Button","Functie":"Function",
     "Register":"Register","op":"on","is volledig opgenomen":"is fully recorded","Wil je het nu controleren?":"Review it now?","is compleet":"is complete","Controleren?":"Review?",
@@ -325,7 +343,7 @@ I18N_JS = r'''
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
     "Sample Controle":"Sample-Kontrolle",
     // loops
-    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Sucht pro Sample den Abschnitt, der nahtlos an sich selbst anschlieÃŸt, und legt ihn in der Datei ab, damit ein Ton beliebig lange gehalten werden kann. SchlieÃŸt die Wellenform nicht sauber an, wird Ã¼bergeblendet und das Original vorher beiseitegelegt.","Alleen meten":"Nur messen","Loops maken":"Loops erstellen","Afbreken":"Abbrechen","Stemtoon (Hz)":"Stimmton (Hz)","Na een opname automatisch controleren":"Nach der Aufnahme automatisch prÃ¼fen","Na een opname ook loops maken":"Nach der Aufnahme auch Loops erstellen","zonder loop:":"ohne Loop:","Looppunten vragen de module soundfile":"Loop-Punkte benÃ¶tigen das Modul soundfile","Er loopt al een loopronde":"Es lÃ¤uft bereits ein Loop-Durchlauf","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Loop-Punkte suchen und in alle Samples schreiben? Von Samples, deren Audio verÃ¤ndert wird, kommt zuerst eine Kopie des Originals in den Ausgabeordner.","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig",
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Sucht pro Sample den Abschnitt, der nahtlos an sich selbst anschlieÃŸt, und legt ihn in der Datei ab, damit ein Ton beliebig lange gehalten werden kann. SchlieÃŸt die Wellenform nicht sauber an, wird Ã¼bergeblendet und das Original vorher beiseitegelegt.","Alleen meten":"Nur messen","Loops maken":"Loops erstellen","Afbreken":"Abbrechen","Stemtoon (Hz)":"Stimmton (Hz)","Na een opname automatisch controleren":"Nach der Aufnahme automatisch prÃ¼fen","Na een opname ook loops maken":"Nach der Aufnahme auch Loops erstellen","zonder loop:":"ohne Loop:","Looppunten vragen de module soundfile":"Loop-Punkte benÃ¶tigen das Modul soundfile","Er loopt al een loopronde":"Es lÃ¤uft bereits ein Loop-Durchlauf","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Loop-Punkte suchen und in alle Samples schreiben? Von Samples, deren Audio verÃ¤ndert wird, kommt zuerst eine Kopie des Originals in den Ausgabeordner.","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig","ingang":"Eingang","alle kanalen (volgens kanaalinstelling)":"alle Kanäle (laut Kanaleinstellung)",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
     "Register":"Register","op":"auf","is volledig opgenomen":"ist vollständig aufgenommen","Wil je het nu controleren?":"Möchten Sie es jetzt prüfen?","is compleet":"ist vollständig","Controleren?":"Prüfen?",
     "Klavier / Pedaal":"Manual / Pedal","Register opnemen":"Register aufnehmen","Apparaten verversen":"Geräte aktualisieren","Laden...":"Lädt...","MP3 Bitrate":"MP3-Bitrate","Mapnaam:":"Ordnername:","Mapnaam: —":"Ordnername: —","Scan de QR-code met je telefoon of tablet":"Scannen Sie den QR-Code mit Ihrem Telefon oder Tablet","om de afstandsbediening te openen":"um die Fernsteuerung zu öffnen","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet ist nicht nötig — die Steuerung funktioniert auch ohne. Lassen Sie dieses Fenster offen; schaltet sich der Hotspot ab, schalten Sie ihn erneut ein.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Klicken Sie auf 'Hotspot-Einstellungen öffnen' und schalten Sie den Mobilen Hotspot EIN.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notieren Sie den Netzwerknamen und das Passwort, die Windows anzeigt.","Verbind je iPad/iPhone of Android met dat netwerk.":"Verbinden Sie Ihr iPad/iPhone oder Android mit diesem Netzwerk.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wählen Sie oben das Hotspot-Netzwerk und scannen Sie den QR-Code (oder tippen Sie die Adresse).","Pad naar register-, klavier- of orgelmap":"Pfad zum Register-, Manual- oder Orgelordner","Her-opname:":"Neuaufnahme:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Register pro Manual hinzufügen/entfernen. Großes C = MIDI 36.","Register toevoegen":"Register hinzufügen"
@@ -356,7 +374,7 @@ I18N_JS = r'''
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
     "Sample Controle":"Contrôle des samples",
     // loops
-    "Loops":"Boucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cherche pour chaque Ã©chantillon le passage qui se raccorde sans couture Ã  lui-mÃªme et l'inscrit dans le fichier, afin qu'une note puisse Ãªtre tenue indÃ©finiment. Si la forme d'onde ne se raccorde pas proprement, un fondu est appliquÃ© et l'original est d'abord mis de cÃ´tÃ©.","Alleen meten":"Mesurer seulement","Loops maken":"CrÃ©er les boucles","Afbreken":"Interrompre","Stemtoon (Hz)":"Diapason (Hz)","Na een opname automatisch controleren":"ContrÃ´ler automatiquement aprÃ¨s l'enregistrement","Na een opname ook loops maken":"CrÃ©er aussi les boucles aprÃ¨s l'enregistrement","zonder loop:":"sans boucle :","Looppunten vragen de module soundfile":"Les points de boucle nÃ©cessitent le module soundfile","Er loopt al een loopronde":"Un cycle de boucles est dÃ©jÃ  en cours","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Chercher les points de boucle et les Ã©crire dans tous les Ã©chantillons ? Pour ceux dont l'audio est modifiÃ©, une copie de l'original est d'abord placÃ©e dans le dossier de sortie.","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé",
+    "Loops":"Boucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cherche pour chaque Ã©chantillon le passage qui se raccorde sans couture Ã  lui-mÃªme et l'inscrit dans le fichier, afin qu'une note puisse Ãªtre tenue indÃ©finiment. Si la forme d'onde ne se raccorde pas proprement, un fondu est appliquÃ© et l'original est d'abord mis de cÃ´tÃ©.","Alleen meten":"Mesurer seulement","Loops maken":"CrÃ©er les boucles","Afbreken":"Interrompre","Stemtoon (Hz)":"Diapason (Hz)","Na een opname automatisch controleren":"ContrÃ´ler automatiquement aprÃ¨s l'enregistrement","Na een opname ook loops maken":"CrÃ©er aussi les boucles aprÃ¨s l'enregistrement","zonder loop:":"sans boucle :","Looppunten vragen de module soundfile":"Les points de boucle nÃ©cessitent le module soundfile","Er loopt al een loopronde":"Un cycle de boucles est dÃ©jÃ  en cours","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Chercher les points de boucle et les Ã©crire dans tous les Ã©chantillons ? Pour ceux dont l'audio est modifiÃ©, une copie de l'original est d'abord placÃ©e dans le dossier de sortie.","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé","ingang":"entrée","alle kanalen (volgens kanaalinstelling)":"tous les canaux (selon le réglage)",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
     "Register":"Jeu","op":"sur","is volledig opgenomen":"est entièrement enregistré","Wil je het nu controleren?":"Le contrôler maintenant ?","is compleet":"est complet","Controleren?":"Contrôler ?",
     "Klavier / Pedaal":"Clavier / Pédalier","Register opnemen":"Enregistrer le jeu","Apparaten verversen":"Actualiser les appareils","Laden...":"Chargement...","MP3 Bitrate":"Débit MP3","Mapnaam:":"Nom du dossier :","Mapnaam: —":"Nom du dossier : —","Scan de QR-code met je telefoon of tablet":"Scannez le QR code avec votre téléphone ou tablette","om de afstandsbediening te openen":"pour ouvrir la télécommande","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet n'est pas nécessaire — la commande fonctionne sans. Gardez cette fenêtre ouverte ; si le point d'accès se coupe, réactivez-le.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Cliquez sur « Ouvrir les réglages du point d'accès » et activez le point d'accès mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notez le nom du réseau et le mot de passe affichés par Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connectez votre iPad/iPhone ou Android à ce réseau.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Choisissez le réseau du point d'accès ci-dessus et scannez le QR code (ou tapez l'adresse).","Pad naar register-, klavier- of orgelmap":"Chemin vers le dossier jeu, clavier ou orgue","Her-opname:":"Réenregistrement :","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Ajouter/supprimer des jeux par clavier. Do grave = MIDI 36.","Register toevoegen":"Ajouter un jeu"
@@ -881,6 +899,12 @@ I18N_JS = r'''
     const k=(''+s).trim();
     return (m[k]!==undefined) ? m[k] : s;
   };
+  // Weergavenaam van een mic-positie: apparaat, of apparaat + gekozen ingang.
+  window.jmMicLabel = function(d){
+    if (d.input) return d.name + ' \u2014 ' + tr('ingang') + ' ' + d.input;
+    if (d.multi) return d.name + ' \u2014 ' + tr('alle kanalen (volgens kanaalinstelling)');
+    return d.name;
+  };
   window.translateTree = function(root){
     if(LANG==='nl') return; const m=I18N[LANG]; if(!m) return;
     root = root||document.body;
@@ -1130,10 +1154,57 @@ class RecorderEngine:
     @property
     def device_index(self):
         """Backwards-compatible: return first selected device or None."""
-        return self.device_indices[0] if self.device_indices else None
+        return mic_device(self.device_indices[0]) if self.device_indices else None
 
-    def get_devices(self):
-        """List available audio input devices (WASAPI only to avoid duplicates)."""
+    def _mic_name(self, key):
+        """Positienaam voor de submap; zonder naam: apparaat (+ ingang)."""
+        naam = self.device_names.get(key)
+        if naam:
+            return naam
+        ch = mic_channel(key)
+        return "Mic_%s" % mic_device(key) + ("_in%d" % ch if ch else "")
+
+    def _use_multi(self):
+        """Meerdere posities, of één ingang uit een apparaat: dan moet er
+        gesneden worden en kan de eenvoudige enkelvoudige opname niet."""
+        return (len(self.device_indices) > 1
+                or any(mic_channel(k) for k in self.device_indices))
+
+    @staticmethod
+    def _mic_groups(keys):
+        """{apparaat: [sleutels]}: één stream per apparaat, meerdere posities."""
+        groepen = {}
+        for k in keys:
+            groepen.setdefault(mic_device(k), []).append(k)
+        return groepen
+
+    @staticmethod
+    def _mic_stream_channels(keys, default_channels):
+        """Aantal kanalen dat de stream van dit apparaat moet openen."""
+        nodig = 0
+        for k in keys:
+            c = mic_channel(k)
+            nodig = max(nodig, c if c else default_channels)
+        return max(1, nodig)
+
+    @staticmethod
+    def _mic_slice(key, indata, default_channels):
+        """De kanalen die bij deze positie horen, als eigen kopie."""
+        c = mic_channel(key)
+        if indata.ndim < 2:
+            return indata.copy()
+        if c:
+            i = min(c, indata.shape[1]) - 1
+            return indata[:, i:i + 1].copy()
+        return indata[:, :default_channels].copy()
+
+    def get_devices(self, positions=False):
+        """List available audio input devices (WASAPI only to avoid duplicates).
+
+        Met positions=True krijgt een apparaat met meerdere ingangen er per
+        ingang een rij bij (sleutel = apparaat + 1000*ingang), zodat elke ingang
+        als eigen mic-positie gekozen kan worden.
+        """
         devices = sd.query_devices()
         hostapis = sd.query_hostapis()
         # Find WASAPI host api index
@@ -1153,8 +1224,19 @@ class RecorderEngine:
                     'name': d['name'],
                     'safe_name': sanitize_device_name(d['name']),
                     'channels': d['max_input_channels'],
-                    'sample_rate': int(d['default_samplerate'])
+                    'sample_rate': int(d['default_samplerate']),
+                    'multi': bool(positions and d['max_input_channels'] > 1),
                 })
+                if positions and d['max_input_channels'] > 1:
+                    for k in range(1, int(d['max_input_channels']) + 1):
+                        input_devices.append({
+                            'index': i + MIC_KEY_STRIDE * k,
+                            'name': d['name'],
+                            'safe_name': "%s_in%d" % (sanitize_device_name(d['name']), k),
+                            'channels': 1,
+                            'sample_rate': int(d['default_samplerate']),
+                            'input': k,
+                        })
         return input_devices
 
     def get_loopback_devices(self):
@@ -1329,7 +1411,7 @@ class RecorderEngine:
         # Create multi-mic subdirs if applicable
         if len(self.device_indices) > 1:
             for idx in self.device_indices:
-                sub = sanitize_path_component(self.device_names.get(idx, f"Mic_{idx}"))
+                sub = sanitize_path_component(self._mic_name(idx))
                 os.makedirs(os.path.join(path, sub), exist_ok=True)
         return path
     
@@ -1688,7 +1770,7 @@ class RecorderEngine:
         channels = self.channels
         dtype = 'float32' if self.bit_depth == 24 else 'int16'
 
-        if len(self.device_indices) > 1:
+        if self._use_multi():
             self._do_record_multi(frames, channels, dtype)
         else:
             self._do_record_single(dev, frames, channels, dtype)
@@ -1802,40 +1884,41 @@ class RecorderEngine:
             self._notify()
 
     def _do_record_multi(self, frames, channels, dtype):
-        """Record from multiple devices simultaneously using InputStream per device."""
-        buffers = {}
+        """Neem meerdere posities tegelijk op: één InputStream per apparaat,
+        waaruit elke positie (het apparaat of één ingang) wordt gesneden."""
+        keys = list(self.device_indices)
+        buffers = {k: [] for k in keys}
         streams = {}
 
-        for dev_idx in self.device_indices:
-            buffers[dev_idx] = []
-
-        def make_callback(dev_idx):
+        def make_callback(dev_keys):
             def callback(indata, frame_count, time_info, status):
-                buffers[dev_idx].append(indata.copy())
-                # Update per-device level
-                if self.bit_depth == 24:
-                    rms = np.sqrt(np.mean(indata.astype(np.float64)**2))
-                else:
-                    rms = np.sqrt(np.mean((indata.astype(np.float64) / 32768.0)**2))
-                self.current_levels[dev_idx] = min(1.0, rms * 3)
+                for k in dev_keys:
+                    deel = self._mic_slice(k, indata, channels)
+                    buffers[k].append(deel)
+                    # Niveau per positie
+                    if self.bit_depth == 24:
+                        rms = np.sqrt(np.mean(deel.astype(np.float64)**2))
+                    else:
+                        rms = np.sqrt(np.mean((deel.astype(np.float64) / 32768.0)**2))
+                    self.current_levels[k] = min(1.0, rms * 3)
             return callback
 
         failed = []
         try:
             # Open streams
-            for dev_idx in self.device_indices:
+            for dev, dev_keys in self._mic_groups(keys).items():
                 try:
                     stream = sd.InputStream(
-                        device=dev_idx,
+                        device=dev,
                         samplerate=self.sample_rate,
-                        channels=channels,
+                        channels=self._mic_stream_channels(dev_keys, channels),
                         dtype=dtype,
-                        callback=make_callback(dev_idx)
+                        callback=make_callback(dev_keys)
                     )
-                    streams[dev_idx] = stream
+                    streams[dev] = stream
                 except Exception as e:
-                    print(f"Warning: Could not open device {dev_idx}: {e}")
-                    failed.append(self.device_names.get(dev_idx, f"Mic_{dev_idx}"))
+                    print(f"Warning: Could not open device {dev}: {e}")
+                    failed.extend(self._mic_name(k) for k in dev_keys)
 
             if not streams:
                 print("No devices could be opened for multi-mic recording")
@@ -1853,12 +1936,12 @@ class RecorderEngine:
                 stream.start()
 
             # Wait for recording duration
+            primary = next(k for k in keys if mic_device(k) in streams)
             start_time = time.time()
             while time.time() - start_time < self.record_seconds:
                 if not self.is_running or self._abort_take:
                     break
-                # Primary level = first active device
-                primary = next(iter(streams))
+                # Primary level = first active position
                 self.current_level = self.current_levels.get(primary, 0.0)
                 self._notify()
                 time.sleep(0.05)
@@ -1874,22 +1957,24 @@ class RecorderEngine:
             if not self.is_running or self._abort_take:
                 return
 
-            # Save per device
-            for dev_idx in streams:
+            # Save per position
+            for key in keys:
                 try:
-                    if not buffers[dev_idx]:
+                    if mic_device(key) not in streams or not buffers[key]:
                         continue
-                    audio_data = np.concatenate(buffers[dev_idx], axis=0)
+                    audio_data = np.concatenate(buffers[key], axis=0)
                     # Trim or pad to exact frame count
                     if len(audio_data) > frames:
                         audio_data = audio_data[:frames]
                     elif len(audio_data) < frames:
                         pad_shape = (frames - len(audio_data),) + audio_data.shape[1:]
                         audio_data = np.concatenate([audio_data, np.zeros(pad_shape, dtype=audio_data.dtype)])
-                    sub = sanitize_path_component(self.device_names.get(dev_idx, f"Mic_{dev_idx}"))
+                    # Eén positie (een enkele ingang gekozen): geen submap, net
+                    # als bij een gewone enkelvoudige opname.
+                    sub = sanitize_path_component(self._mic_name(key)) if len(keys) > 1 else None
                     self._save_audio(audio_data, subdirectory=sub)
                 except Exception as e:
-                    print(f"Save error for device {dev_idx}: {e}")
+                    print(f"Save error for device {key}: {e}")
 
             self.current_level = 0.0
             self.current_levels.clear()
@@ -1979,7 +2064,7 @@ class RecorderEngine:
         devs = list(self.device_indices) if self.device_indices else [self.device_index]
         primary = devs[0]
 
-        sr, ch = self._resolve_record_params(primary)
+        sr, ch = self._resolve_record_params(mic_device(primary))
         if sr != self.sample_rate or ch != self.channels:
             self.sample_rate, self.channels = sr, ch
             self._notify()
@@ -2011,21 +2096,24 @@ class RecorderEngine:
         dropped = {d: 0 for d in devs}     # pre-onset samples discarded per device
         self.current_levels.clear()
 
-        def make_cb(d):
+        def make_cb(dev_keys):
             def cb(indata, frames, time_info, status):
-                buffers[d].append(indata.copy())
+                for k in dev_keys:
+                    buffers[k].append(self._mic_slice(k, indata, channels))
             return cb
 
         streams = {}
         failed = []
         try:
-            for d in devs:
+            for dev, dev_keys in self._mic_groups(devs).items():
                 try:
-                    streams[d] = sd.InputStream(device=d, samplerate=sr, channels=channels,
-                                                dtype=dtype, callback=make_cb(d))
+                    streams[dev] = sd.InputStream(
+                        device=dev, samplerate=sr,
+                        channels=self._mic_stream_channels(dev_keys, channels),
+                        dtype=dtype, callback=make_cb(dev_keys))
                 except Exception as e:
-                    print(f"Auto: could not open device {d}: {e}", flush=True)
-                    failed.append(self.device_names.get(d, f"Mic_{d}"))
+                    print(f"Auto: could not open device {dev}: {e}", flush=True)
+                    failed.extend(self._mic_name(k) for k in dev_keys)
             if not streams:
                 # Pauzeer de cyclus: anders marcheert hij foutend door alle noten.
                 self.last_error = "Opname mislukt: geen microfoon kon worden geopend"
@@ -2036,8 +2124,8 @@ class RecorderEngine:
             if failed:
                 self.last_error = "Let op: microfoon niet geopend: " + ", ".join(failed)
                 self._notify()
-            if primary not in streams:
-                primary = next(iter(streams))
+            if mic_device(primary) not in streams:
+                primary = next(k for k in devs if mic_device(k) in streams)
             for s in streams.values():
                 s.start()
 
@@ -2143,7 +2231,7 @@ class RecorderEngine:
                             onset_by_dev = {
                                 d: max(0, dropped[d] + sum(len(a) for a in buffers[d])
                                        - int(sr * 0.20))
-                                for d in streams}
+                                for d in devs if mic_device(d) in streams}
                             onset_time = time.time()
                             env, stable_run, peak = [], 0.0, 0.0
                             self._notify()
@@ -2234,9 +2322,9 @@ class RecorderEngine:
             if not self.is_running or self._abort_take:
                 return
 
-            for d in streams:
+            for d in devs:
                 try:
-                    if not buffers[d]:
+                    if mic_device(d) not in streams or not buffers[d]:
                         continue
                     audio = np.concatenate(buffers[d], axis=0)
                     trim = max(0, onset_by_dev.get(d, 0) - dropped[d])
@@ -2244,7 +2332,7 @@ class RecorderEngine:
                         audio = audio[trim:]
                     if len(devs) > 1:
                         self._save_audio(audio, subdirectory=sanitize_path_component(
-                            self.device_names.get(d, f"Mic_{d}")))
+                            self._mic_name(d)))
                     else:
                         self._save_audio(audio)
                 except Exception as e:
@@ -2774,7 +2862,7 @@ class RecorderEngine:
             os.makedirs(t, exist_ok=True)
             if len(self.device_indices) > 1:
                 for idx in self.device_indices:
-                    mic = sanitize_path_component(self.device_names.get(idx, f"Mic_{idx}"))
+                    mic = sanitize_path_component(self._mic_name(idx))
                     os.makedirs(os.path.join(t, mic), exist_ok=True)
 
     def new_register(self, register_name, tremulant=False):
@@ -3078,7 +3166,7 @@ class RecorderEngine:
         for i, kb in enumerate(list(self.keyboards)):
             divisions.append((i + 1, kb["name"], kb))
 
-        mic_pref = [sanitize_path_component(self.device_names.get(i, f"Mic_{i}"))
+        mic_pref = [sanitize_path_component(self._mic_name(i))
                     for i in self.device_indices]
 
         enclosures = []     # (id, divisie-naam)
@@ -3722,7 +3810,7 @@ def create_web_app(engine: RecorderEngine):
     
     @app.route('/api/devices')
     def api_devices():
-        return jsonify(engine.get_devices())
+        return jsonify(engine.get_devices(positions=True))
 
     @app.route('/api/loopback-devices')
     def api_loopback_devices():
@@ -5822,7 +5910,7 @@ function dRenderMicList(activeIndices, activeNames) {
         const posName = activeNames[d.index] || d.safe_name || '';
         html += '<div class="d-checkbox-row">' +
             '<input type="checkbox" id="dMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="dApplyMics()">' +
-            '<label for="dMic' + d.index + '">' + d.name + '</label>' +
+            '<label for="dMic' + d.index + '">' + jmMicLabel(d) + '</label>' +
             '<input class="d-mic-name" id="dMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="dApplyMics()">' +
             '</div>';
     });
@@ -6389,7 +6477,7 @@ async function wizBuildMics(){
         else cont.innerHTML = devs.map(d => {
             const checked = wizData.settings.device_indices.indexOf(d.index)>=0 ? 'checked' : '';
             const pos = (wizData.settings.device_names && wizData.settings.device_names[d.index]) || '';
-            return '<div class="wiz-row"><label class="wiz-check" style="flex:1;"><input type="checkbox" class="wizMicChk" data-idx="'+d.index+'" '+checked+'> '+d.name+'</label>'+
+            return '<div class="wiz-row"><label class="wiz-check" style="flex:1;"><input type="checkbox" class="wizMicChk" data-idx="'+d.index+'" '+checked+'> '+jmMicLabel(d)+'</label>'+
                    '<input type="text" class="wizMicPos" data-idx="'+d.index+'" placeholder="positie" value="'+wizEsc(pos)+'" style="max-width:150px;"></div>';
         }).join('');
     } catch(e){ cont.innerHTML = '<p class="hint">Kon apparaten niet laden.</p>'; }
@@ -7433,7 +7521,7 @@ function fRenderMicList(activeIndices, activeNames) {
         const posName = activeNames[d.index] || d.safe_name || '';
         html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
             '<input type="checkbox" id="fMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="fApplyMics()" style="accent-color:var(--accent);width:16px;height:16px;">' +
-            '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + d.name + '</label>' +
+            '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + jmMicLabel(d) + '</label>' +
             '<input id="fMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="fApplyMics()" style="width:80px;padding:4px 8px;font-family:JetBrains Mono,monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;">' +
             '</div>';
     });
