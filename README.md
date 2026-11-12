@@ -1,22 +1,29 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.13-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.14-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.13 — Organ Sample Recorder
+# JM-Rec v3.14 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.14
+- **Losse ingangen van een interface** — een geluidskaart met meerdere mic-ingangen verscheen als één apparaat, waarvan alleen ingang 1 werd opgenomen. Nu krijgt elke ingang een eigen rij in de microfoonlijst (lade, opstartwizard en afstandsbediening), met eigen naam en een eigen map per register. De rij *alle kanalen* blijft bestaan voor een stereomic. Werkt ook bij intelligent opnemen.
+- **Loops automatisch na een reeks** — het vinkje *Na een reeks ook loops maken* werkte nog niet; nu maakt JM-Rec na de controle van een afgeronde reeks meteen de loops van die reeks, met een reservekopie van de originelen. Staat standaard uit.
+- **Loops bij intelligent opnemen** — de zoeker gebruikte de vaste opnameduur als aanhoudtijd, ook als de speler zelf bepaalde hoe lang de toon klonk; dat leidt hij nu af uit het signaal.
+- **Vertaling** — de twee vinkjes bij Loops waren in het Engels, Duits en Frans niet vertaald.
 
 ### Nieuw in v3.13
 - **Zeven talen in de interface** — Spaans, Italiaans en Pools zijn erbij gekomen; de taalkiezer rechtsboven en het ingebouwde helpvenster werken nu in `nl`, `en`, `de`, `fr`, `es`, `it`, `pl`. De in-app vertalingen volgen de orgelbouwpraktijk per taal (bijvoorbeeld *caja expresiva* / *cassa espressiva* / *szafa ekspresyjna* voor zwelkast).
 
 ### Nieuw in v3.12
 - **"Wat je hoort" gerepareerd** — de loopback-opname riep `recorder()` aan op een soundcard-*luidspreker*, maar die heeft die methode niet; WASAPI-loopback loopt via `get_microphone(..., include_loopback=True)`. Daardoor faalde deze opnamemodus altijd met "Loopback-opname mislukt". Deze fout zat er sinds v3.0 in en is nu verholpen — systeemaudio opnemen werkt.
+- **Looppunten** — JM-Rec zoekt per sample het stuk dat naadloos op zichzelf aansluit en schrijft dat als `smpl`-chunk in de WAV, waar JM-Orgue het leest; zie *Loops* in de lade. Daarnaast draait na een afgeronde reeks vanzelf de samplecontrole (alleen lezen).
 
 ### Nieuw in v3.11
 - **Opnamevolume tot 600%** — de volumeschuif (Instellingen → Audio) gaat nu tot 600% in plaats van 200%, voor zachte microfoons of registers die anders te stil binnenkomen. Boven 200% kleurt de waarde oranje: let dan op oversturing (de sample-controle waarschuwt bij clipping).
