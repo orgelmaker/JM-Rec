@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.15-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.16-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.15 — Organ Sample Recorder
+# JM-Rec v3.16 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.16
+- **Test microfoons** — JM-Rec toonde alleen een niveau tijdens een opname, dus bij het koppelen van een interface was niet te zien of een ingang signaal kreeg. De knop onder de microfoonlijst opent elke gekozen positie anderhalve seconde (zonder op te nemen) en meldt per ingang: signaal met dBFS, zacht, bijna geen signaal, digitale stilte (vaak een gedempt Windows-apparaat of volume op 0%) of de echte foutmelding van het apparaat. Van een gekozen apparaat met meer ingangen worden ook de andere ingangen gemeten, zodat zichtbaar is op welke ingang het signaal zit.
 
 ### Nieuw in v3.15
 - **Alle driversoorten tonen** — JM-Rec liet alleen apparaten onder WASAPI zien. Een interface die daar niet al zijn ingangen laat zien (bijvoorbeeld een RME Fireface, waarvan mic 9 en 10 ontbraken) had geen uitweg. Nu staat er in de lade (Audiobron) en in stap 2 van de wizard een vinkje *Alle driversoorten tonen*: dan komen ook MME, DirectSound en WDM-KS in de lijst, met de naam van de driversoort achter elk apparaat. Standaard verandert er niets; de keuze wordt onthouden.
