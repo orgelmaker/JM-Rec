@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.14-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.15-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.14 — Organ Sample Recorder
+# JM-Rec v3.15 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.15
+- **Alle driversoorten tonen** — JM-Rec liet alleen apparaten onder WASAPI zien. Een interface die daar niet al zijn ingangen laat zien (bijvoorbeeld een RME Fireface, waarvan mic 9 en 10 ontbraken) had geen uitweg. Nu staat er in de lade (Audiobron) en in stap 2 van de wizard een vinkje *Alle driversoorten tonen*: dan komen ook MME, DirectSound en WDM-KS in de lijst, met de naam van de driversoort achter elk apparaat. Standaard verandert er niets; de keuze wordt onthouden.
 
 ### Nieuw in v3.14
 - **Losse ingangen van een interface** — een geluidskaart met meerdere mic-ingangen verscheen als één apparaat, waarvan alleen ingang 1 werd opgenomen. Nu krijgt elke ingang een eigen rij in de microfoonlijst (lade, opstartwizard en afstandsbediening), met eigen naam en een eigen map per register. De rij *alle kanalen* blijft bestaan voor een stereomic. Werkt ook bij intelligent opnemen.
