@@ -121,6 +121,32 @@ def mic_channel(key):
     return 0 if key is None else int(key) // MIC_KEY_STRIDE
 
 
+# De VU-meter werkt in dBFS, niet lineair: een orgel of een microfoon op afstand
+# zit vaak rond -40 dBFS, en lineaal×3 maakt dat onzichtbaar (2% van de balk).
+# De balkvulling loopt van VU_FLOOR_DB (leeg) tot 0 dB (vol).
+VU_FLOOR_DB = -60.0
+
+
+def rms_to_dbfs(x):
+    """Lineair niveau (0..1) naar dBFS; stilte wordt -120."""
+    x = float(x)
+    return -120.0 if x <= 1e-9 else 20.0 * float(np.log10(min(1.0, x)))
+
+
+def dbfs_to_fill(db, floor=VU_FLOOR_DB):
+    """dBFS naar balkvulling 0..1 over [floor, 0]."""
+    if db <= floor:
+        return 0.0
+    if db >= 0.0:
+        return 1.0
+    return (db - floor) / (0.0 - floor)
+
+
+def vu_fill(rms):
+    """Balkvulling 0..1 voor een lineair RMS-niveau, via dBFS."""
+    return dbfs_to_fill(rms_to_dbfs(rms))
+
+
 def sanitize_device_name(name):
     """Convert audio device name to filesystem-safe folder name."""
     name = re.sub(r"\s*\(.*?\)\s*", "", name)
@@ -311,7 +337,7 @@ I18N_JS = r'''
     // review modal
     "Sample Controle":"Sample Review",
     // loops
-    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Finds, for every sample, the stretch that joins seamlessly onto itself and stores it in the file, so a note can be held indefinitely. Where the waveform does not join cleanly it is crossfaded, and the original is copied aside first.","Alleen meten":"Measure only","Loops maken":"Create loops","Afbreken":"Abort","Stemtoon (Hz)":"Pitch standard (Hz)","Na een reeks automatisch controleren":"Check automatically after a series","Na een reeks ook loops maken":"Also create loops after a series","zonder loop:":"without a loop:","Looppunten vragen de module soundfile":"Loop points need the soundfile module","Er loopt al een loopronde":"A loop pass is already running","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Find loop points and write them into every sample? For samples whose audio is altered, a copy of the original is placed in the output folder first.","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done","Alle driversoorten tonen":"Show all driver types","Test microfoons":"Test microphones","Bezig met testen… praat of speel iets op de microfoon(s)":"Testing… speak or play something on the microphone(s)","Test mislukt":"Test failed","Stop eerst de opname":"Stop the recording first","Kies eerst een microfoon":"Choose a microphone first","signaal":"signal","zacht signaal":"weak signal","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"almost no signal — check cable, phantom power and gain","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"digital silence — check in Windows (Sound → Recording) whether this device is muted or set to 0%","geen gegevens ontvangen":"no data received","kon niet openen":"could not open","ook gemeten:":"also measured:","ingang":"input","alle kanalen (volgens kanaalinstelling)":"all channels (per channel setting)",
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Finds, for every sample, the stretch that joins seamlessly onto itself and stores it in the file, so a note can be held indefinitely. Where the waveform does not join cleanly it is crossfaded, and the original is copied aside first.","Alleen meten":"Measure only","Loops maken":"Create loops","Afbreken":"Abort","Stemtoon (Hz)":"Pitch standard (Hz)","Na een reeks automatisch controleren":"Check automatically after a series","Na een reeks ook loops maken":"Also create loops after a series","zonder loop:":"without a loop:","Looppunten vragen de module soundfile":"Loop points need the soundfile module","Er loopt al een loopronde":"A loop pass is already running","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Find loop points and write them into every sample? For samples whose audio is altered, a copy of the original is placed in the output folder first.","Analyseren":"Analyze","Annuleren":"Cancel","Map":"Folder","Orgel":"Organ","Stilte knippen":"Trim silence","Klaar":"Done","Alle driversoorten tonen":"Show all driver types","Live niveaumeter (dB)":"Live level meter (dB)","Test microfoons":"Test microphones","Bezig met testen… praat of speel iets op de microfoon(s)":"Testing… speak or play something on the microphone(s)","Test mislukt":"Test failed","Stop eerst de opname":"Stop the recording first","Kies eerst een microfoon":"Choose a microphone first","signaal":"signal","zacht signaal":"weak signal","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"almost no signal — check cable, phantom power and gain","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"digital silence — check in Windows (Sound → Recording) whether this device is muted or set to 0%","geen gegevens ontvangen":"no data received","kon niet openen":"could not open","ook gemeten:":"also measured:","ingang":"input","alle kanalen (volgens kanaalinstelling)":"all channels (per channel setting)",
     // handleiding
     "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Quick start","Kleurcodes per register":"Colour codes per register","Kleur":"Colour","Betekenis":"Meaning","Knop":"Button","Functie":"Function",
     "Register":"Register","op":"on","is volledig opgenomen":"is fully recorded","Wil je het nu controleren?":"Review it now?","is compleet":"is complete","Controleren?":"Review?",
@@ -343,7 +369,7 @@ I18N_JS = r'''
     "Remote Control":"Fernsteuerung","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Stellen Sie sicher, dass Ihr Telefon im selben Netzwerk wie dieser PC ist.","Kies het netwerk waarmee je telefoon verbonden is:":"Wählen Sie das Netzwerk, mit dem Ihr Telefon verbunden ist:","Directe verbinding (geen WiFi nodig)":"Direktverbindung (kein WLAN nötig)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Kein WLAN vor Ort? Lassen Sie diesen PC ein eigenes Netzwerk aussenden und verbinden Sie Ihr Telefon oder Tablet damit.","Open hotspot-instellingen":"Hotspot-Einstellungen öffnen",
     "Sample Controle":"Sample-Kontrolle",
     // loops
-    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Sucht pro Sample den Abschnitt, der nahtlos an sich selbst anschließt, und legt ihn in der Datei ab, damit ein Ton beliebig lange gehalten werden kann. Schließt die Wellenform nicht sauber an, wird übergeblendet und das Original vorher beiseitegelegt.","Alleen meten":"Nur messen","Loops maken":"Loops erstellen","Afbreken":"Abbrechen","Stemtoon (Hz)":"Stimmton (Hz)","Na een reeks automatisch controleren":"Nach einer Reihe automatisch prüfen","Na een reeks ook loops maken":"Nach einer Reihe auch Loops erstellen","zonder loop:":"ohne Loop:","Looppunten vragen de module soundfile":"Loop-Punkte benötigen das Modul soundfile","Er loopt al een loopronde":"Es läuft bereits ein Loop-Durchlauf","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Loop-Punkte suchen und in alle Samples schreiben? Von Samples, deren Audio verändert wird, kommt zuerst eine Kopie des Originals in den Ausgabeordner.","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig","Alle driversoorten tonen":"Alle Treibertypen anzeigen","Test microfoons":"Mikrofone testen","Bezig met testen… praat of speel iets op de microfoon(s)":"Teste… sprechen oder spielen Sie etwas auf dem Mikrofon","Test mislukt":"Test fehlgeschlagen","Stop eerst de opname":"Beenden Sie zuerst die Aufnahme","Kies eerst een microfoon":"Wählen Sie zuerst ein Mikrofon","signaal":"Signal","zacht signaal":"schwaches Signal","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"fast kein Signal — Kabel, Phantomspeisung und Verstärkung prüfen","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"digitale Stille — in Windows (Sound → Aufnahme) prüfen, ob dieses Gerät stummgeschaltet oder auf 0 % gestellt ist","geen gegevens ontvangen":"keine Daten empfangen","kon niet openen":"konnte nicht geöffnet werden","ook gemeten:":"auch gemessen:","ingang":"Eingang","alle kanalen (volgens kanaalinstelling)":"alle Kanäle (laut Kanaleinstellung)",
+    "Loops":"Loops","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Sucht pro Sample den Abschnitt, der nahtlos an sich selbst anschließt, und legt ihn in der Datei ab, damit ein Ton beliebig lange gehalten werden kann. Schließt die Wellenform nicht sauber an, wird übergeblendet und das Original vorher beiseitegelegt.","Alleen meten":"Nur messen","Loops maken":"Loops erstellen","Afbreken":"Abbrechen","Stemtoon (Hz)":"Stimmton (Hz)","Na een reeks automatisch controleren":"Nach einer Reihe automatisch prüfen","Na een reeks ook loops maken":"Nach einer Reihe auch Loops erstellen","zonder loop:":"ohne Loop:","Looppunten vragen de module soundfile":"Loop-Punkte benötigen das Modul soundfile","Er loopt al een loopronde":"Es läuft bereits ein Loop-Durchlauf","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Loop-Punkte suchen und in alle Samples schreiben? Von Samples, deren Audio verändert wird, kommt zuerst eine Kopie des Originals in den Ausgabeordner.","Analyseren":"Analysieren","Annuleren":"Abbrechen","Map":"Ordner","Orgel":"Orgel","Stilte knippen":"Stille beschneiden","Klaar":"Fertig","Alle driversoorten tonen":"Alle Treibertypen anzeigen","Live niveaumeter (dB)":"Live-Pegelanzeige (dB)","Test microfoons":"Mikrofone testen","Bezig met testen… praat of speel iets op de microfoon(s)":"Teste… sprechen oder spielen Sie etwas auf dem Mikrofon","Test mislukt":"Test fehlgeschlagen","Stop eerst de opname":"Beenden Sie zuerst die Aufnahme","Kies eerst een microfoon":"Wählen Sie zuerst ein Mikrofon","signaal":"Signal","zacht signaal":"schwaches Signal","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"fast kein Signal — Kabel, Phantomspeisung und Verstärkung prüfen","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"digitale Stille — in Windows (Sound → Aufnahme) prüfen, ob dieses Gerät stummgeschaltet oder auf 0 % gestellt ist","geen gegevens ontvangen":"keine Daten empfangen","kon niet openen":"konnte nicht geöffnet werden","ook gemeten:":"auch gemessen:","ingang":"Eingang","alle kanalen (volgens kanaalinstelling)":"alle Kanäle (laut Kanaleinstellung)",
     "JM-Rec — Handleiding":"JM-Rec — Handbuch","Snelstart":"Schnellstart","Kleurcodes per register":"Farbcodes pro Register","Kleur":"Farbe","Betekenis":"Bedeutung","Knop":"Taste","Functie":"Funktion",
     "Register":"Register","op":"auf","is volledig opgenomen":"ist vollständig aufgenommen","Wil je het nu controleren?":"Möchten Sie es jetzt prüfen?","is compleet":"ist vollständig","Controleren?":"Prüfen?",
     "Klavier / Pedaal":"Manual / Pedal","Register opnemen":"Register aufnehmen","Apparaten verversen":"Geräte aktualisieren","Laden...":"Lädt...","MP3 Bitrate":"MP3-Bitrate","Mapnaam:":"Ordnername:","Mapnaam: —":"Ordnername: —","Scan de QR-code met je telefoon of tablet":"Scannen Sie den QR-Code mit Ihrem Telefon oder Tablet","om de afstandsbediening te openen":"um die Fernsteuerung zu öffnen","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet ist nicht nötig — die Steuerung funktioniert auch ohne. Lassen Sie dieses Fenster offen; schaltet sich der Hotspot ab, schalten Sie ihn erneut ein.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Klicken Sie auf 'Hotspot-Einstellungen öffnen' und schalten Sie den Mobilen Hotspot EIN.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notieren Sie den Netzwerknamen und das Passwort, die Windows anzeigt.","Verbind je iPad/iPhone of Android met dat netwerk.":"Verbinden Sie Ihr iPad/iPhone oder Android mit diesem Netzwerk.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wählen Sie oben das Hotspot-Netzwerk und scannen Sie den QR-Code (oder tippen Sie die Adresse).","Pad naar register-, klavier- of orgelmap":"Pfad zum Register-, Manual- oder Orgelordner","Her-opname:":"Neuaufnahme:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Register pro Manual hinzufügen/entfernen. Großes C = MIDI 36.","Register toevoegen":"Register hinzufügen"
@@ -374,7 +400,7 @@ I18N_JS = r'''
     "Remote Control":"Télécommande","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assurez-vous que votre téléphone est sur le même réseau que ce PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Choisissez le réseau auquel votre téléphone est connecté :","Directe verbinding (geen WiFi nodig)":"Connexion directe (pas de WiFi requis)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Pas de WiFi sur place ? Laissez ce PC diffuser son propre réseau et connectez-y votre téléphone ou tablette.","Open hotspot-instellingen":"Ouvrir les réglages du point d'accès",
     "Sample Controle":"Contrôle des samples",
     // loops
-    "Loops":"Boucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cherche pour chaque échantillon le passage qui se raccorde sans couture à lui-même et l'inscrit dans le fichier, afin qu'une note puisse être tenue indéfiniment. Si la forme d'onde ne se raccorde pas proprement, un fondu est appliqué et l'original est d'abord mis de côté.","Alleen meten":"Mesurer seulement","Loops maken":"Créer les boucles","Afbreken":"Interrompre","Stemtoon (Hz)":"Diapason (Hz)","Na een reeks automatisch controleren":"Contrôler automatiquement après une série","Na een reeks ook loops maken":"Créer aussi les boucles après une série","zonder loop:":"sans boucle :","Looppunten vragen de module soundfile":"Les points de boucle nécessitent le module soundfile","Er loopt al een loopronde":"Un cycle de boucles est déjà en cours","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Chercher les points de boucle et les écrire dans tous les échantillons ? Pour ceux dont l'audio est modifié, une copie de l'original est d'abord placée dans le dossier de sortie.","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé","Alle driversoorten tonen":"Afficher tous les types de pilotes","Test microfoons":"Tester les microphones","Bezig met testen… praat of speel iets op de microfoon(s)":"Test en cours… parlez ou jouez quelque chose sur le(s) microphone(s)","Test mislukt":"Échec du test","Stop eerst de opname":"Arrêtez d'abord l'enregistrement","Kies eerst een microfoon":"Choisissez d'abord un microphone","signaal":"signal","zacht signaal":"signal faible","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"presque aucun signal — vérifiez le câble, l'alimentation fantôme et le gain","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silence numérique — vérifiez dans Windows (Son → Enregistrement) que ce périphérique n'est pas coupé ou à 0 %","geen gegevens ontvangen":"aucune donnée reçue","kon niet openen":"impossible à ouvrir","ook gemeten:":"aussi mesuré :","ingang":"entrée","alle kanalen (volgens kanaalinstelling)":"tous les canaux (selon le réglage)",
+    "Loops":"Boucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cherche pour chaque échantillon le passage qui se raccorde sans couture à lui-même et l'inscrit dans le fichier, afin qu'une note puisse être tenue indéfiniment. Si la forme d'onde ne se raccorde pas proprement, un fondu est appliqué et l'original est d'abord mis de côté.","Alleen meten":"Mesurer seulement","Loops maken":"Créer les boucles","Afbreken":"Interrompre","Stemtoon (Hz)":"Diapason (Hz)","Na een reeks automatisch controleren":"Contrôler automatiquement après une série","Na een reeks ook loops maken":"Créer aussi les boucles après une série","zonder loop:":"sans boucle :","Looppunten vragen de module soundfile":"Les points de boucle nécessitent le module soundfile","Er loopt al een loopronde":"Un cycle de boucles est déjà en cours","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Chercher les points de boucle et les écrire dans tous les échantillons ? Pour ceux dont l'audio est modifié, une copie de l'original est d'abord placée dans le dossier de sortie.","Analyseren":"Analyser","Annuleren":"Annuler","Map":"Dossier","Orgel":"Orgue","Stilte knippen":"Couper le silence","Klaar":"Terminé","Alle driversoorten tonen":"Afficher tous les types de pilotes","Live niveaumeter (dB)":"Vu-mètre en direct (dB)","Test microfoons":"Tester les microphones","Bezig met testen… praat of speel iets op de microfoon(s)":"Test en cours… parlez ou jouez quelque chose sur le(s) microphone(s)","Test mislukt":"Échec du test","Stop eerst de opname":"Arrêtez d'abord l'enregistrement","Kies eerst een microfoon":"Choisissez d'abord un microphone","signaal":"signal","zacht signaal":"signal faible","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"presque aucun signal — vérifiez le câble, l'alimentation fantôme et le gain","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silence numérique — vérifiez dans Windows (Son → Enregistrement) que ce périphérique n'est pas coupé ou à 0 %","geen gegevens ontvangen":"aucune donnée reçue","kon niet openen":"impossible à ouvrir","ook gemeten:":"aussi mesuré :","ingang":"entrée","alle kanalen (volgens kanaalinstelling)":"tous les canaux (selon le réglage)",
     "JM-Rec — Handleiding":"JM-Rec — Manuel","Snelstart":"Démarrage rapide","Kleurcodes per register":"Codes couleur par jeu","Kleur":"Couleur","Betekenis":"Signification","Knop":"Bouton","Functie":"Fonction",
     "Register":"Jeu","op":"sur","is volledig opgenomen":"est entièrement enregistré","Wil je het nu controleren?":"Le contrôler maintenant ?","is compleet":"est complet","Controleren?":"Contrôler ?",
     "Klavier / Pedaal":"Clavier / Pédalier","Register opnemen":"Enregistrer le jeu","Apparaten verversen":"Actualiser les appareils","Laden...":"Chargement...","MP3 Bitrate":"Débit MP3","Mapnaam:":"Nom du dossier :","Mapnaam: —":"Nom du dossier : —","Scan de QR-code met je telefoon of tablet":"Scannez le QR code avec votre téléphone ou tablette","om de afstandsbediening te openen":"pour ouvrir la télécommande","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet n'est pas nécessaire — la commande fonctionne sans. Gardez cette fenêtre ouverte ; si le point d'accès se coupe, réactivez-le.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Cliquez sur « Ouvrir les réglages du point d'accès » et activez le point d'accès mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Notez le nom du réseau et le mot de passe affichés par Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connectez votre iPad/iPhone ou Android à ce réseau.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Choisissez le réseau du point d'accès ci-dessus et scannez le QR code (ou tapez l'adresse).","Pad naar register-, klavier- of orgelmap":"Chemin vers le dossier jeu, clavier ou orgue","Her-opname:":"Réenregistrement :","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Ajouter/supprimer des jeux par clavier. Do grave = MIDI 36.","Register toevoegen":"Ajouter un jeu"
@@ -404,7 +430,7 @@ I18N_JS = r'''
     "Exporteren":"Exportar","Exporteer .organ (JM-Orgue)":"Exportar .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Exportar datos del proyecto (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crea un archivo de definición .organ en la carpeta del proyecto que JM-Orgue puede cargar directamente.",".organ opgeslagen:":".organ guardado:","registers":"registros","samples":"muestras","ontbrekend":"faltante","Export mislukt:":"Error al exportar:","Update beschikbaar:":"Actualización disponible:","Feedback":"Comentarios","Feedback geven":"Dar comentarios","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"¿Encontró un problema o tiene una idea para JM-Rec? Su texto se prepara como un informe de GitHub.","Probleem melden":"Informar un problema","Idee of verbetering":"Idea o mejora","Beschrijf je probleem of idee zo concreet mogelijk…":"Describa su problema o idea de la forma más concreta posible…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Se abre una página de GitHub con su texto rellenado (incluida la información de versión). Para enviarlo se necesita una cuenta gratuita de GitHub.","Openen op GitHub":"Abrir en GitHub","Project-JSON opgeslagen:":"JSON del proyecto guardado:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Nota: JM-Orgue no admite FLAC; elija WAV o MP3 como formato",
     "Remote Control":"Mando a distancia","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Asegúrese de que su teléfono esté en la misma red que este PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Elija la red a la que está conectado su teléfono:","Directe verbinding (geen WiFi nodig)":"Conexión directa (sin WiFi)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"¿Sin WiFi en este lugar? Deje que este PC emita su propia red y conecte su teléfono o tableta a ella.","Open hotspot-instellingen":"Abrir ajustes de hotspot",
     "Sample Controle":"Revisión de muestras",
-    "Loops":"Bucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Busca en cada muestra el tramo que se une sin costuras consigo mismo y lo guarda en el archivo, de modo que una nota se pueda sostener indefinidamente. Si la forma de onda no empalma limpiamente, se aplica un fundido cruzado y el original se copia primero.","Alleen meten":"Solo medir","Loops maken":"Crear bucles","Afbreken":"Interrumpir","Stemtoon (Hz)":"Diapasón (Hz)","Na een reeks automatisch controleren":"Comprobar automáticamente tras una serie","Na een reeks ook loops maken":"Crear también bucles tras una serie","Alle driversoorten tonen":"Mostrar todos los tipos de controlador","Test microfoons":"Probar micrófonos","Bezig met testen… praat of speel iets op de microfoon(s)":"Probando… hable o toque algo en el/los micrófono(s)","Test mislukt":"La prueba falló","Stop eerst de opname":"Detenga primero la grabación","Kies eerst een microfoon":"Elija primero un micrófono","signaal":"señal","zacht signaal":"señal débil","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"casi sin señal — compruebe el cable, la alimentación phantom y la ganancia","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silencio digital — compruebe en Windows (Sonido → Grabación) si este dispositivo está silenciado o al 0 %","geen gegevens ontvangen":"no se recibieron datos","kon niet openen":"no se pudo abrir","ook gemeten:":"también medido:","ingang":"entrada","alle kanalen (volgens kanaalinstelling)":"todos los canales (según el ajuste de canales)","zonder loop:":"sin bucle:","Looppunten vragen de module soundfile":"Los puntos de bucle requieren el módulo soundfile","Er loopt al een loopronde":"Ya hay una ronda de bucles en curso","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"¿Buscar y escribir puntos de bucle en todas las muestras? De las muestras cuyo audio se modifique, se guarda primero una copia del original en la carpeta de salida.","Analyseren":"Analizar","Annuleren":"Cancelar","Map":"Carpeta","Orgel":"Órgano","Stilte knippen":"Recortar silencio","Klaar":"Listo",
+    "Loops":"Bucles","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Busca en cada muestra el tramo que se une sin costuras consigo mismo y lo guarda en el archivo, de modo que una nota se pueda sostener indefinidamente. Si la forma de onda no empalma limpiamente, se aplica un fundido cruzado y el original se copia primero.","Alleen meten":"Solo medir","Loops maken":"Crear bucles","Afbreken":"Interrumpir","Stemtoon (Hz)":"Diapasón (Hz)","Na een reeks automatisch controleren":"Comprobar automáticamente tras una serie","Na een reeks ook loops maken":"Crear también bucles tras una serie","Alle driversoorten tonen":"Mostrar todos los tipos de controlador","Live niveaumeter (dB)":"Medidor de nivel en vivo (dB)","Test microfoons":"Probar micrófonos","Bezig met testen… praat of speel iets op de microfoon(s)":"Probando… hable o toque algo en el/los micrófono(s)","Test mislukt":"La prueba falló","Stop eerst de opname":"Detenga primero la grabación","Kies eerst een microfoon":"Elija primero un micrófono","signaal":"señal","zacht signaal":"señal débil","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"casi sin señal — compruebe el cable, la alimentación phantom y la ganancia","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silencio digital — compruebe en Windows (Sonido → Grabación) si este dispositivo está silenciado o al 0 %","geen gegevens ontvangen":"no se recibieron datos","kon niet openen":"no se pudo abrir","ook gemeten:":"también medido:","ingang":"entrada","alle kanalen (volgens kanaalinstelling)":"todos los canales (según el ajuste de canales)","zonder loop:":"sin bucle:","Looppunten vragen de module soundfile":"Los puntos de bucle requieren el módulo soundfile","Er loopt al een loopronde":"Ya hay una ronda de bucles en curso","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"¿Buscar y escribir puntos de bucle en todas las muestras? De las muestras cuyo audio se modifique, se guarda primero una copia del original en la carpeta de salida.","Analyseren":"Analizar","Annuleren":"Cancelar","Map":"Carpeta","Orgel":"Órgano","Stilte knippen":"Recortar silencio","Klaar":"Listo",
     "JM-Rec — Handleiding":"JM-Rec — Manual","Snelstart":"Inicio rápido","Kleurcodes per register":"Códigos de color por registro","Kleur":"Color","Betekenis":"Significado","Knop":"Botón","Functie":"Función",
     "Register":"Registro","op":"en","is volledig opgenomen":"está totalmente grabado","Wil je het nu controleren?":"¿Lo desea revisar ahora?","is compleet":"está completo","Controleren?":"¿Revisar?",
     "Klavier / Pedaal":"Teclado / Pedalero","Register opnemen":"Grabar registro","Apparaten verversen":"Actualizar dispositivos","Laden...":"Cargando...","MP3 Bitrate":"Tasa de bits MP3","Mapnaam:":"Nombre de carpeta:","Mapnaam: —":"Nombre de carpeta: —","Scan de QR-code met je telefoon of tablet":"Escanee el código QR con su teléfono o tableta","om de afstandsbediening te openen":"para abrir el mando a distancia","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"No se necesita Internet — el control funciona igualmente. Mantenga esta ventana abierta; si el hotspot se desactiva, vuelva a encenderlo.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Haga clic en «Abrir ajustes de hotspot» y encienda el hotspot móvil.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Anote el nombre de red y la contraseña que muestra Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Conecte su iPad/iPhone o Android a esa red.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Elija arriba la red del hotspot y escanee el código QR (o escriba la dirección).","Pad naar register-, klavier- of orgelmap":"Ruta a la carpeta de registro, teclado u órgano","Her-opname:":"Regrabación:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Añadir/quitar registros por teclado. Do grave = MIDI 36.","Register toevoegen":"Añadir registro"
@@ -434,7 +460,7 @@ I18N_JS = r'''
     "Exporteren":"Esporta","Exporteer .organ (JM-Orgue)":"Esporta .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Esporta dati del progetto (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Crea un file di definizione .organ nella cartella del progetto che JM-Orgue può caricare direttamente.",".organ opgeslagen:":".organ salvato:","registers":"registri","samples":"campioni","ontbrekend":"mancante","Export mislukt:":"Esportazione fallita:","Update beschikbaar:":"Aggiornamento disponibile:","Feedback":"Feedback","Feedback geven":"Invia feedback","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Hai trovato un problema o hai un'idea per JM-Rec? Il tuo testo viene preparato come segnalazione GitHub.","Probleem melden":"Segnala un problema","Idee of verbetering":"Idea o miglioramento","Beschrijf je probleem of idee zo concreet mogelijk…":"Descrivi il tuo problema o la tua idea nel modo più concreto possibile…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Si apre una pagina GitHub con il testo precompilato (incluse le informazioni di versione). Per inviare serve un account GitHub gratuito.","Openen op GitHub":"Apri su GitHub","Project-JSON opgeslagen:":"JSON del progetto salvato:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Attenzione: JM-Orgue non supporta FLAC; scegli WAV o MP3 come formato",
     "Remote Control":"Telecomando","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Assicurati che il tuo telefono sia sulla stessa rete di questo PC.","Kies het netwerk waarmee je telefoon verbonden is:":"Scegli la rete a cui è connesso il tuo telefono:","Directe verbinding (geen WiFi nodig)":"Connessione diretta (nessun WiFi richiesto)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Niente WiFi in questo luogo? Lascia che questo PC trasmetta la propria rete e collega il tuo telefono o tablet.","Open hotspot-instellingen":"Apri impostazioni hotspot",
     "Sample Controle":"Verifica campioni",
-    "Loops":"Loop","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cerca in ogni campione il tratto che si unisce senza giunture a se stesso e lo salva nel file, in modo che una nota possa essere tenuta indefinitamente. Se la forma d'onda non si collega in modo pulito, viene applicato un crossfade e l'originale viene copiato prima a parte.","Alleen meten":"Solo misurazione","Loops maken":"Crea loop","Afbreken":"Interrompi","Stemtoon (Hz)":"Diapason (Hz)","Na een reeks automatisch controleren":"Verifica automaticamente dopo una serie","Na een reeks ook loops maken":"Crea anche i loop dopo una serie","Alle driversoorten tonen":"Mostra tutti i tipi di driver","Test microfoons":"Prova i microfoni","Bezig met testen… praat of speel iets op de microfoon(s)":"Test in corso… parla o suona qualcosa sul/sui microfono/i","Test mislukt":"Test non riuscito","Stop eerst de opname":"Ferma prima la registrazione","Kies eerst een microfoon":"Scegli prima un microfono","signaal":"segnale","zacht signaal":"segnale debole","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"quasi nessun segnale — controlla cavo, alimentazione phantom e guadagno","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silenzio digitale — controlla in Windows (Suono → Registrazione) che questo dispositivo non sia disattivato o allo 0%","geen gegevens ontvangen":"nessun dato ricevuto","kon niet openen":"impossibile aprire","ook gemeten:":"misurato anche:","ingang":"ingresso","alle kanalen (volgens kanaalinstelling)":"tutti i canali (secondo l'impostazione dei canali)","zonder loop:":"senza loop:","Looppunten vragen de module soundfile":"I punti di loop richiedono il modulo soundfile","Er loopt al een loopronde":"È già in corso un ciclo di loop","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Cercare e scrivere i punti di loop in tutti i campioni? Per i campioni il cui audio viene modificato, viene prima salvata una copia dell'originale nella cartella di output.","Analyseren":"Analizza","Annuleren":"Annulla","Map":"Cartella","Orgel":"Organo","Stilte knippen":"Taglia silenzio","Klaar":"Fatto",
+    "Loops":"Loop","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Cerca in ogni campione il tratto che si unisce senza giunture a se stesso e lo salva nel file, in modo che una nota possa essere tenuta indefinitamente. Se la forma d'onda non si collega in modo pulito, viene applicato un crossfade e l'originale viene copiato prima a parte.","Alleen meten":"Solo misurazione","Loops maken":"Crea loop","Afbreken":"Interrompi","Stemtoon (Hz)":"Diapason (Hz)","Na een reeks automatisch controleren":"Verifica automaticamente dopo una serie","Na een reeks ook loops maken":"Crea anche i loop dopo una serie","Alle driversoorten tonen":"Mostra tutti i tipi di driver","Live niveaumeter (dB)":"Misuratore di livello dal vivo (dB)","Test microfoons":"Prova i microfoni","Bezig met testen… praat of speel iets op de microfoon(s)":"Test in corso… parla o suona qualcosa sul/sui microfono/i","Test mislukt":"Test non riuscito","Stop eerst de opname":"Ferma prima la registrazione","Kies eerst een microfoon":"Scegli prima un microfono","signaal":"segnale","zacht signaal":"segnale debole","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"quasi nessun segnale — controlla cavo, alimentazione phantom e guadagno","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"silenzio digitale — controlla in Windows (Suono → Registrazione) che questo dispositivo non sia disattivato o allo 0%","geen gegevens ontvangen":"nessun dato ricevuto","kon niet openen":"impossibile aprire","ook gemeten:":"misurato anche:","ingang":"ingresso","alle kanalen (volgens kanaalinstelling)":"tutti i canali (secondo l'impostazione dei canali)","zonder loop:":"senza loop:","Looppunten vragen de module soundfile":"I punti di loop richiedono il modulo soundfile","Er loopt al een loopronde":"È già in corso un ciclo di loop","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Cercare e scrivere i punti di loop in tutti i campioni? Per i campioni il cui audio viene modificato, viene prima salvata una copia dell'originale nella cartella di output.","Analyseren":"Analizza","Annuleren":"Annulla","Map":"Cartella","Orgel":"Organo","Stilte knippen":"Taglia silenzio","Klaar":"Fatto",
     "JM-Rec — Handleiding":"JM-Rec — Manuale","Snelstart":"Avvio rapido","Kleurcodes per register":"Codici colore per registro","Kleur":"Colore","Betekenis":"Significato","Knop":"Pulsante","Functie":"Funzione",
     "Register":"Registro","op":"su","is volledig opgenomen":"è completamente registrato","Wil je het nu controleren?":"Vuoi verificarlo ora?","is compleet":"è completo","Controleren?":"Verificare?",
     "Klavier / Pedaal":"Tastiera / Pedaliera","Register opnemen":"Registra registro","Apparaten verversen":"Aggiorna dispositivi","Laden...":"Caricamento...","MP3 Bitrate":"Bitrate MP3","Mapnaam:":"Nome cartella:","Mapnaam: —":"Nome cartella: —","Scan de QR-code met je telefoon of tablet":"Scansiona il codice QR con il tuo telefono o tablet","om de afstandsbediening te openen":"per aprire il telecomando","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Non serve Internet — il controllo funziona anche senza. Tieni aperta questa finestra; se l'hotspot si spegne, riaccendilo.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Fai clic su «Apri impostazioni hotspot» e attiva l'hotspot mobile.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Annota il nome di rete e la password che Windows mostra.","Verbind je iPad/iPhone of Android met dat netwerk.":"Connetti il tuo iPad/iPhone o Android a quella rete.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Scegli sopra la rete dell'hotspot e scansiona il codice QR (o digita l'indirizzo).","Pad naar register-, klavier- of orgelmap":"Percorso alla cartella del registro, tastiera o organo","Her-opname:":"Rifare la registrazione:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Aggiungi/rimuovi registri per tastiera. Do grave = MIDI 36.","Register toevoegen":"Aggiungi registro"
@@ -464,7 +490,7 @@ I18N_JS = r'''
     "Exporteren":"Eksportuj","Exporteer .organ (JM-Orgue)":"Eksportuj .organ (JM-Orgue)","Exporteer projectgegevens (.json)":"Eksportuj dane projektu (.json)","Maakt een .organ-definitiebestand in de projectmap dat JM-Orgue direct kan laden.":"Tworzy plik definicji .organ w folderze projektu, który JM-Orgue może bezpośrednio załadować.",".organ opgeslagen:":".organ zapisany:","registers":"głosy","samples":"próbki","ontbrekend":"brakujące","Export mislukt:":"Eksport nie powiódł się:","Update beschikbaar:":"Dostępna aktualizacja:","Feedback":"Opinie","Feedback geven":"Wyślij opinię","Een probleem gevonden of een idee voor JM-Rec? Je tekst wordt als GitHub-melding klaargezet.":"Znalazłeś problem lub masz pomysł dla JM-Rec? Twój tekst zostanie przygotowany jako zgłoszenie GitHub.","Probleem melden":"Zgłoś problem","Idee of verbetering":"Pomysł lub ulepszenie","Beschrijf je probleem of idee zo concreet mogelijk…":"Opisz swój problem lub pomysł tak konkretnie, jak to możliwe…","Er opent een GitHub-pagina met je tekst al ingevuld (inclusief versie-info). Om te versturen is een gratis GitHub-account nodig.":"Otworzy się strona GitHub z wypełnionym tekstem (łącznie z informacją o wersji). Do wysłania potrzebne jest bezpłatne konto GitHub.","Openen op GitHub":"Otwórz na GitHub","Project-JSON opgeslagen:":"JSON projektu zapisany:","Let op: JM-Orgue ondersteunt geen FLAC; kies WAV of MP3 als formaat":"Uwaga: JM-Orgue nie obsługuje FLAC; wybierz WAV lub MP3 jako format",
     "Remote Control":"Pilot zdalny","Zorg dat je telefoon op hetzelfde netwerk zit als deze PC.":"Upewnij się, że telefon jest w tej samej sieci co ten komputer.","Kies het netwerk waarmee je telefoon verbonden is:":"Wybierz sieć, z którą jest połączony twój telefon:","Directe verbinding (geen WiFi nodig)":"Połączenie bezpośrednie (bez WiFi)","Geen WiFi op deze locatie? Laat deze PC zelf een netwerk uitzenden en verbind je telefoon of tablet daarmee.":"Brak WiFi w tej lokalizacji? Pozwól temu komputerowi nadawać własną sieć i podłącz telefon lub tablet do niej.","Open hotspot-instellingen":"Otwórz ustawienia hotspotu",
     "Sample Controle":"Kontrola próbek",
-    "Loops":"Pętle","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Wyszukuje w każdej próbce fragment, który łączy się bez szwu sam ze sobą i zapisuje go w pliku, aby dźwięk mógł być trzymany bez ograniczeń. Jeśli przebieg nie łączy się czysto, stosuje się crossfade, a oryginał jest najpierw kopiowany.","Alleen meten":"Tylko pomiar","Loops maken":"Utwórz pętle","Afbreken":"Przerwij","Stemtoon (Hz)":"Strój (Hz)","Na een reeks automatisch controleren":"Automatycznie sprawdź po serii","Na een reeks ook loops maken":"Twórz również pętle po serii","Alle driversoorten tonen":"Pokaż wszystkie typy sterowników","Test microfoons":"Testuj mikrofony","Bezig met testen… praat of speel iets op de microfoon(s)":"Testowanie… powiedz coś lub zagraj do mikrofonu/mikrofonów","Test mislukt":"Test nie powiódł się","Stop eerst de opname":"Najpierw zatrzymaj nagrywanie","Kies eerst een microfoon":"Najpierw wybierz mikrofon","signaal":"sygnał","zacht signaal":"słaby sygnał","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"prawie brak sygnału — sprawdź kabel, zasilanie phantom i wzmocnienie","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"cyfrowa cisza — sprawdź w systemie Windows (Dźwięk → Nagrywanie), czy to urządzenie nie jest wyciszone lub ustawione na 0%","geen gegevens ontvangen":"nie odebrano danych","kon niet openen":"nie można otworzyć","ook gemeten:":"zmierzono także:","ingang":"wejście","alle kanalen (volgens kanaalinstelling)":"wszystkie kanały (zgodnie z ustawieniem kanałów)","zonder loop:":"bez pętli:","Looppunten vragen de module soundfile":"Punkty pętli wymagają modułu soundfile","Er loopt al een loopronde":"Runda pętli już trwa","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Wyszukać i zapisać punkty pętli we wszystkich próbkach? Dla próbek, których audio jest zmieniane, najpierw tworzona jest kopia oryginału w folderze wyjściowym.","Analyseren":"Analizuj","Annuleren":"Anuluj","Map":"Folder","Orgel":"Organy","Stilte knippen":"Przytnij ciszę","Klaar":"Gotowe",
+    "Loops":"Pętle","Zoekt per sample het stuk dat naadloos op zichzelf aansluit en zet dat in het bestand, zodat een toon onbeperkt kan worden aangehouden. Sluit de golfvorm niet schoon aan, dan wordt er overgevloeid en gaat het origineel eerst in een reservekopie.":"Wyszukuje w każdej próbce fragment, który łączy się bez szwu sam ze sobą i zapisuje go w pliku, aby dźwięk mógł być trzymany bez ograniczeń. Jeśli przebieg nie łączy się czysto, stosuje się crossfade, a oryginał jest najpierw kopiowany.","Alleen meten":"Tylko pomiar","Loops maken":"Utwórz pętle","Afbreken":"Przerwij","Stemtoon (Hz)":"Strój (Hz)","Na een reeks automatisch controleren":"Automatycznie sprawdź po serii","Na een reeks ook loops maken":"Twórz również pętle po serii","Alle driversoorten tonen":"Pokaż wszystkie typy sterowników","Live niveaumeter (dB)":"Miernik poziomu na żywo (dB)","Test microfoons":"Testuj mikrofony","Bezig met testen… praat of speel iets op de microfoon(s)":"Testowanie… powiedz coś lub zagraj do mikrofonu/mikrofonów","Test mislukt":"Test nie powiódł się","Stop eerst de opname":"Najpierw zatrzymaj nagrywanie","Kies eerst een microfoon":"Najpierw wybierz mikrofon","signaal":"sygnał","zacht signaal":"słaby sygnał","bijna geen signaal — controleer kabel, fantoomvoeding en versterking":"prawie brak sygnału — sprawdź kabel, zasilanie phantom i wzmocnienie","digitale stilte — controleer in Windows (Geluid → Opnemen) of dit apparaat gedempt is of op 0% staat":"cyfrowa cisza — sprawdź w systemie Windows (Dźwięk → Nagrywanie), czy to urządzenie nie jest wyciszone lub ustawione na 0%","geen gegevens ontvangen":"nie odebrano danych","kon niet openen":"nie można otworzyć","ook gemeten:":"zmierzono także:","ingang":"wejście","alle kanalen (volgens kanaalinstelling)":"wszystkie kanały (zgodnie z ustawieniem kanałów)","zonder loop:":"bez pętli:","Looppunten vragen de module soundfile":"Punkty pętli wymagają modułu soundfile","Er loopt al een loopronde":"Runda pętli już trwa","Looppunten zoeken en wegschrijven in alle samples? Van de samples waarvan de audio wordt aangepast komt eerst een reservekopie in de uitvoermap.":"Wyszukać i zapisać punkty pętli we wszystkich próbkach? Dla próbek, których audio jest zmieniane, najpierw tworzona jest kopia oryginału w folderze wyjściowym.","Analyseren":"Analizuj","Annuleren":"Anuluj","Map":"Folder","Orgel":"Organy","Stilte knippen":"Przytnij ciszę","Klaar":"Gotowe",
     "JM-Rec — Handleiding":"JM-Rec — Podręcznik","Snelstart":"Szybki start","Kleurcodes per register":"Kody kolorów na głos","Kleur":"Kolor","Betekenis":"Znaczenie","Knop":"Przycisk","Functie":"Funkcja",
     "Register":"Głos","op":"na","is volledig opgenomen":"jest w pełni nagrany","Wil je het nu controleren?":"Chcesz go teraz sprawdzić?","is compleet":"jest kompletny","Controleren?":"Sprawdzić?",
     "Klavier / Pedaal":"Manuał / Pedał","Register opnemen":"Nagrywaj głos","Apparaten verversen":"Odśwież urządzenia","Laden...":"Ładowanie...","MP3 Bitrate":"Bitrate MP3","Mapnaam:":"Nazwa folderu:","Mapnaam: —":"Nazwa folderu: —","Scan de QR-code met je telefoon of tablet":"Zeskanuj kod QR telefonem lub tabletem","om de afstandsbediening te openen":"aby otworzyć pilota zdalnego","Internet is niet nodig — de bediening werkt ook zonder. Houd dit venster open; schakelt de hotspot uit, zet hem opnieuw aan.":"Internet nie jest wymagany — sterowanie działa też bez niego. Nie zamykaj tego okna; jeśli hotspot się wyłączy, włącz go ponownie.","Klik op 'Open hotspot-instellingen' en zet de Mobiele hotspot AAN.":"Kliknij „Otwórz ustawienia hotspotu” i włącz hotspot mobilny.","Noteer de netwerknaam en het wachtwoord die Windows toont.":"Zanotuj nazwę sieci i hasło, które pokazuje Windows.","Verbind je iPad/iPhone of Android met dat netwerk.":"Połącz iPada/iPhone'a lub Androida z tą siecią.","Kies hierboven het hotspot-netwerk en scan de QR-code (of typ het adres).":"Wybierz powyżej sieć hotspotu i zeskanuj kod QR (lub wpisz adres).","Pad naar register-, klavier- of orgelmap":"Ścieżka do folderu głosu, manuału lub organów","Her-opname:":"Ponowne nagranie:","Registers toevoegen/verwijderen per klavier. C-groot = MIDI 36.":"Dodawanie/usuwanie głosów na manuał. C duże = MIDI 36.","Register toevoegen":"Dodaj głos"
@@ -918,6 +944,21 @@ I18N_JS = r'''
     if (d.multi) return d.name + ' \u2014 ' + tr('alle kanalen (volgens kanaalinstelling)') + api;
     return d.name + api;
   };
+  // Groepskop per apparaat: alleen bij een apparaat met meerdere ingangen,
+  // zodat de lange lijst overzichtelijk wordt (apparaat \u00b7 driversoort).
+  window.jmMicHeader = function(d){
+    return d.multi ? (d.name + (d.api ? ' \u00b7 ' + d.api : '')) : null;
+  };
+  // Korte rij-tekst onder zo'n kop; losse apparaten houden hun volledige naam.
+  window.jmMicShort = function(d){
+    if (d.input) return tr('ingang') + ' ' + d.input;
+    if (d.multi) return tr('alle kanalen (volgens kanaalinstelling)');
+    return jmMicLabel(d);
+  };
+  // dBFS naar balkvulling 0..1 over [-60, 0] dB (gelijk aan de server).
+  window.jmFillFromDb = function(db){
+    return db <= -60 ? 0 : (db >= 0 ? 1 : (db + 60) / 60);
+  };
   // "Alle driversoorten tonen": onthouden per browser, en de bijbehorende url.
   window.jmMicAlle = function(){
     try { return localStorage.getItem('jmMicAlle') === '1'; } catch(e) { return false; }
@@ -1145,6 +1186,13 @@ class RecorderEngine:
         # VU meter
         self.current_level = 0.0
         self.current_levels = {}   # per-device levels for multi-mic
+        # Live niveaumeter (los van opnemen): een achtergrond-thread opent de
+        # gekozen microfoons en meet dBFS per positie, zodat je vóór het opnemen
+        # ziet of er signaal binnenkomt.
+        self.monitor_active = False
+        self.monitor_levels = {}   # {positie-sleutel: dBFS}
+        self._monitor_meta = {}    # {sleutel: {device, api, input, name}}
+        self._monitor_stop = threading.Event()
         
         # Callbacks
         self.on_state_change = None
@@ -1274,6 +1322,93 @@ class RecorderEngine:
                             **({'api': api} if api else {}),
                         })
         return input_devices
+
+    def _monitor_snapshot(self):
+        """De huidige meterstanden als lijst, in de volgorde van de keuze."""
+        uit = []
+        for k in self.device_indices:
+            meta = self._monitor_meta.get(k, {})
+            uit.append({'key': k, 'db': round(float(self.monitor_levels.get(k, -120.0)), 1),
+                        'name': meta.get('name', self._mic_name(k)),
+                        'input': mic_channel(k), 'api': meta.get('api', '')})
+        return uit
+
+    def start_monitor(self):
+        """Begin de live niveaumeter voor de gekozen microfoons."""
+        if self.is_running or self.state == "recording":
+            return {'success': False, 'error': 'Stop eerst de opname'}
+        if not self.device_indices:
+            return {'success': False, 'error': 'Kies eerst een microfoon'}
+        if self.monitor_active:
+            return {'success': True}
+        self._monitor_stop.clear()
+        self.monitor_active = True
+        self.monitor_levels = {}
+        threading.Thread(target=self._monitor_loop, daemon=True).start()
+        return {'success': True}
+
+    def stop_monitor(self):
+        """Stop de live niveaumeter (ook aangeroepen vóór een opname)."""
+        self._monitor_stop.set()
+        self.monitor_active = False
+        self.monitor_levels = {}
+
+    def _monitor_loop(self):
+        """Open de gekozen microfoons en meet dBFS per positie tot stop/opname."""
+        keys = list(self.device_indices)
+        # Labels één keer opzoeken (query_devices is traag voor elke poll).
+        self._monitor_meta = {}
+        for k in keys:
+            dev = mic_device(k)
+            meta = {'name': self._mic_name(k), 'api': ''}
+            try:
+                info = sd.query_devices(dev)
+                meta['api'] = sd.query_hostapis(info['hostapi'])['name'].replace('Windows ', '')
+            except Exception:
+                pass
+            self._monitor_meta[k] = meta
+
+        recent = {}        # piek sinds de laatste uitlezing, per positie
+
+        def maak_cb(dev_keys, ch):
+            def cb(indata, frames, time_info, status):
+                for k in dev_keys:
+                    deel = self._mic_slice(k, indata, ch)
+                    if deel.size:
+                        piek = float(np.max(np.abs(deel.astype(np.float64))))
+                        recent[k] = max(recent.get(k, 0.0), piek)
+            return cb
+
+        streams = {}
+        try:
+            for dev, dev_keys in self._mic_groups(keys).items():
+                try:
+                    sr, ch = self._resolve_record_params(dev)
+                    streams[dev] = sd.InputStream(
+                        device=dev, samplerate=sr, dtype='float32',
+                        channels=self._mic_stream_channels(dev_keys, ch),
+                        callback=maak_cb(dev_keys, ch))
+                    streams[dev].start()
+                except Exception as e:
+                    print("Monitor: kon apparaat %s niet openen: %s" % (dev, e), flush=True)
+                    for k in dev_keys:
+                        self.monitor_levels[k] = -120.0
+            while not self._monitor_stop.is_set() and not self.is_running:
+                time.sleep(0.07)
+                for k in keys:
+                    if mic_device(k) in streams:
+                        self.monitor_levels[k] = rms_to_dbfs(recent.get(k, 0.0))
+                recent.clear()
+                self._notify()
+        finally:
+            for st in streams.values():
+                try:
+                    st.stop(); st.close()
+                except Exception:
+                    pass
+            self.monitor_active = False
+            self.monitor_levels = {}
+            self._notify()
 
     def mic_test(self, seconds=1.5):
         """Open de gekozen microfoons even en meet het niveau, zonder op te nemen.
@@ -1543,6 +1678,7 @@ class RecorderEngine:
             self.check_prompt = None
             self._abort_take = False
             self.pause_requested = False
+        self.stop_monitor()   # geeft de microfoons vrij voor de opname
         thread = threading.Thread(target=self._recording_cycle_thread, daemon=True)
         thread.start()
 
@@ -1935,7 +2071,7 @@ class RecorderEngine:
                             rms = np.sqrt(np.mean(chunk.astype(np.float64)**2))
                         else:
                             rms = np.sqrt(np.mean((chunk.astype(np.float64) / 32768.0)**2))
-                        self.current_level = min(1.0, rms * 3)
+                        self.current_level = vu_fill(rms)
                 self._notify()
                 time.sleep(0.05)
 
@@ -1991,7 +2127,7 @@ class RecorderEngine:
 
                     # Update VU meter
                     rms = np.sqrt(np.mean(data.astype(np.float64)**2))
-                    self.current_level = min(1.0, rms * 3)
+                    self.current_level = vu_fill(rms)
                     self._notify()
 
             audio_data = np.concatenate(collected, axis=0)
@@ -2035,7 +2171,7 @@ class RecorderEngine:
                         rms = np.sqrt(np.mean(deel.astype(np.float64)**2))
                     else:
                         rms = np.sqrt(np.mean((deel.astype(np.float64) / 32768.0)**2))
-                    self.current_levels[k] = min(1.0, rms * 3)
+                    self.current_levels[k] = vu_fill(rms)
             return callback
 
         failed = []
@@ -2341,7 +2477,7 @@ class RecorderEngine:
                 time.sleep(LOOP)
                 win = primary_tail(0.093)
                 rms = float(np.sqrt(np.mean(win ** 2))) if win.size else 0.0
-                self.current_level = min(1.0, rms * 3)
+                self.current_level = vu_fill(rms)
                 over_cap = onset_time and (time.time() - onset_time) > self.max_record_seconds
 
                 if phase == "waiting":
@@ -3744,6 +3880,8 @@ class RecorderEngine:
                 'progress': self.get_progress(),
                 'level': self.current_level,
                 'levels': dict(self.current_levels),
+                'monitor': {'active': self.monitor_active,
+                            'positions': self._monitor_snapshot()},
                 'last_error': self.last_error,
                 'has_manifest': bool(self.project_name),
                 'organ_meta': {
@@ -3951,6 +4089,15 @@ def create_web_app(engine: RecorderEngine):
     @app.route('/api/mic-test', methods=['POST'])
     def api_mic_test():
         return jsonify(engine.mic_test())
+
+    @app.route('/api/monitor', methods=['POST'])
+    def api_monitor():
+        data = request.json or {}
+        if str(data.get('action') or '').lower() == 'stop':
+            engine.stop_monitor()
+            engine._notify()
+            return jsonify({'success': True})
+        return jsonify(engine.start_monitor())
 
     @app.route('/api/loopback-devices')
     def api_loopback_devices():
@@ -5470,6 +5617,10 @@ body {
                 <div id="dMicList">Laden...</div>
                 <button class="d-btn" id="dMicTestBtn" onclick="dMicTest()" style="width:100%;margin-top:8px;">Test microfoons</button>
                 <div id="dMicTestResult" style="font-size:0.72rem;color:var(--dim);margin-top:6px;white-space:pre-line;"></div>
+                <label class="d-checkbox-row" style="font-size:0.78rem;margin-top:8px;">
+                    <input type="checkbox" id="dMonChk" onchange="dMonitorToggle(this.checked)">
+                    Live niveaumeter (dB)</label>
+                <div id="dMonitor" style="margin-top:4px;"></div>
             </div>
             <div id="dLoopbackSection" style="display:none;">
                 <div id="dLoopbackList" style="font-size:0.75rem;color:var(--dim);">Laden...</div>
@@ -6034,9 +6185,42 @@ function dSetInputMode(mode) {
     document.getElementById('dInputMode').value = mode;
     document.getElementById('dMicSection').style.display = mode === 'mic' ? '' : 'none';
     document.getElementById('dLoopbackSection').style.display = mode === 'loopback' ? '' : 'none';
+    if (mode !== 'mic') { const c = document.getElementById('dMonChk'); if (c && c.checked) { c.checked = false; dMonitorToggle(false); } }
     dApi('/api/settings', { input_mode: mode });
 }
 
+async function dMonitorToggle(on){
+    let r = null;
+    try { r = await dApi('/api/monitor', { action: on ? 'start' : 'stop' }); } catch(e) {}
+    if (on && r && r.success === false) {
+        document.getElementById('dMonChk').checked = false;
+        document.getElementById('dMonitor').textContent = r.error ? tr(r.error) : tr('Test mislukt');
+    }
+    if (!on) document.getElementById('dMonitor').innerHTML = '';
+}
+function dRenderMonitor(state){
+    const chk = document.getElementById('dMonChk');
+    const box = document.getElementById('dMonitor');
+    if (!chk || !box) return;
+    const mon = state.monitor;
+    const actief = !!(mon && mon.active);
+    if (document.activeElement !== chk) chk.checked = actief;
+    if (!actief) { if (box.dataset.on) { box.innerHTML = ''; box.dataset.on = ''; } return; }
+    box.dataset.on = '1';
+    const pos = (mon && mon.positions) || [];
+    if (!pos.length) { box.innerHTML = '<span style="color:var(--dim);font-size:0.72rem;">\u2026</span>'; return; }
+    box.innerHTML = pos.map(p => {
+        const label = jmMicLabel({ name: p.name, input: p.input, api: p.api });
+        const pct = Math.round(jmFillFromDb(p.db) * 100);
+        const db = (p.db <= -119) ? '-\u221e' : p.db.toFixed(0);
+        const kleur = p.db >= -3 ? 'var(--recording)' : (p.db >= -40 ? 'var(--success)' : 'var(--accent)');
+        return '<div style="margin:4px 0;">' +
+            '<div style="display:flex;justify-content:space-between;font-size:0.68rem;color:var(--dim);">' +
+                '<span>' + label + '</span><span>' + db + ' dBFS</span></div>' +
+            '<div class="vu-bar-bg" style="height:8px;"><div class="vu-bar" style="width:' + pct + '%;background:' + kleur + ';"></div></div>' +
+            '</div>';
+    }).join('');
+}
 async function dMicTest() {
     const btn = document.getElementById('dMicTestBtn');
     const out = document.getElementById('dMicTestResult');
@@ -6091,9 +6275,11 @@ function dRenderMicList(activeIndices, activeNames) {
     _deviceList.forEach(d => {
         const checked = activeIndices.includes(d.index) ? ' checked' : '';
         const posName = activeNames[d.index] || d.safe_name || '';
-        html += '<div class="d-checkbox-row">' +
+        const kop = jmMicHeader(d);
+        if (kop) html += '<div style="margin:8px 0 2px;font-size:0.72rem;color:var(--accent);border-top:1px solid var(--border);padding-top:6px;">' + kop + '</div>';
+        html += '<div class="d-checkbox-row"' + (d.input ? ' style="margin-left:14px;"' : '') + '>' +
             '<input type="checkbox" id="dMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="dApplyMics()">' +
-            '<label for="dMic' + d.index + '">' + jmMicLabel(d) + '</label>' +
+            '<label for="dMic' + d.index + '">' + jmMicShort(d) + '</label>' +
             '<input class="d-mic-name" id="dMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="dApplyMics()">' +
             '</div>';
     });
@@ -6334,6 +6520,7 @@ function dRenderPlan(state){
 
 function updateUI(state) {
     dLoopUI(state);
+    dRenderMonitor(state);
 
     // State badge
     const badge = document.getElementById('stateBadge');
@@ -6667,7 +6854,9 @@ async function wizBuildMics(){
         else cont.innerHTML = devs.map(d => {
             const checked = wizData.settings.device_indices.indexOf(d.index)>=0 ? 'checked' : '';
             const pos = (wizData.settings.device_names && wizData.settings.device_names[d.index]) || '';
-            return '<div class="wiz-row"><label class="wiz-check" style="flex:1;"><input type="checkbox" class="wizMicChk" data-idx="'+d.index+'" '+checked+'> '+jmMicLabel(d)+'</label>'+
+            const kop = jmMicHeader(d);
+            return (kop ? '<div style="margin:8px 0 2px;font-size:0.8rem;color:var(--accent);">'+kop+'</div>' : '') +
+                   '<div class="wiz-row"'+(d.input?' style="margin-left:14px;"':'')+'><label class="wiz-check" style="flex:1;"><input type="checkbox" class="wizMicChk" data-idx="'+d.index+'" '+checked+'> '+jmMicShort(d)+'</label>'+
                    '<input type="text" class="wizMicPos" data-idx="'+d.index+'" placeholder="positie" value="'+wizEsc(pos)+'" style="max-width:150px;"></div>';
         }).join('');
     } catch(e){ cont.innerHTML = '<p class="hint">Kon apparaten niet laden.</p>'; }
@@ -7709,9 +7898,11 @@ function fRenderMicList(activeIndices, activeNames) {
     _rDeviceList.forEach(d => {
         const checked = activeIndices.includes(d.index) ? ' checked' : '';
         const posName = activeNames[d.index] || d.safe_name || '';
-        html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">' +
+        const kop = jmMicHeader(d);
+        if (kop) html += '<div style="margin:8px 0 2px;font-size:0.72rem;color:var(--accent);border-top:1px solid var(--border);padding-top:6px;">' + kop + '</div>';
+        html += '<div style="display:flex;align-items:center;gap:8px;margin:4px 0;' + (d.input ? 'margin-left:14px;' : '') + '">' +
             '<input type="checkbox" id="fMic' + d.index + '" data-idx="' + d.index + '"' + checked + ' onchange="fApplyMics()" style="accent-color:var(--accent);width:16px;height:16px;">' +
-            '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + jmMicLabel(d) + '</label>' +
+            '<label for="fMic' + d.index + '" style="font-family:JetBrains Mono,monospace;font-size:0.75rem;color:var(--text);flex:1;">' + jmMicShort(d) + '</label>' +
             '<input id="fMicN' + d.index + '" placeholder="Positie" value="' + posName + '" onchange="fApplyMics()" style="width:80px;padding:4px 8px;font-family:JetBrains Mono,monospace;font-size:0.7rem;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);outline:none;">' +
             '</div>';
     });
