@@ -1,16 +1,21 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.16-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.17-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.16 — Organ Sample Recorder
+# JM-Rec v3.17 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.17
+- **dB-niveaumeter** — de niveaumeter rekende lineair, waardoor een zacht of veraf signaal (bijvoorbeeld rond -42 dBFS) nauwelijks uitsloeg. De meter werkt nu in dBFS (leeg bij -60 dB, vol bij 0 dB), zodat ook een laag signaal zichtbaar is.
+- **Live niveaumeter** — een vinkje in de lade opent de gekozen microfoons en toont het niveau per positie in dBFS, zonder op te nemen. Zo zie je vooraf of er signaal binnenkomt. De meter geeft de microfoons vrij zodra een opname start.
+- **Overzichtelijke microfoonlijst** — bij een interface met meerdere ingangen staat er nu een kop per apparaat (apparaat · driversoort) met de ingangen eronder, in plaats van één lange lijst.
 
 ### Nieuw in v3.16
 - **Test microfoons** — JM-Rec toonde alleen een niveau tijdens een opname, dus bij het koppelen van een interface was niet te zien of een ingang signaal kreeg. De knop onder de microfoonlijst opent elke gekozen positie anderhalve seconde (zonder op te nemen) en meldt per ingang: signaal met dBFS, zacht, bijna geen signaal, digitale stilte (vaak een gedempt Windows-apparaat of volume op 0%) of de echte foutmelding van het apparaat. Van een gekozen apparaat met meer ingangen worden ook de andere ingangen gemeten, zodat zichtbaar is op welke ingang het signaal zit.
