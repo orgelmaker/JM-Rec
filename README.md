@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="https://img.shields.io/badge/version-3.17-blue?style=flat-square" alt="Version">
+  <img src="https://img.shields.io/badge/version-3.18-blue?style=flat-square" alt="Version">
   <img src="https://img.shields.io/badge/platform-Windows-blue?style=flat-square" alt="Platform">
   <img src="https://img.shields.io/badge/remote-Android%20%7C%20iOS%20%7C%20Windows-green?style=flat-square" alt="Remote">
   <img src="https://img.shields.io/badge/output-JM--Orgue-orange?style=flat-square" alt="Output">
   <img src="https://img.shields.io/badge/license-alle%20rechten%20voorbehouden-red?style=flat-square" alt="License">
 </p>
 
-# JM-Rec v3.17 — Organ Sample Recorder
+# JM-Rec v3.18 — Organ Sample Recorder
 
 **Neem pijporgels op, noot voor noot, met automatische doorloop en draadloze bediening.**
 
 JM-Rec is een opnametool speciaal ontworpen voor het samplen van pijporgels. Het genereert MP3-bestanden met JM-Orgue-compatibele naamgeving en biedt een draadloze afstandsbediening via elke browser — Android, iOS of Windows.
+
+### Nieuw in v3.18
+- **Slimme microfoonscan** — de knop <em>Zoek microfoons met geluid (10 s)</em> opent tien seconden lang alle ingangen terwijl je geluid maakt, en toont daarna alleen de ingangen die signaal opvingen, met het niveau in dBFS. Eén klik neemt die selectie over. Handig als je niet weet welke van een lange lijst de juiste is.
 
 ### Nieuw in v3.17
 - **dB-niveaumeter** — de niveaumeter rekende lineair, waardoor een zacht of veraf signaal (bijvoorbeeld rond -42 dBFS) nauwelijks uitsloeg. De meter werkt nu in dBFS (leeg bij -60 dB, vol bij 0 dB), zodat ook een laag signaal zichtbaar is.
